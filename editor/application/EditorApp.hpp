@@ -14,6 +14,7 @@
 #include "lantern/runtime/Application.hpp"
 #include "lantern/ui/DockLayout.hpp"
 
+#include <array>
 #include <filesystem>
 
 namespace lantern::ui {
@@ -31,12 +32,14 @@ public:
     /// Opens the editor window and blocks until it closes.
     Status run();
 
-    /// The panel arrangement used on first start and by View > Reset Layout:
-    ///   +-----------+---------------------+-----------+
-    ///   | Hierarchy |      Viewport       | Inspector |
-    ///   |           +---------------------+           |
-    ///   |           |      Console        |           |
-    ///   +-----------+---------------------+-----------+
+    /// The panel arrangement used on first start and by View > Reset Layout,
+    /// the classic game-editor layout:
+    ///   +-----------+-----------------------------+-----------+
+    ///   | Hierarchy |            Scene            | Inspector |
+    ///   +-----------+                             |           |
+    ///   |  Assets   +-----------------------------+           |
+    ///   |           | Assets Preview | [Console]  |           |
+    ///   +-----------+-----------------------------+-----------+
     static ui::DockLayout defaultLayout();
 
 private:
@@ -70,8 +73,8 @@ private:
     HierarchyPanel* m_hierarchy = nullptr;
     InspectorPanel* m_inspector = nullptr;
     ConsolePanel* m_consolePanel = nullptr;
-    ui::Label* m_statusText = nullptr;
-    ui::Label* m_statusProblems = nullptr;
+    ui::Label* m_statusFps = nullptr;
+    std::array<ui::Label*, 3> m_statusCounts{};   // messages, warnings, errors
 
     bool m_quitRequested = false;   // File > Quit or the shortcut
     bool m_layoutDirty = false;

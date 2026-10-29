@@ -64,6 +64,9 @@ public:
     void setIcon(std::optional<Icon> icon) { m_icon = icon; }
     void setStyle(Style style) { m_style = style; }
     void setOnClick(std::function<void()> onClick) { m_onClick = std::move(onClick); }
+    /// Shows the button as switched on (e.g. the active tool in a toolbar).
+    void setToggled(bool toggled) { m_toggled = toggled; }
+    bool isToggled() const noexcept { return m_toggled; }
 
     Size measure(Context& ctx, Size available) override;
     void paint(Context& ctx, DrawList& draw) override;
@@ -79,6 +82,7 @@ private:
     std::optional<Icon> m_icon;
     Style m_style = Style::Normal;
     std::function<void()> m_onClick;
+    bool m_toggled = false;
 };
 
 /// A box that can be ticked, with a label.
@@ -139,6 +143,21 @@ private:
 };
 
 /// Draws a keyboard-focus ring around `rect` (shared by focusable widgets).
+/// A single icon, e.g. beside a count in a status bar.
+class IconView : public Widget {
+public:
+    explicit IconView(Icon icon, float size = 14.0f, std::optional<Color> color = {});
+    void setColor(std::optional<Color> color) { m_color = color; }
+    Size measure(Context& ctx, Size available) override;
+    void paint(Context& ctx, DrawList& draw) override;
+    Widget* hitTest(Vec2) override { return nullptr; }
+
+private:
+    Icon m_icon;
+    float m_size;
+    std::optional<Color> m_color;
+};
+
 void paintFocusRing(Context& ctx, DrawList& draw, Rect rect, float radius);
 
 } // namespace lantern::ui

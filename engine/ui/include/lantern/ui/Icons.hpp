@@ -14,6 +14,29 @@ enum class Icon {
     Check,         // checkbox, checked menu item
     Search,        // magnifying glass in filter fields
     Dot,           // small filled circle (status, unsaved marker)
+    ChevronLeft,   // back
+    Plus,          // create
+    Menu,          // three lines: a panel's menu
+    More,          // three vertical dots: more actions
+    Help,          // question mark in a circle
+    Info,          // filled circle with "i"
+    Warning,       // triangle with "!"
+    Error,         // filled circle with a cross
+    Play,          // start the game
+    Refresh,       // circular arrow: reload
+    Send,          // paper plane: build / publish
+    Folder,        // a folder
+    Layers,        // stacked sheets: the Hierarchy panel
+    Scene,         // a framed picture: the Scene / viewport panel
+    Sliders,       // three sliders: the Inspector panel
+    Terminal,      // a window with a prompt: the Console panel
+    Eye,           // preview
+    Flame,         // Lantern's flame: a scene or the app itself
+    Move,          // four-way arrows: move tool
+    Rotate,        // rotation arc: rotate tool
+    Scale,         // corner arrow out of a box: scale tool
+    RectTool,      // rectangle with handles: rect tool
+    Grid,          // 2x2 squares: layout / preview options
 };
 
 /// Draws `icon` centred in `area`.

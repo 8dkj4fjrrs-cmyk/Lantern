@@ -3,12 +3,15 @@
 // DockSpace: the editor's main area. Shows panels in tab groups arranged by a
 // DockLayout, and lets the user
 //   * drag the gaps between groups to resize them,
-//   * click tabs to switch, and the "x" to close a panel,
+//   * click tabs to switch, and the "x" (shown on hover) to close a panel,
+//   * open a group's panel menu (the three lines at the right of its tabs),
 //   * drag a tab onto another group's centre (to join it as a tab) or onto one
 //     of its edges (to split the group) — a highlighted preview shows where.
 
 #include "lantern/ui/DockLayout.hpp"
+#include "lantern/ui/Icons.hpp"
 #include "lantern/ui/Widget.hpp"
+#include "lantern/ui/widgets/Menu.hpp"
 
 #include <functional>
 #include <optional>
@@ -23,12 +26,23 @@ public:
 
     /// Registers a panel. `id` is used in saved layouts, so keep it stable.
     template <class T>
-    T& addPanel(std::string id, std::string title, std::unique_ptr<T> content)
+    T& addPanel(std::string id, std::string title, std::unique_ptr<T> content, std::optional<Icon> icon = {})
     {
         T& ref = addChild(std::move(content));
-        m_panels.push_back(Panel{std::move(id), std::move(title), &ref});
+        m_panels.push_back(Panel{std::move(id), std::move(title), &ref, icon});
         return ref;
     }
+
+    /// Items for a group's panel menu, given the visible panel's id. By default:
+    /// "Close <panel>" and "Reset Layout".
+    void setPanelMenu(std::function<std::vector<MenuItem>(const std::string& panel)> builder)
+    {
+        m_panelMenu = std::move(builder);
+    }
+    /// Opens the panel menu of the group showing `panel` (as if its button were clicked).
+    void openPanelMenu(Context& ctx, const std::string& panel);
+    /// The panel menu button of the group showing `panel`.
+    Rect panelMenuButton(std::string_view panel) const;
 
     /// The arrangement used at first start and by resetLayout().
     void setDefaultLayout(DockLayout layout);
@@ -62,6 +76,7 @@ private:
         std::string id;
         std::string title;
         Widget* content;
+        std::optional<Icon> icon;
     };
     struct Tab {
         std::string id;
@@ -79,6 +94,8 @@ private:
     const Panel* findPanel(std::string_view id) const;
     const DockLayout::SplitterRect* splitterAt(Vec2 point) const;
     const Tab* tabAt(Vec2 point) const;
+    std::optional<std::size_t> menuButtonAt(Vec2 point) const;
+    std::string activePanelOf(std::size_t group) const;
     std::optional<DropTarget> dropTargetAt(Vec2 point) const;
     void changed();
 
@@ -92,6 +109,8 @@ private:
     std::vector<DockLayout::SplitterRect> m_splitters;
     std::vector<Tab> m_tabs;
     std::vector<Rect> m_contentRects; // per group, below the tab bar
+    std::vector<Rect> m_menuButtons;  // per group, right end of the tab bar
+    std::function<std::vector<MenuItem>(const std::string&)> m_panelMenu;
 
     // Interaction.
     Drag m_drag = Drag::None;

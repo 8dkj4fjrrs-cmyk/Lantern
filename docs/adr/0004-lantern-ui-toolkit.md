@@ -68,7 +68,7 @@ labels (⌘Q / Ctrl+Q).
 ### 5. Docking is plain data
 
 `DockLayout` is a binary tree of splits and tab groups, saved as one line of
-text (`layout.dock`), e.g.
+text (`panels.dock`), e.g.
 
     lantern-dock 1 (h 0.180 [0|hierarchy] (h 0.710 (v 0.700 [0|viewport] [0|console]) [0|inspector]))
 
@@ -86,6 +86,21 @@ modal dialogs, tooltips, keyboard focus, and docking. Inspector editing
 widgets (number fields, colour pickers, drop-downs) arrive with Milestone 3,
 when there is something to edit.
 
+### 7. Look and layout: the classic game-editor arrangement
+
+The editor follows the layout people know from Cocos Creator and similar
+editors (Hierarchy and Assets on the left, Scene in the middle with Assets
+Preview and Console below, a full-height Inspector on the right, a main
+toolbar above and a status bar below), in neutral greys with Lantern's
+amber as the one accent colour. Tabs carry icons; each panel has a ☰ menu.
+The Inspector uses folding sections with label/value rows and X/Y value
+boxes (`widgets/Inspector.hpp`).
+
+Controls for features that do not exist yet are shown, disabled, with a
+tooltip naming the milestone that brings them. Inspector value boxes are
+read-only until scene editing, and their tooltips say so. The layout is
+complete without pretending the features behind it exist.
+
 ## Consequences
 
 - Dear ImGui is gone: Axmol's ImGui extension is switched off and nothing
@@ -95,8 +110,8 @@ when there is something to edit.
   menus too.
 - New third-party notices: stb_truetype and Inter (see
   `THIRD_PARTY_NOTICES.md`).
-- `layout.ini` from the Milestone 2 preview is ignored; the editor starts
-  with the default layout once and then saves `layout.dock`.
+- Earlier preview layouts (`layout.ini`, `layout.dock`) are ignored; the
+  editor starts with the default layout once and then saves `panels.dock`.
 
 ## Alternatives considered
 

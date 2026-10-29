@@ -9,10 +9,12 @@
 namespace lantern::ui {
 
 namespace {
-constexpr float kGap = 4.0f;            // space between groups (also the splitter)
-constexpr float kGroupRadius = 6.0f;
-constexpr float kTabPadding = 12.0f;
+constexpr float kGap = 3.0f;            // space between groups (also the splitter)
+constexpr float kGroupRadius = 0.0f;    // square panels, edge to edge
+constexpr float kTabPadding = 10.0f;
+constexpr float kIconSize = 15.0f;
 constexpr float kCloseSize = 16.0f;
+constexpr float kMenuButtonSize = 22.0f;
 constexpr float kDragThreshold = 6.0f;
 constexpr float kEdgeZone = 0.25f;      // outer quarter of a group = dock to that side
 } // namespace
@@ -104,9 +106,10 @@ void DockSpace::arrange(Context& ctx, Rect rect)
 {
     setBounds(rect);
     const Theme& t = ctx.theme();
-    m_layout.computeRects(rect.inset(kGap), kGap, m_groups, m_splitters);
+    m_layout.computeRects(rect.inset(Insets{0.0f, kGap, 0.0f, 0.0f}), kGap, m_groups, m_splitters);
     m_tabs.clear();
     m_contentRects.clear();
+    m_menuButtons.clear();
 
     for (const Panel& p : m_panels) {
         p.content->setVisible(false);
@@ -117,26 +120,84 @@ void DockSpace::arrange(Context& ctx, Rect rect)
         const Rect bar{g.x, g.y, g.width, t.tabBarHeight};
         const Rect content{g.x, g.y + t.tabBarHeight, g.width, std::max(0.0f, g.height - t.tabBarHeight)};
         m_contentRects.push_back(content);
+        m_menuButtons.push_back(Rect{bar.right() - kMenuButtonSize - 4.0f, bar.center().y - kMenuButtonSize * 0.5f,
+                                     kMenuButtonSize, kMenuButtonSize});
 
-        float x = bar.x + 4.0f;
+        float x = bar.x;
         for (std::size_t i = 0; i < group.node->tabs.size(); ++i) {
             const std::string& id = group.node->tabs[i];
+            const Panel* panel = findPanel(id);
             const float textWidth = std::ceil(ctx.atlas().measure(t.font, t.fontSize, titleOf(id)));
-            const float w = kTabPadding + textWidth + 6.0f + kCloseSize + 6.0f;
-            const Rect tab{x, bar.y + 4.0f, w, bar.height - 4.0f};
+            const float iconWidth = panel != nullptr && panel->icon ? kIconSize + 7.0f : 0.0f;
+            const float w = kTabPadding + iconWidth + textWidth + 6.0f + kCloseSize + 6.0f;
+            const Rect tab{x, bar.y, w, bar.height};
             const Rect close{tab.right() - kCloseSize - 6.0f, tab.center().y - kCloseSize * 0.5f, kCloseSize, kCloseSize};
             const bool active = i == group.node->active;
             m_tabs.push_back(Tab{id, tab, close, active});
-            x += w + 2.0f;
+            x += w;
 
-            if (active) {
-                if (const Panel* p = findPanel(id)) {
-                    p->content->setVisible(true);
-                    p->content->arrange(ctx, content);
-                }
+            if (active && panel != nullptr) {
+                panel->content->setVisible(true);
+                panel->content->arrange(ctx, content);
             }
         }
     }
+}
+
+std::string DockSpace::activePanelOf(std::size_t group) const
+{
+    if (group >= m_groups.size()) {
+        return {};
+    }
+    const auto& node = *m_groups[group].node;
+    return node.active < node.tabs.size() ? node.tabs[node.active] : std::string{};
+}
+
+std::optional<std::size_t> DockSpace::menuButtonAt(Vec2 point) const
+{
+    for (std::size_t i = 0; i < m_menuButtons.size(); ++i) {
+        if (m_menuButtons[i].contains(point)) {
+            return i;
+        }
+    }
+    return std::nullopt;
+}
+
+Rect DockSpace::panelMenuButton(std::string_view panel) const
+{
+    for (std::size_t i = 0; i < m_groups.size(); ++i) {
+        if (activePanelOf(i) == panel) {
+            return m_menuButtons[i];
+        }
+    }
+    return {};
+}
+
+void DockSpace::openPanelMenu(Context& ctx, const std::string& panel)
+{
+    std::vector<MenuItem> items;
+    if (m_panelMenu) {
+        items = m_panelMenu(panel);
+    } else {
+        MenuItem close;
+        close.label = "Close " + titleOf(panel);
+        close.action = [this, panel] { setOpen(panel, false); };
+        items.push_back(std::move(close));
+        items.push_back(MenuItem::divider());
+        MenuItem reset;
+        reset.label = "Reset Layout";
+        reset.action = [this] { resetLayout(); };
+        items.push_back(std::move(reset));
+    }
+    if (items.empty()) {
+        return;
+    }
+    const Rect button = panelMenuButton(panel);
+    auto popup = std::make_unique<MenuPopup>(std::move(items));
+    // Right-align the menu under its button.
+    const float width = popup->measure(ctx, ctx.viewport()).width;
+    ctx.openOverlay(std::move(popup),
+                    OverlayOptions{.position = {std::max(0.0f, button.right() - width), button.bottom() + 2.0f}});
 }
 
 // --- Painting -------------------------------------------------------------------------------
@@ -149,12 +210,9 @@ void DockSpace::paint(Context& ctx, DrawList& draw)
 
     for (std::size_t gi = 0; gi < m_groups.size(); ++gi) {
         const Rect g = m_groups[gi].rect;
-        draw.fillRoundedRect(g, kGroupRadius, t.panel);
-        // Tab strip: darker band across the top (square bottom edge).
-        draw.pushClip(Rect{g.x, g.y, g.width, t.tabBarHeight});
-        draw.fillRoundedRect(Rect{g.x, g.y, g.width, t.tabBarHeight + kGroupRadius}, kGroupRadius, t.panelHeader);
-        draw.popClip();
-        draw.fillRect(Rect{g.x, g.y + t.tabBarHeight - 1.0f, g.width, 1.0f}, t.divider);
+        draw.fillRect(g, t.panel);
+        // Tab strip: a darker band across the top.
+        draw.fillRect(Rect{g.x, g.y, g.width, t.tabBarHeight}, t.panelHeader);
 
         // Panel content, clipped to its area.
         const Rect content = m_contentRects[gi];
@@ -167,28 +225,39 @@ void DockSpace::paint(Context& ctx, DrawList& draw)
                 draw.popClip();
             }
         }
+
+        // Panel menu button (three lines).
+        const Rect button = m_menuButtons[gi];
+        const bool hot = interactive && m_drag == Drag::None && button.contains(pointer);
+        if (hot) {
+            draw.fillRoundedRect(button, t.radius, t.controlHover);
+        }
+        drawIcon(draw, Icon::Menu, button.inset(3.0f), hot ? t.text : t.textDim);
     }
 
-    // Tabs.
+    // Tabs: the visible one takes the panel's colour and joins its content.
     const FontMetrics fm = ctx.atlas().metrics(t.font, t.fontSize);
     for (const Tab& tab : m_tabs) {
         const bool hovered = interactive && m_drag == Drag::None && tab.rect.contains(pointer);
         draw.pushClip(bounds());
         if (tab.active) {
-            draw.pushClip(Rect{tab.rect.x, tab.rect.y, tab.rect.width, tab.rect.height - 1.0f});
-            draw.fillRoundedRect(Rect{tab.rect.x, tab.rect.y, tab.rect.width, tab.rect.height + 6.0f}, 5.0f, t.panel);
-            draw.popClip();
-            draw.fillRoundedRect(Rect{tab.rect.x + 6.0f, tab.rect.y, tab.rect.width - 12.0f, 2.0f}, 1.0f, t.accent);
+            draw.fillRect(tab.rect, t.panel);
         } else if (hovered) {
-            draw.fillRoundedRect(tab.rect.inset(Insets{0.0f, 2.0f, 0.0f, 3.0f}), 4.0f, t.hover);
+            draw.fillRect(tab.rect, t.hover);
+        }
+        float x = tab.rect.x + kTabPadding;
+        const Panel* panel = findPanel(tab.id);
+        if (panel != nullptr && panel->icon) {
+            drawIcon(draw, *panel->icon, Rect{x, tab.rect.center().y - kIconSize * 0.5f, kIconSize, kIconSize},
+                     tab.active ? t.accent : t.textFaint);
+            x += kIconSize + 7.0f;
         }
         const float textY = tab.rect.y + std::round((tab.rect.height - fm.lineHeight) * 0.5f);
-        draw.text(tab.active ? t.fontStrong : t.font, t.fontSize, {tab.rect.x + kTabPadding, textY},
-                  tab.active ? t.text : t.textDim, titleOf(tab.id));
-        if (tab.active || hovered) {
-            const bool closeHot = interactive && tab.close.contains(pointer);
+        draw.text(t.font, t.fontSize, {x, textY}, tab.active ? t.text : t.textDim, titleOf(tab.id));
+        if (hovered) {
+            const bool closeHot = tab.close.contains(pointer);
             if (closeHot) {
-                draw.fillRoundedRect(tab.close, 4.0f, t.controlHover);
+                draw.fillRoundedRect(tab.close, t.radius, t.controlHover);
             }
             drawIcon(draw, Icon::Close, tab.close, closeHot ? t.text : t.textFaint);
         }
@@ -261,7 +330,7 @@ Widget* DockSpace::hitTest(Vec2 point)
     if (!isVisible() || !bounds().contains(point)) {
         return nullptr;
     }
-    if (splitterAt(point) != nullptr || tabAt(point) != nullptr) {
+    if (splitterAt(point) != nullptr || tabAt(point) != nullptr || menuButtonAt(point)) {
         return this;
     }
     for (std::size_t gi = 0; gi < m_groups.size(); ++gi) {
@@ -343,6 +412,10 @@ bool DockSpace::onPointerDown(Context& ctx, const PointerEvent& event)
         return false;
     }
     m_pressPosition = event.position;
+    if (const auto group = menuButtonAt(event.position)) {
+        openPanelMenu(ctx, activePanelOf(*group));
+        return true;
+    }
     if (const auto* s = splitterAt(event.position)) {
         m_drag = Drag::Splitter;
         m_dragSplit = s->node;

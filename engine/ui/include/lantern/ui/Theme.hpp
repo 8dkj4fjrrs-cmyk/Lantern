@@ -10,20 +10,24 @@ namespace lantern::ui {
 
 struct Theme {
     // --- Surfaces, darkest to lightest ---------------------------------------
-    Color window = Color::hex(0x141519);      // behind everything (gaps between panels)
-    Color panel = Color::hex(0x1C1D22);       // panel content
-    Color panelHeader = Color::hex(0x17181C); // tab strips, menu bar, status bar
-    Color control = Color::hex(0x2A2C33);     // buttons, text fields
-    Color controlHover = Color::hex(0x33363E);
-    Color controlPressed = Color::hex(0x3B3E47);
-    Color popup = Color::hex(0x24262C);       // menus, tooltips, dialogs
-    Color border = Color::hex(0x2E3038);
-    Color divider = Color::hex(0x0E0F12);
+    // Neutral greys, laid out like a desktop game editor: dark tab strips,
+    // lighter panel content, and input fields darker than the panel they sit on.
+    Color window = Color::hex(0x141414);      // behind everything (gaps between panels)
+    Color panel = Color::hex(0x272727);       // panel content
+    Color panelHeader = Color::hex(0x1E1E1E); // tab strips, menu bar, toolbars, status bar
+    Color control = Color::hex(0x383838);     // buttons
+    Color controlHover = Color::hex(0x424242);
+    Color controlPressed = Color::hex(0x4C4C4C);
+    Color field = Color::hex(0x1B1B1B);       // text fields and value boxes
+    Color fieldHover = Color::hex(0x202020);
+    Color popup = Color::hex(0x2F2F2F);       // menus, tooltips, dialogs
+    Color border = Color::hex(0x3A3A3A);
+    Color divider = Color::hex(0x151515);
 
     // --- Text -----------------------------------------------------------------
-    Color text = Color::hex(0xE6E7EB);
-    Color textDim = Color::hex(0x9A9DA8);
-    Color textFaint = Color::hex(0x6B6E79);
+    Color text = Color::hex(0xDDDDDD);
+    Color textDim = Color::hex(0xA0A0A0);
+    Color textFaint = Color::hex(0x6E6E6E);
     Color textOnAccent = Color::hex(0x1A1206);
 
     // --- Accent (lantern amber) and states -----------------------------------
@@ -47,17 +51,18 @@ struct Theme {
     float smallFontSize = 11.5f;
 
     // --- Metrics (points) ------------------------------------------------------
-    float rowHeight = 24.0f;          // list, tree and property rows
-    float controlHeight = 26.0f;      // buttons, text fields
-    float menuBarHeight = 28.0f;
-    float tabBarHeight = 30.0f;
+    float rowHeight = 22.0f;          // list, tree and property rows
+    float controlHeight = 24.0f;      // buttons, text fields
+    float menuBarHeight = 26.0f;
+    float tabBarHeight = 28.0f;
     float statusBarHeight = 24.0f;
-    float radius = 5.0f;              // rounded corners of controls
-    float popupRadius = 7.0f;
+    float radius = 3.0f;              // rounded corners of controls
+    float popupRadius = 5.0f;
     float spacing = 8.0f;             // gap between neighbouring controls
     float padding = 10.0f;            // inside panels
     float indent = 16.0f;             // per tree level
     float splitterThickness = 4.0f;
+    float toolbarHeight = 34.0f;      // the editor's main toolbar; panel toolbars use controlHeight + 8
     float scrollbarWidth = 8.0f;
 };
 

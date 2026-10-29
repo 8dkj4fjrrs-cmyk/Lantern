@@ -8,6 +8,7 @@
 #include "lantern/ui/widgets/Box.hpp"
 #include "lantern/ui/widgets/Dialog.hpp"
 #include "lantern/ui/widgets/DockSpace.hpp"
+#include "lantern/ui/widgets/Inspector.hpp"
 #include "lantern/ui/widgets/Menu.hpp"
 
 #include <string>
@@ -23,9 +24,40 @@ constexpr std::string_view kCategory = "editor";
 // so dragging a splitter does not write the file on every frame.
 constexpr double kLayoutSaveDelaySeconds = 1.0;
 
+// Every panel, in View-menu order: id, title, tab icon.
+struct PanelInfo {
+    const char* id;
+    const char* title;
+    ui::Icon icon;
+};
+constexpr PanelInfo kPanels[] = {
+    {kHierarchyPanel, "Hierarchy", ui::Icon::Layers},
+    {kAssetsPanel, "Assets", ui::Icon::Folder},
+    {kViewportPanel, "Scene", ui::Icon::Scene},
+    {kPreviewPanel, "Assets Preview", ui::Icon::Eye},
+    {kConsolePanel, "Console", ui::Icon::Terminal},
+    {kInspectorPanel, "Inspector", ui::Icon::Sliders},
+};
+
 bool isEditorPanel(std::string_view id)
 {
-    return id == kViewportPanel || id == kHierarchyPanel || id == kInspectorPanel || id == kConsolePanel;
+    for (const PanelInfo& panel : kPanels) {
+        if (id == panel.id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// A disabled toolbar button for a feature that is not built yet.
+ui::Button& addComingSoonButton(ui::Row& bar, ui::Icon icon, std::string text, std::string tooltip)
+{
+    auto& button = bar.emplace<ui::Button>(std::move(text));
+    button.setIcon(icon);
+    button.setStyle(ui::Button::Style::Subtle);
+    button.setEnabled(false);
+    button.setTooltip(std::move(tooltip));
+    return button;
 }
 
 } // namespace
@@ -39,10 +71,15 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
 
 ui::DockLayout EditorApp::defaultLayout()
 {
+    // Order matters: each dock splits the group it is placed beside, so the
+    // left column and the Inspector are added first to span the full height.
     ui::DockLayout layout = ui::DockLayout::tabs({kViewportPanel});
-    layout.dock(kHierarchyPanel, kViewportPanel, ui::DockSide::Left, 0.18f);
+    layout.dock(kHierarchyPanel, kViewportPanel, ui::DockSide::Left, 0.21f);
+    layout.dock(kAssetsPanel, kHierarchyPanel, ui::DockSide::Bottom, 0.45f);
     layout.dock(kInspectorPanel, kViewportPanel, ui::DockSide::Right, 0.29f);
-    layout.dock(kConsolePanel, kViewportPanel, ui::DockSide::Bottom, 0.3f);
+    layout.dock(kPreviewPanel, kViewportPanel, ui::DockSide::Bottom, 0.32f);
+    layout.dock(kConsolePanel, kPreviewPanel, ui::DockSide::Center);
+    layout.activate(kConsolePanel);
     return layout;
 }
 
@@ -129,9 +166,10 @@ void EditorApp::buildWorkspace(UiFrame& frame)
     }
     {
         std::vector<ui::MenuItem> items;
-        for (const char* id : {kViewportPanel, kHierarchyPanel, kInspectorPanel, kConsolePanel}) {
+        for (const PanelInfo& panel : kPanels) {
+            const char* id = panel.id;
             ui::MenuItem item;
-            item.label = std::string(1, static_cast<char>(id[0] - ('a' - 'A'))) + (id + 1);
+            item.label = panel.title;
             item.isChecked = [this, id] { return m_dock->isOpen(id); };
             item.action = [this, id] { m_dock->setOpen(id, !m_dock->isOpen(id)); };
             items.push_back(std::move(item));
@@ -153,13 +191,55 @@ void EditorApp::buildWorkspace(UiFrame& frame)
         menuBar.addMenu({"Help", {std::move(about)}});
     }
 
+    // --- Main toolbar ---------------------------------------------------------------
+    //   [scene] [play] [reload]  ......................  [build] [project folder]
+    auto& toolbar = root->emplace<ui::Row>(4.0f, ui::Insets::symmetric(8.0f, 0.0f));
+    toolbar.setBackground(theme.panelHeader);
+    toolbar.setCrossAlign(ui::CrossAlign::Center);
+    toolbar.setFixedSize({0.0f, theme.toolbarHeight});
+    toolbar.emplace<ui::Spacer>();
+    auto& scene = toolbar.emplace<ui::ValueBox>("Start Scene", ui::ValueBox::Kind::Choice);
+    scene.setStretch(0.0f);
+    scene.setFixedSize({190.0f, 0.0f});
+    scene.setTooltip(std::string("The scene being edited. Choosing scenes: ") + kComingWithScenes);
+    addComingSoonButton(toolbar, ui::Icon::Play, "", std::string("Play the game in the editor. ") + kComingLater)
+        .setFixedSize({30.0f, 0.0f});
+    addComingSoonButton(toolbar, ui::Icon::Refresh, "", std::string("Reload the scene. ") + kComingWithScenes)
+        .setFixedSize({30.0f, 0.0f});
+    toolbar.emplace<ui::Spacer>();
+    addComingSoonButton(toolbar, ui::Icon::Send, "Build", kComingWithBuilds);
+    addComingSoonButton(toolbar, ui::Icon::Folder, "", std::string("Open the project folder. ") + kComingWithScenes)
+        .setFixedSize({30.0f, 0.0f});
+
     // --- Panels ------------------------------------------------------------------
     auto& dock = root->emplace<ui::DockSpace>();
     dock.setStretch(1.0f);
-    m_viewport = &dock.addPanel(kViewportPanel, "Viewport", std::make_unique<ViewportPanel>());
-    m_hierarchy = &dock.addPanel(kHierarchyPanel, "Hierarchy", std::make_unique<HierarchyPanel>(m_state));
-    m_inspector = &dock.addPanel(kInspectorPanel, "Inspector", std::make_unique<InspectorPanel>(m_state));
-    m_consolePanel = &dock.addPanel(kConsolePanel, "Console", std::make_unique<ConsolePanel>(m_console));
+    for (const PanelInfo& panel : kPanels) {
+        std::unique_ptr<ui::Widget> content;
+        const std::string id = panel.id;
+        if (id == kViewportPanel) {
+            auto p = std::make_unique<ViewportPanel>();
+            m_viewport = p.get();
+            content = std::move(p);
+        } else if (id == kHierarchyPanel) {
+            auto p = std::make_unique<HierarchyPanel>(m_state);
+            m_hierarchy = p.get();
+            content = std::move(p);
+        } else if (id == kInspectorPanel) {
+            auto p = std::make_unique<InspectorPanel>(m_state);
+            m_inspector = p.get();
+            content = std::move(p);
+        } else if (id == kConsolePanel) {
+            auto p = std::make_unique<ConsolePanel>(m_console);
+            m_consolePanel = p.get();
+            content = std::move(p);
+        } else if (id == kAssetsPanel) {
+            content = std::make_unique<AssetsPanel>();
+        } else {
+            content = std::make_unique<AssetsPreviewPanel>();
+        }
+        dock.addPanel(id, panel.title, std::move(content), panel.icon);
+    }
     dock.setDefaultLayout(defaultLayout());
     dock.setOnLayoutChanged([this, &ctx] {
         m_layoutDirty = true;
@@ -168,14 +248,28 @@ void EditorApp::buildWorkspace(UiFrame& frame)
     m_dock = &dock;
 
     // --- Status bar ----------------------------------------------------------------
-    auto& status = root->emplace<ui::Row>(theme.spacing * 2.0f, ui::Insets::symmetric(theme.padding, 0.0f));
+    //   60 fps  ........................  (i) 12  (!) 0  (x) 0   Version 0.2.0
+    auto& status = root->emplace<ui::Row>(5.0f, ui::Insets::symmetric(theme.padding, 0.0f));
     status.setBackground(theme.panelHeader);
     status.setCrossAlign(ui::CrossAlign::Center);
     status.setFixedSize({0.0f, theme.statusBarHeight});
-    m_statusText = &status.emplace<ui::Label>("", ui::Label::Style::Small);
-    m_statusText->setColor(theme.textDim);
+    m_statusFps = &status.emplace<ui::Label>("", ui::Label::Style::Small);
+    m_statusFps->setColor(theme.textFaint);
+    m_statusFps->setTooltip("Frames drawn per second");
     status.emplace<ui::Spacer>();
-    m_statusProblems = &status.emplace<ui::Label>("", ui::Label::Style::Small);
+    const std::pair<ui::Icon, ui::Color> counters[] = {
+        {ui::Icon::Info, theme.debug}, {ui::Icon::Warning, theme.warning}, {ui::Icon::Error, theme.error}};
+    const char* tips[] = {"Messages in the Console", "Warnings in the Console", "Errors in the Console"};
+    for (std::size_t i = 0; i < 3; ++i) {
+        status.emplace<ui::IconView>(counters[i].first, 13.0f, counters[i].second);
+        m_statusCounts[i] = &status.emplace<ui::Label>("0", ui::Label::Style::Small);
+        m_statusCounts[i]->setColor(theme.textDim);
+        m_statusCounts[i]->setTooltip(tips[i]);
+        status.emplace<ui::Spacer>(0.0f).setFixedSize({6.0f, 1.0f});
+    }
+    status.emplace<ui::Spacer>(0.0f).setFixedSize({6.0f, 1.0f});
+    auto& version = status.emplace<ui::Label>("Version " + std::string(versionString()), ui::Label::Style::Small);
+    version.setColor(theme.textDim);
 
     ctx.setRoot(std::move(root));
 
@@ -187,24 +281,12 @@ void EditorApp::buildWorkspace(UiFrame& frame)
 
 void EditorApp::updateStatusBar(UiFrame& frame)
 {
-    m_statusText->setText("Lantern Engine " + std::string(versionString()) + "   ·   "
-                          + std::string(runtimeBackendName()) + "   ·   "
-                          + std::to_string(static_cast<int>(frame.framesPerSecond() + 0.5f)) + " fps");
-
-    const std::size_t errors = m_console.count(LogLevel::Error);
-    const std::size_t warnings = m_console.count(LogLevel::Warning);
-    std::string problems;
-    if (errors > 0) {
-        problems = std::to_string(errors) + (errors == 1 ? " error" : " errors");
-    }
-    if (warnings > 0) {
-        problems += (problems.empty() ? "" : ", ") + std::to_string(warnings)
-                    + (warnings == 1 ? " warning" : " warnings");
-    }
-    const ui::Theme& theme = frame.ui().theme();
-    m_statusProblems->setText(problems);
-    m_statusProblems->setColor(errors > 0 ? theme.error : theme.warning);
-    m_statusProblems->setVisible(!problems.empty());
+    m_statusFps->setText(std::to_string(static_cast<int>(frame.framesPerSecond() + 0.5f)) + " fps");
+    const std::size_t messages = m_console.count(LogLevel::Trace) + m_console.count(LogLevel::Debug)
+                                 + m_console.count(LogLevel::Info);
+    m_statusCounts[0]->setText(std::to_string(messages));
+    m_statusCounts[1]->setText(std::to_string(m_console.count(LogLevel::Warning)));
+    m_statusCounts[2]->setText(std::to_string(m_console.count(LogLevel::Error)));
 }
 
 void EditorApp::showAbout(ui::Context& ctx)
@@ -262,8 +344,8 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_hierarchy = nullptr;
     m_inspector = nullptr;
     m_consolePanel = nullptr;
-    m_statusText = nullptr;
-    m_statusProblems = nullptr;
+    m_statusFps = nullptr;
+    m_statusCounts = {};
 }
 
 // ---------------------------------------------------------------------------

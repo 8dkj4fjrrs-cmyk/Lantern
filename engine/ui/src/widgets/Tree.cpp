@@ -119,16 +119,20 @@ void TreeView::paint(Context& ctx, DrawList& draw)
         const Rect row{b.x, b.y + 2.0f + static_cast<float>(v) * m_rowHeight - m_scroll.offset(), b.width, m_rowHeight};
         const bool selected = item.id == m_selected;
         if (selected) {
-            draw.fillRoundedRect(row.inset(Insets{4.0f, 1.0f, 4.0f, 1.0f}), 4.0f, isFocused() ? t.selectionFocused : t.selection);
+            draw.fillRect(row, isFocused() ? t.selectionFocused : t.selection);
         } else if (hovered && *hovered == v) {
-            draw.fillRoundedRect(row.inset(Insets{4.0f, 1.0f, 4.0f, 1.0f}), 4.0f, t.hover);
+            draw.fillRect(row, t.hover);
         }
         const Rect chevron = chevronRect(row, item.depth, t);
         if (item.hasChildren) {
             drawIcon(draw, isExpanded(item) ? Icon::ChevronDown : Icon::ChevronRight, chevron, t.textDim);
         }
         const float textY = row.y + std::round((row.height - fm.lineHeight) * 0.5f);
-        const float x = chevron.right() + 4.0f;
+        float x = chevron.right() + 4.0f;
+        if (item.icon) {
+            drawIcon(draw, *item.icon, Rect{x, row.center().y - 7.0f, 14.0f, 14.0f}, t.accent);
+            x += 19.0f;
+        }
         const float labelWidth = draw.textEllipsized(t.font, t.fontSize, {x, textY}, t.text, item.label,
                                                      std::max(0.0f, row.right() - x - 8.0f));
         if (!item.detail.empty()) {

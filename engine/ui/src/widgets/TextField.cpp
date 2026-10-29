@@ -237,8 +237,10 @@ void TextField::paint(Context& ctx, DrawList& draw)
     const Theme& t = ctx.theme();
     const Rect b = bounds();
     const bool focused = isFocused();
-    draw.fillRoundedRect(b, t.radius, focused ? Color::hex(0x23252B) : t.control);
-    draw.strokeRoundedRect(b, t.radius, focused ? t.focusRing : (isHovered() ? t.controlPressed : t.border));
+    draw.fillRoundedRect(b, t.radius, focused || isHovered() ? t.fieldHover : t.field);
+    if (focused || isHovered()) {
+        draw.strokeRoundedRect(b, t.radius, focused ? t.focusRing : t.border);
+    }
 
     if (m_icon) {
         drawIcon(draw, *m_icon, Rect{b.x + 6.0f, b.center().y - 8.0f, 16.0f, 16.0f}, t.textFaint);

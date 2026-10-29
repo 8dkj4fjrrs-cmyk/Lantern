@@ -27,7 +27,8 @@ add_executable(lantern_tests
     ui/test_ui_context.cpp
     ui/test_ui_docking.cpp
     ui/test_ui_foundations.cpp
-    ui/test_ui_widgets.cpp)
+    ui/test_ui_widgets.cpp
+    ui/test_ui_inspector.cpp)
 target_link_libraries(lantern_tests PRIVATE lantern::core lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)

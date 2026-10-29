@@ -265,11 +265,37 @@ TEST_CASE("Dragging the gap between groups resizes them", "[ui][dock]")
     const float before = h.dock->tabRect("viewport").x;
     const Rect hierarchyTab = h.dock->tabRect("hierarchy");
     // The vertical gap just right of the hierarchy group (starts ~18% across).
-    const float gapX = before - 4.0f - 2.0f - 2.0f; // tab x - tab inset - half gap
+    const float gapX = before - 1.5f; // tabs start at the group's edge; the gap is 3 points
     REQUIRE(h.ctx.cursor() == CursorShape::Arrow);
     h.ctx.pointerMove({gapX, hierarchyTab.bottom() + 100.0f});
     h.ctx.render();
     CHECK(h.ctx.cursor() == CursorShape::ResizeHorizontal);
     h.drag({gapX, hierarchyTab.bottom() + 100.0f}, {gapX + 150.0f, hierarchyTab.bottom() + 100.0f});
     CHECK(h.dock->tabRect("viewport").x > before + 100.0f);
+}
+
+TEST_CASE("The panel menu closes the visible panel or resets the layout", "[ui][dock]")
+{
+    DockHarness h;
+    const Rect button = h.dock->panelMenuButton("console");
+    REQUIRE_FALSE(button.isEmpty());
+    // Click the three-line button: a menu opens with "Close Console" first.
+    h.ctx.pointerMove(button.center());
+    h.ctx.pointerButton(MouseButton::Left, true, {});
+    h.ctx.pointerButton(MouseButton::Left, false, {});
+    h.ctx.render();
+    REQUIRE(h.ctx.hasOverlays());
+    h.ctx.keyDown(Key::Down, {});
+    h.ctx.keyDown(Key::Enter, {});
+    h.ctx.render();
+    CHECK_FALSE(h.ctx.hasOverlays());
+    CHECK_FALSE(h.dock->isOpen("console"));
+
+    // Reset Layout from another group's menu brings it back.
+    h.dock->openPanelMenu(h.ctx, "viewport");
+    h.ctx.render();
+    h.ctx.keyDown(Key::Up, {}); // last item
+    h.ctx.keyDown(Key::Enter, {});
+    h.ctx.render();
+    CHECK(h.dock->isOpen("console"));
 }

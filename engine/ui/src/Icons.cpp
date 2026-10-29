@@ -6,6 +6,43 @@
 
 namespace lantern::ui {
 
+namespace {
+
+// Icons are designed on a 16 x 16 grid; G maps grid coordinates to the area.
+struct Grid16 {
+    Vec2 c;
+    float u;
+    Vec2 operator()(float x, float y) const { return {c.x + (x - 8.0f) * u, c.y + (y - 8.0f) * u}; }
+};
+
+void ring(DrawList& draw, Vec2 centre, float radius, Color color, float thickness, float from = 0.0f,
+          float to = 6.2831853f, bool closed = true)
+{
+    std::array<Vec2, 28> pts{};
+    for (std::size_t i = 0; i < pts.size(); ++i) {
+        const float a = from + (to - from) * static_cast<float>(i) / static_cast<float>(closed ? pts.size() : pts.size() - 1);
+        pts[i] = {centre.x + std::cos(a) * radius, centre.y + std::sin(a) * radius};
+    }
+    draw.polyline(pts, color, thickness, closed);
+}
+
+void arrowHead(DrawList& draw, Vec2 tip, Vec2 dir, float size, Color color)
+{
+    const Vec2 n{-dir.y, dir.x};
+    const std::array<Vec2, 3> tri{tip, Vec2{tip.x - dir.x * size + n.x * size * 0.7f, tip.y - dir.y * size + n.y * size * 0.7f},
+                                  Vec2{tip.x - dir.x * size - n.x * size * 0.7f, tip.y - dir.y * size - n.y * size * 0.7f}};
+    // Clockwise on screen whatever the direction.
+    const float cross = (tri[1].x - tri[0].x) * (tri[2].y - tri[0].y) - (tri[1].y - tri[0].y) * (tri[2].x - tri[0].x);
+    if (cross > 0.0f) {
+        draw.fillConvexPolygon(tri, color);
+    } else {
+        const std::array<Vec2, 3> rev{tri[0], tri[2], tri[1]};
+        draw.fillConvexPolygon(rev, color);
+    }
+}
+
+} // namespace
+
 void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
 {
     const Vec2 c = area.center();
@@ -54,6 +91,174 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
     }
     case Icon::Dot:
         draw.fillCircle(c, s * 0.16f, color);
+        break;
+    default:
+        break;
+    }
+
+    const Grid16 g{c, s / 16.0f};
+    const float u = s / 16.0f;
+    const float w = std::max(1.2f, 1.3f * u); // stroke for the larger icons
+    switch (icon) {
+    case Icon::ChevronLeft: {
+        const float h = s * 0.22f;
+        const std::array<Vec2, 3> pts{Vec2{c.x + h * 0.5f, c.y - h}, Vec2{c.x - h * 0.5f, c.y},
+                                      Vec2{c.x + h * 0.5f, c.y + h}};
+        draw.polyline(pts, color, t);
+        break;
+    }
+    case Icon::Plus:
+        draw.line(g(8, 3.5f), g(8, 12.5f), color, w);
+        draw.line(g(3.5f, 8), g(12.5f, 8), color, w);
+        break;
+    case Icon::Menu:
+        for (float y : {4.5f, 8.0f, 11.5f}) {
+            draw.line(g(3, y), g(13, y), color, w);
+        }
+        break;
+    case Icon::More:
+        for (float y : {4.0f, 8.0f, 12.0f}) {
+            draw.fillCircle(g(8, y), 1.3f * u, color);
+        }
+        break;
+    case Icon::Help:
+        ring(draw, c, 6.0f * u, color, w * 0.85f);
+        ring(draw, g(8, 6.6f), 1.9f * u, color, w * 0.85f, 3.4f, 7.2f, false);
+        draw.line(g(8, 8.5f), g(8, 9.6f), color, w * 0.85f);
+        draw.fillCircle(g(8, 11.6f), 0.8f * u, color);
+        break;
+    case Icon::Info:
+        draw.fillCircle(c, 6.5f * u, color);
+        draw.fillCircle(g(8, 5.0f), 0.95f * u, Color{0, 0, 0, 200});
+        draw.line(g(8, 7.2f), g(8, 11.6f), Color{0, 0, 0, 200}, 1.6f * u);
+        break;
+    case Icon::Error:
+        draw.fillCircle(c, 6.5f * u, color);
+        draw.line(g(5.6f, 5.6f), g(10.4f, 10.4f), Color{0, 0, 0, 200}, 1.5f * u);
+        draw.line(g(5.6f, 10.4f), g(10.4f, 5.6f), Color{0, 0, 0, 200}, 1.5f * u);
+        break;
+    case Icon::Warning: {
+        const std::array<Vec2, 3> tri{g(8, 1.8f), g(14.6f, 13.6f), g(1.4f, 13.6f)};
+        draw.fillConvexPolygon(tri, color);
+        draw.line(g(8, 5.8f), g(8, 9.6f), Color{0, 0, 0, 200}, 1.6f * u);
+        draw.fillCircle(g(8, 11.7f), 0.9f * u, Color{0, 0, 0, 200});
+        break;
+    }
+    case Icon::Play: {
+        const std::array<Vec2, 3> tri{g(4.5f, 2.8f), g(13.2f, 8), g(4.5f, 13.2f)};
+        draw.fillConvexPolygon(tri, color);
+        break;
+    }
+    case Icon::Refresh:
+        ring(draw, c, 5.2f * u, color, w, -1.1f, 4.4f, false);
+        arrowHead(draw, g(12.6f, 2.6f), Vec2{0.5f, -0.86f}, 3.2f * u, color);
+        break;
+    case Icon::Send: {
+        const std::array<Vec2, 4> plane{g(1.5f, 7.4f), g(14.5f, 1.8f), g(9.6f, 14.2f), g(7.4f, 8.6f)};
+        draw.polyline(plane, color, w * 0.9f, true);
+        draw.line(g(7.4f, 8.6f), g(14.5f, 1.8f), color, w * 0.9f);
+        break;
+    }
+    case Icon::Folder: {
+        const std::array<Vec2, 5> tab{g(1.5f, 3.5f), g(6.2f, 3.5f), g(7.6f, 5.0f), g(7.6f, 6.0f), g(1.5f, 6.0f)};
+        draw.fillConvexPolygon(tab, color);
+        draw.fillRoundedRect(Rect{g(1.5f, 4.8f).x, g(1.5f, 4.8f).y, 13.0f * u, 8.4f * u}, 1.2f * u, color);
+        break;
+    }
+    case Icon::Layers: {
+        const std::array<Vec2, 4> top{g(8, 2), g(14, 5.2f), g(8, 8.4f), g(2, 5.2f)};
+        draw.polyline(top, color, w * 0.9f, true);
+        const std::array<Vec2, 3> mid{g(2, 8.2f), g(8, 11.4f), g(14, 8.2f)};
+        draw.polyline(mid, color, w * 0.9f);
+        const std::array<Vec2, 3> low{g(2, 11.0f), g(8, 14.2f), g(14, 11.0f)};
+        draw.polyline(low, color, w * 0.9f);
+        break;
+    }
+    case Icon::Scene: {
+        draw.strokeRoundedRect(Rect{g(1.5f, 2.5f).x, g(1.5f, 2.5f).y, 13.0f * u, 11.0f * u}, 1.5f * u, color, w * 0.9f);
+        const std::array<Vec2, 3> hill{g(3.2f, 11.8f), g(7.0f, 7.0f), g(10.6f, 11.8f)};
+        draw.fillConvexPolygon(hill, color);
+        draw.fillCircle(g(11.0f, 5.8f), 1.3f * u, color);
+        break;
+    }
+    case Icon::Sliders:
+        for (int i = 0; i < 3; ++i) {
+            const float y = 4.0f + 4.0f * static_cast<float>(i);
+            const float knob = i == 1 ? 10.5f : 5.5f;
+            draw.line(g(2, y), g(14, y), color, w * 0.8f);
+            draw.fillCircle(g(knob, y), 1.9f * u, color);
+        }
+        break;
+    case Icon::Terminal:
+        draw.strokeRoundedRect(Rect{g(1.5f, 2.5f).x, g(1.5f, 2.5f).y, 13.0f * u, 11.0f * u}, 1.5f * u, color, w * 0.9f);
+        {
+            const std::array<Vec2, 3> prompt{g(4.2f, 6.0f), g(6.6f, 8.0f), g(4.2f, 10.0f)};
+            draw.polyline(prompt, color, w * 0.9f);
+        }
+        draw.line(g(8.0f, 10.4f), g(11.6f, 10.4f), color, w * 0.9f);
+        break;
+    case Icon::Eye: {
+        std::array<Vec2, 24> lid{};
+        for (std::size_t i = 0; i < lid.size(); ++i) {
+            const float a = 6.2831853f * static_cast<float>(i) / static_cast<float>(lid.size());
+            lid[i] = g(8.0f + std::cos(a) * 6.6f, 8.0f + std::sin(a) * 3.9f);
+        }
+        draw.polyline(lid, color, w * 0.9f, true);
+        draw.fillCircle(c, 2.1f * u, color);
+        break;
+    }
+    case Icon::Flame: {
+        // A teardrop: round bottom, pointed top.
+        std::array<Vec2, 22> drop{};
+        const Vec2 base = g(8.0f, 10.2f);
+        const float r = 4.4f * u;
+        for (std::size_t i = 0; i < 20; ++i) {
+            const float a = -0.55f + (3.1415927f + 1.1f) * static_cast<float>(i) / 19.0f;
+            drop[i] = {base.x + std::cos(a) * r, base.y + std::sin(a) * r};
+        }
+        drop[20] = g(5.2f, 5.2f);
+        drop[21] = g(8.6f, 1.2f);
+        draw.fillConvexPolygon(drop, color);
+        draw.fillCircle(g(8.0f, 10.6f), 1.9f * u, Color{0, 0, 0, 110});
+        break;
+    }
+    case Icon::Move: {
+        const float a = 3.0f * u;
+        draw.line(g(8, 2.5f), g(8, 13.5f), color, w * 0.9f);
+        draw.line(g(2.5f, 8), g(13.5f, 8), color, w * 0.9f);
+        arrowHead(draw, g(8, 1.5f), {0, -1}, a, color);
+        arrowHead(draw, g(8, 14.5f), {0, 1}, a, color);
+        arrowHead(draw, g(1.5f, 8), {-1, 0}, a, color);
+        arrowHead(draw, g(14.5f, 8), {1, 0}, a, color);
+        break;
+    }
+    case Icon::Rotate:
+        ring(draw, c, 5.4f * u, color, w * 0.9f, 0.6f, 5.4f, false);
+        arrowHead(draw, g(8.0f + 5.4f * std::cos(5.6f), 8.0f + 5.4f * std::sin(5.6f)), Vec2{0.63f, 0.77f}, 3.0f * u, color);
+        break;
+    case Icon::Scale:
+        draw.strokeRoundedRect(Rect{g(2, 6).x, g(2, 6).y, 8.0f * u, 8.0f * u}, 0.8f * u, color, w * 0.9f);
+        draw.line(g(7, 9), g(13, 3), color, w * 0.9f);
+        arrowHead(draw, g(14, 2), Vec2{0.707f, -0.707f}, 3.2f * u, color);
+        break;
+    case Icon::RectTool:
+        draw.strokeRoundedRect(Rect{g(3, 3).x, g(3, 3).y, 10.0f * u, 10.0f * u}, 0.0f, color, w * 0.8f);
+        for (float x : {3.0f, 13.0f}) {
+            for (float y : {3.0f, 13.0f}) {
+                const Vec2 p = g(x, y);
+                draw.fillRect(Rect{p.x - 1.6f * u, p.y - 1.6f * u, 3.2f * u, 3.2f * u}, color);
+            }
+        }
+        break;
+    case Icon::Grid:
+        for (float x : {2.0f, 9.0f}) {
+            for (float y : {2.0f, 9.0f}) {
+                const Vec2 p = g(x, y);
+                draw.strokeRoundedRect(Rect{p.x, p.y, 5.0f * u, 5.0f * u}, 1.0f * u, color, w * 0.8f);
+            }
+        }
+        break;
+    default:
         break;
     }
 }

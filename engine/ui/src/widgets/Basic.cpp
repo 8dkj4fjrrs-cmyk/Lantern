@@ -8,6 +8,25 @@
 
 namespace lantern::ui {
 
+IconView::IconView(Icon icon, float size, std::optional<Color> color)
+    : m_icon(icon)
+    , m_size(size)
+    , m_color(color)
+{
+}
+
+Size IconView::measure(Context&, Size)
+{
+    return applyFixedSize({m_size, m_size});
+}
+
+void IconView::paint(Context& ctx, DrawList& draw)
+{
+    const Rect b = bounds();
+    const Rect box{b.center().x - m_size * 0.5f, b.center().y - m_size * 0.5f, m_size, m_size};
+    drawIcon(draw, m_icon, box, m_color.value_or(ctx.theme().textDim));
+}
+
 void paintFocusRing(Context& ctx, DrawList& draw, Rect rect, float radius)
 {
     draw.strokeRoundedRect(rect.inset(-2.0f), radius + 2.0f, ctx.theme().focusRing, 1.5f);
@@ -183,6 +202,10 @@ void Button::paint(Context& ctx, DrawList& draw)
         ink = hovered ? t.text : t.textDim;
         break;
     }
+    if (m_toggled) {
+        fill = hovered ? t.controlHover : t.control;
+        ink = t.accent;
+    }
     if (!enabled) {
         fill = fill.fade(0.5f);
         ink = ink.fade(0.45f);
@@ -262,16 +285,16 @@ void Checkbox::paint(Context& ctx, DrawList& draw)
 {
     const Theme& t = ctx.theme();
     const Rect b = bounds();
-    const Rect box{b.x, b.center().y - 8.0f, 16.0f, 16.0f};
+    const Rect box{b.x + 1.0f, b.center().y - 7.0f, 14.0f, 14.0f};
     const bool hovered = isHovered() || hasPointerCapture();
     const float alpha = isEnabled() ? 1.0f : 0.45f;
 
     if (m_checked) {
-        draw.fillRoundedRect(box, 4.0f, (hovered ? t.accentHover : t.accent).fade(alpha));
-        drawIcon(draw, Icon::Check, box, t.textOnAccent.fade(alpha));
+        draw.fillRoundedRect(box, 2.5f, (hovered ? t.accentHover : t.accent).fade(alpha));
+        drawIcon(draw, Icon::Check, box.inset(-1.0f), t.textOnAccent.fade(alpha));
     } else {
-        draw.fillRoundedRect(box, 4.0f, (hovered ? t.controlHover : t.control).fade(alpha));
-        draw.strokeRoundedRect(box, 4.0f, t.border.fade(alpha));
+        draw.fillRoundedRect(box, 2.5f, (hovered ? t.fieldHover : t.field).fade(alpha));
+        draw.strokeRoundedRect(box, 2.5f, t.border.fade(alpha));
     }
     if (!m_text.empty()) {
         const FontMetrics fm = ctx.atlas().metrics(t.font, t.fontSize);

@@ -26,6 +26,7 @@ add_library(lantern_ui STATIC
     src/widgets/Box.cpp
     src/widgets/Dialog.cpp
     src/widgets/DockSpace.cpp
+    src/widgets/Inspector.cpp
     src/widgets/Menu.cpp
     src/widgets/Scroll.cpp
     src/widgets/TextField.cpp

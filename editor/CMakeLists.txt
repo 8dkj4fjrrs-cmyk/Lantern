@@ -30,6 +30,7 @@ add_executable(lantern_editor
     application/EditorApp.cpp
     panels/ConsolePanel.cpp
     panels/HierarchyPanel.cpp
+    panels/PanelCommon.cpp
     panels/InspectorPanel.cpp
     panels/ViewportPanel.cpp)
 

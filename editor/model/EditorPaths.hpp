@@ -34,6 +34,6 @@ std::filesystem::path userConfigDirectory();
 
 /// File names inside the config directory.
 inline constexpr const char* kPreferencesFileName = "editor.prefs";
-inline constexpr const char* kLayoutFileName = "layout.dock";
+inline constexpr const char* kLayoutFileName = "panels.dock"; // "layout.dock" held the 4-panel layout of 0.2.0 previews
 
 } // namespace lantern::editor

@@ -3,10 +3,12 @@
 // TreeView: an expandable, selectable tree (the Hierarchy panel).
 // PropertyList: label/value rows (the Inspector panel, read-only for now).
 
+#include "lantern/ui/Icons.hpp"
 #include "lantern/ui/widgets/Scroll.hpp"
 
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -20,6 +22,7 @@ struct TreeItem {
     std::string label;
     std::string detail;          // shown dimmed after the label
     bool hasChildren = false;
+    std::optional<Icon> icon;    // drawn before the label
 };
 
 class TreeView : public Widget {
