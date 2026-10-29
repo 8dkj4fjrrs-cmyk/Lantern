@@ -6,6 +6,10 @@ test runner. No game-engine backend is linked yet, so no window opens.
 
 ## macOS (Apple silicon) — primary platform
 
+Verified 2026-10-29 on the project owner's Apple silicon MacBook Pro
+(Homebrew 7.0.11, CMake 4.4.5, Ninja 1.13.2, Apple Clang): 18/18 tests passed
+and the editor ran.
+
 ### 1. One-time setup
 
 ```sh
