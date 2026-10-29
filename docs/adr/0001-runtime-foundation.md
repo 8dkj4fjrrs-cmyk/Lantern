@@ -50,7 +50,7 @@ C++ namespace is `ax` instead of `cocos2d`).
 | Build | CMake 3.22+, Ninja supported. Third-party libraries are built from source, plus a few pinned downloads (shader compiler `axslcc`, `1kdist` prebuilts). |
 | Platforms | Windows, Linux, macOS (x64 **and arm64**), iOS, Android, WASM per its docs. |
 | Dear ImGui | Ships an ImGui extension (ImGui 1.92.1, docking branch) that renders inside the engine. |
-| Linux build (real attempt) | See "Probe build results" below. |
+| Linux build (real attempt) | After its `setup.ps1` (installs PowerShell + the `axslcc` shader compiler) and two system packages (`libwebkit2gtk-4.1-dev`, X11/GL dev headers), the `axmol` core library built with **0 errors** (GCC 13, C++20, Ninja, Release). Its `unit-tests` program (doctest) linked and ran under a virtual X display: **70/70 test cases, 1291/1291 assertions passed.** Not run: any windowed sample, any macOS or Windows build. |
 
 ## Options
 
