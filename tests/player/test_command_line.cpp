@@ -83,3 +83,12 @@ TEST_CASE("Help and version flags are recognised", "[player][cli]")
     CHECK(parse({"-h"}).options.showHelp);
     CHECK(parse({"--version"}).options.showVersion);
 }
+
+TEST_CASE("A project or a scene can be chosen, not both", "[player][cli]")
+{
+    CHECK(parse({"--project", "My Game"}).options.projectPath == "My Game");
+    CHECK(parse({"--scene", "a.lscene"}).options.scenePath == "a.lscene");
+    const auto both = parse({"--project", "p", "--scene", "s"});
+    CHECK_FALSE(both.ok());
+    CHECK(both.error.find("not both") != std::string::npos);
+}

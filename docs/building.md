@@ -9,7 +9,7 @@ A full build produces:
 | `lantern_tests`, `lantern_runtime_tests` | Automated tests, run by `ctest`. |
 
 The window and rendering come from [Axmol](https://github.com/axmolengine/axmol)
-(see `docs/adr/`). CMake downloads Axmol and its shader compiler automatically
+(see `docs/adr/`). CMake downloads Axmol, its shader compiler and the JSON library automatically
 the first time; you only install the tools below.
 
 ## macOS (Apple silicon) — primary platform
@@ -122,3 +122,4 @@ cmake --workflow --preset dev
 | `PowerShell 7 ('pwsh') was not found` | Install it (see step 1), open a new Terminal, configure again. |
 | `external/axmol is not at the pinned commit` | Delete the `external/axmol` folder and configure again. |
 | `Could not download Axmol` | Check your internet connection; configure again. |
+| `Failed to download` / `HASH mismatch` for `json.tar.xz` | CMake downloads nlohmann/json (for scene files) from GitHub at configure time and checks it. Check your connection and configure again; a hash mismatch means the download was damaged or tampered with: delete `build/` and retry. |

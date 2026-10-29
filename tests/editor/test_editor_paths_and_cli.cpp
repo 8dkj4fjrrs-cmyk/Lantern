@@ -73,3 +73,22 @@ TEST_CASE("Editor command line: mistakes are reported", "[editor][cli]")
     CHECK(parse({"--smoke-test"}).error == "Unknown option: --smoke-test");
     CHECK(parse({"--version"}).options.showVersion);
 }
+
+TEST_CASE("Editor command line: project options", "[editor][cli]")
+{
+    CHECK(parse({"--project", "My Game"}).options.projectPath == "My Game");
+    CHECK(parse({"--new-project", "/tmp/x"}).options.newProjectPath == "/tmp/x");
+    CHECK(parse({"--no-project"}).options.noProject);
+    CHECK_FALSE(parse({"--project", "a", "--no-project"}).ok());
+    CHECK_FALSE(parse({"--project"}).ok());
+}
+
+TEST_CASE("New projects are suggested in Documents/Lantern Projects", "[editor][paths]")
+{
+    const auto mac = fakeEnvironment({{"HOME", "/Users/oscar"}});
+    CHECK(defaultProjectsDirectory(HostOs::MacOS, mac) == "/Users/oscar/Documents/Lantern Projects");
+    const auto win = fakeEnvironment({{"USERPROFILE", "C:/Users/oscar"}});
+    CHECK(defaultProjectsDirectory(HostOs::Windows, win) == std::filesystem::path("C:/Users/oscar") / "Documents"
+                                                                / "Lantern Projects");
+    CHECK(defaultProjectsDirectory(HostOs::Linux, fakeEnvironment({})).empty());
+}

@@ -3,10 +3,12 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 2 (minimal editor).** `lantern_editor` opens a
-> standalone editor with dockable Viewport, Hierarchy, Inspector and Console
-> panels and a remembered layout; `lantern_player` runs the game window.
-> Scenes you can create, edit and save arrive in Milestone 3.
+> **Status: Milestone 3 (scenes and serialization).** `lantern_editor`
+> creates and opens projects, and edits scenes: create, delete, duplicate,
+> rename and reorder objects, edit their components in the Inspector, with
+> undo and redo, and save them as versioned JSON files. `lantern_player`
+> plays a project or a scene file. Sprites, tilemaps and the camera arrive
+> in Milestone 4.
 
 ## Quick start
 

@@ -75,6 +75,11 @@ ParseResult parseCommandLine(std::span<const std::string_view> args)
                 return result;
             }
             opt.maxFrames = *number;
+        } else if (arg == "--project" || arg == "--scene") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            (arg == "--project" ? opt.projectPath : opt.scenePath) = std::string(value);
         } else if (arg == "--screenshot") {
             if (!nextValue(value)) {
                 return result;
@@ -86,6 +91,10 @@ ParseResult parseCommandLine(std::span<const std::string_view> args)
         }
     }
 
+    if (!opt.projectPath.empty() && !opt.scenePath.empty()) {
+        result.error = "Use either --project or --scene, not both.";
+        return result;
+    }
     if (!opt.screenshotPath.empty() && opt.maxFrames == 0) {
         result.error = "--screenshot needs --frames N, so the player knows which frame to capture.";
     }
@@ -96,9 +105,13 @@ std::string helpText()
 {
     return "Usage: lantern_player [options]\n"
            "\n"
+           "Without --project or --scene, the player shows Lantern's start scene.\n"
+           "\n"
            "Options:\n"
            "  --help             Show this message\n"
            "  --version          Print version information and exit\n"
+           "  --project FOLDER   Play a Lantern project (its start scene)\n"
+           "  --scene FILE       Play one scene file (.lscene)\n"
            "  --title TEXT       Window title (default: Lantern Engine)\n"
            "  --width N          Window width in points (default: 1280)\n"
            "  --height N         Window height in points (default: 720)\n"

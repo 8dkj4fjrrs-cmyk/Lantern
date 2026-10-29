@@ -110,6 +110,21 @@ void DrawList::fillRect(Rect rect, Color color)
     addTriangle(a, d, e);
 }
 
+void DrawList::fillRectGradient(Rect rect, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft)
+{
+    if (rect.isEmpty() || currentClip().intersect(rect).isEmpty()) {
+        return;
+    }
+    ensureCommand(kAtlasTexture);
+    const Vec2 uv = m_atlas.whiteUv();
+    const std::uint32_t a = addVertex(rect.left(), rect.top(), uv.x, uv.y, topLeft.packed());
+    const std::uint32_t b = addVertex(rect.right(), rect.top(), uv.x, uv.y, topRight.packed());
+    const std::uint32_t d = addVertex(rect.right(), rect.bottom(), uv.x, uv.y, bottomRight.packed());
+    const std::uint32_t e = addVertex(rect.left(), rect.bottom(), uv.x, uv.y, bottomLeft.packed());
+    addTriangle(a, b, d);
+    addTriangle(a, d, e);
+}
+
 void DrawList::roundedRectPath(Rect rect, float radius, std::vector<Vec2>& out) const
 {
     out.clear();

@@ -133,7 +133,7 @@ void TreeView::paint(Context& ctx, DrawList& draw)
             drawIcon(draw, *item.icon, Rect{x, row.center().y - 7.0f, 14.0f, 14.0f}, t.accent);
             x += 19.0f;
         }
-        const float labelWidth = draw.textEllipsized(t.font, t.fontSize, {x, textY}, t.text, item.label,
+        const float labelWidth = draw.textEllipsized(t.font, t.fontSize, {x, textY}, item.dimmed ? t.textFaint : t.text, item.label,
                                                      std::max(0.0f, row.right() - x - 8.0f));
         if (!item.detail.empty()) {
             const float dx = x + labelWidth + 8.0f;
@@ -183,13 +183,16 @@ bool TreeView::onPointerDown(Context& ctx, const PointerEvent& event)
     const Rect row{bounds().x, 0.0f, bounds().width, m_rowHeight};
     const Rect chevron = chevronRect(row, item.depth, ctx.theme());
     const bool onChevron = event.position.x >= chevron.x - 2.0f && event.position.x <= chevron.right() + 2.0f;
-    if (item.hasChildren && (onChevron || event.clickCount == 2)) {
+    if (item.hasChildren && (onChevron || (event.clickCount == 2 && !m_onActivate))) {
         setExpanded(item.id, !isExpanded(item));
         if (onChevron) {
             return true;
         }
     }
     select(ctx, item.id);
+    if (event.clickCount == 2 && m_onActivate) {
+        ctx.post([onActivate = m_onActivate, id = item.id] { onActivate(id); });
+    }
     return true;
 }
 
@@ -204,6 +207,28 @@ bool TreeView::onPointerUp(Context&, const PointerEvent&)
 {
     m_scroll.pointerUp();
     return true;
+}
+
+void TreeView::reveal(std::uint64_t id)
+{
+    // Walk up the parents, unfolding each.
+    for (std::size_t guard = 0; guard < m_items.size(); ++guard) {
+        const auto it = std::find_if(m_items.begin(), m_items.end(), [id](const TreeItem& i) { return i.id == id; });
+        if (it == m_items.end() || it->parentId == 0) {
+            break;
+        }
+        id = it->parentId;
+        m_expanded.insert(id);
+        m_collapsed.erase(id);
+    }
+    rebuildVisible();
+    for (std::size_t v = 0; v < m_visible.size(); ++v) {
+        if (m_items[m_visible[v]].id == m_selected) {
+            const float top = 2.0f + static_cast<float>(v) * m_rowHeight;
+            m_scroll.ensureVisible(top, top + m_rowHeight);
+            return;
+        }
+    }
 }
 
 void TreeView::revealSelection(Context&)
@@ -235,6 +260,12 @@ bool TreeView::onKeyDown(Context& ctx, const KeyEvent& event)
         select(ctx, m_items[m_visible[hasSelection ? std::min(v + 1, m_visible.size() - 1) : 0]].id);
         break;
     case Key::Home: select(ctx, m_items[m_visible.front()].id); break;
+    case Key::Enter:
+        if (!hasSelection || !m_onActivate) {
+            return false;
+        }
+        ctx.post([onActivate = m_onActivate, id = m_selected] { onActivate(id); });
+        return true;
     case Key::End: select(ctx, m_items[m_visible.back()].id); break;
     case Key::Left: {
         if (!hasSelection) {

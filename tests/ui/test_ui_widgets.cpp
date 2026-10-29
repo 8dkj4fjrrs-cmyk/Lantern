@@ -397,3 +397,49 @@ TEST_CASE("A stretching child in a Flow line pushes the rest to the right", "[ui
     f.arrange(ctx, {0, 0, 400, 20});
     CHECK(last.bounds().x == 350.0f);
 }
+
+TEST_CASE("Revealing a tree item unfolds its parents", "[ui][tree]")
+{
+    Harness<TreeView> h;
+    h.widget->setAutoExpandDepth(0);
+    h.widget->setItems({
+        {1, 0, 0, "World", "", true},
+        {2, 1, 1, "Lantern", "", true},
+        {3, 2, 2, "Flame", "", false},
+    });
+    h.ctx.render();
+    CHECK(h.widget->visibleRows().size() == 1);
+    h.widget->setSelectedId(3);
+    h.widget->reveal(3);
+    CHECK(h.widget->visibleRows().size() == 3);
+}
+
+// Regression: after Enter committed a value, an undo could not update the
+// field because it still had focus and counted as "being edited".
+TEST_CASE("A committed field shows values set afterwards, even while focused", "[ui][fields]")
+{
+    Harness<TextField> h;
+    std::string committed;
+    h.widget->setOnCommit([&](const std::string& text) { committed = text; });
+    h.widget->setText("100");
+    h.click(h.widget->bounds().center());
+    REQUIRE(h.widget->isFocused());
+    CHECK_FALSE(h.widget->isEditing()); // focused, but nothing typed yet
+
+    h.key(Key::A, primary(h.ctx.platform()));
+    h.type(U"300");
+    CHECK(h.widget->isEditing()); // uncommitted typing: owners must not overwrite it
+    h.key(Key::Enter);
+    h.ctx.render(); // run the posted commit
+    CHECK(committed == "300");
+    CHECK(h.widget->isFocused());
+    CHECK_FALSE(h.widget->isEditing());
+
+    // An undo puts the old value back: the field may now show it.
+    h.widget->setText("100");
+    CHECK(h.widget->text() == "100");
+    // ...and Escape returns to that value, not to the undone one.
+    h.type(U"5");
+    h.key(Key::Escape);
+    CHECK(h.widget->text() == "100");
+}

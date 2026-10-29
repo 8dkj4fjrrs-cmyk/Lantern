@@ -21,6 +21,11 @@ constexpr float kTitlePadding = 10.0f;
 MenuPopup::MenuPopup(std::vector<MenuItem> items)
     : m_items(std::move(items))
 {
+    for (MenuItem& item : m_items) {
+        if (item.dynamicLabel) {
+            item.label = item.dynamicLabel();
+        }
+    }
 }
 
 float MenuPopup::itemTop(std::size_t index) const

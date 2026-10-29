@@ -23,6 +23,7 @@ struct TreeItem {
     std::string detail;          // shown dimmed after the label
     bool hasChildren = false;
     std::optional<Icon> icon;    // drawn before the label
+    bool dimmed = false;         // drawn faintly (e.g. a hidden object)
 };
 
 class TreeView : public Widget {
@@ -36,7 +37,12 @@ public:
     std::uint64_t selectedId() const noexcept { return m_selected; }
     /// Selects without notifying (e.g. when the selection is restored).
     void setSelectedId(std::uint64_t id) { m_selected = id; }
+    /// Unfolds the parents of `id` and scrolls it into view.
+    void reveal(std::uint64_t id);
     void setOnSelect(std::function<void(std::uint64_t)> onSelect) { m_onSelect = std::move(onSelect); }
+    /// Double-click or Enter on an item (e.g. open a file, rename an object).
+    /// Without it, double-clicking an item with children folds or unfolds it.
+    void setOnActivate(std::function<void(std::uint64_t)> onActivate) { m_onActivate = std::move(onActivate); }
 
     /// Items shallower than this start expanded (until the user collapses them).
     void setAutoExpandDepth(int depth) { m_autoExpandDepth = depth; }
@@ -71,6 +77,7 @@ private:
     int m_autoExpandDepth = 2;
     std::uint64_t m_selected = 0;
     std::function<void(std::uint64_t)> m_onSelect;
+    std::function<void(std::uint64_t)> m_onActivate;
     std::string m_emptyText;
     ScrollState m_scroll;
     float m_rowHeight = 24.0f;

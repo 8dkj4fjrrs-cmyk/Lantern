@@ -12,6 +12,8 @@ configure_file(
 
 add_library(lantern_core STATIC
     src/Engine.cpp
+    src/Files.cpp
+    src/Numbers.cpp
     src/Log.cpp
     src/Version.cpp)
 

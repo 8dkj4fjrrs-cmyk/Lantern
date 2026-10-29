@@ -78,6 +78,20 @@ public:
     /// Called when Enter is pressed.
     void setOnSubmit(std::function<void(const std::string&)> onSubmit) { m_onSubmit = std::move(onSubmit); }
 
+    /// "Commit" editing, as in property inspectors: `onCommit` runs when the
+    /// user presses Enter or leaves the field after changing its text; Escape
+    /// puts the text back as it was and leaves the field.
+    void setOnCommit(std::function<void(const std::string&)> onCommit) { m_onCommit = std::move(onCommit); }
+    /// Selects all the text when the field gets keyboard focus.
+    void setSelectAllOnFocus(bool selectAll) { m_selectAllOnFocus = selectAll; }
+    /// True while the field holds typing that has not been committed yet, so
+    /// whoever owns the value should not overwrite it. A commit-style field
+    /// (setOnCommit) stops "editing" once Enter commits, even if it keeps focus,
+    /// so an undo can update it straight away.
+    bool isEditing() const noexcept { return isFocused() && (!m_onCommit || m_state.text() != m_textAtFocus); }
+    /// Keeps text clear of the right end (for a label drawn there, e.g. "X").
+    void setRightInset(float inset) { m_rightInset = inset; }
+
     TextEditState& state() noexcept { return m_state; }
 
     Size measure(Context& ctx, Size available) override;
@@ -90,8 +104,10 @@ public:
     void onFocusChanged(Context& ctx, bool focused) override;
     CursorShape cursor(Vec2 point) const override;
 
-private:
+protected:
     Rect textArea() const;
+
+private:
     Rect clearButtonRect() const;
     std::size_t indexAt(Context& ctx, float x);
     void changed(Context& ctx);
@@ -103,6 +119,12 @@ private:
     bool m_clearButton = false;
     std::function<void(const std::string&)> m_onChange;
     std::function<void(const std::string&)> m_onSubmit;
+    std::function<void(const std::string&)> m_onCommit;
+    std::string m_textAtFocus;
+    float m_rightInset = 0.0f;
+    bool m_selectAllOnFocus = false;
+
+    void commit(Context& ctx);
 
     float m_scrollX = 0.0f;     // horizontal scroll when the text is wider than the field
     double m_caretTime = 0.0;   // restarts the caret blink after each action

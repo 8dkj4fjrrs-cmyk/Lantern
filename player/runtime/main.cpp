@@ -1,14 +1,18 @@
 // Lantern Player — runs a Lantern game in a window.
 //
-// Milestone 1: starts the engine, opens a window showing the start scene,
-// and shuts everything down cleanly. Game content arrives in later milestones.
+// Shows a Lantern scene: a project's start scene (--project), one scene file
+// (--scene), or Lantern's own start scene. Gameplay code arrives in
+// Milestone 5; for now the player draws the scene as it was saved.
 
 #include "CommandLine.hpp"
 
 #include "lantern/core/Engine.hpp"
 #include "lantern/core/Version.hpp"
 #include "lantern/runtime/Application.hpp"
+#include "lantern/scene/Project.hpp"
+#include "lantern/scene/SceneFile.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <string_view>
 #include <vector>
@@ -45,7 +49,42 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    lantern::Application app(engine, {.title = opt.title, .width = opt.width, .height = opt.height});
+    // Find the scene to play.
+    std::filesystem::path scenePath = opt.scenePath;
+    std::string title = opt.title;
+    if (!opt.projectPath.empty()) {
+        std::string error;
+        const auto project = lantern::Project::open(opt.projectPath, &error);
+        if (!project) {
+            engine.logger().error("player", error);
+            return 1;
+        }
+        scenePath = project->absolute(project->settings().startScene);
+        if (title == lantern::player::PlayerOptions{}.title) {
+            title = project->settings().name;
+        }
+    }
+    lantern::PresentationSettings presentation;
+    if (!scenePath.empty()) {
+        const lantern::ComponentRegistry registry = lantern::ComponentRegistry::withBuiltins();
+        lantern::SceneLoadResult loaded = lantern::loadSceneFile(scenePath, registry);
+        for (const lantern::FileIssue& issue : loaded.issues) {
+            if (issue.isError()) {
+                engine.logger().error("scene", issue.toString());
+            } else {
+                engine.logger().warning("scene", issue.toString());
+            }
+        }
+        if (!loaded.ok()) {
+            engine.logger().error("player", "Could not open the scene " + scenePath.string() + ".");
+            return 1;
+        }
+        engine.logger().info("player", "Playing scene '" + loaded.scene->name() + "' (" + scenePath.string() + ")");
+        presentation.scene = std::make_shared<const lantern::Scene>(std::move(*loaded.scene));
+    }
+
+    lantern::Application app(engine, {.title = title, .width = opt.width, .height = opt.height},
+                             std::move(presentation));
     const lantern::Status runStatus = app.run({
         .maxFrames = opt.maxFrames,
         .screenshotPath = opt.screenshotPath,

@@ -37,6 +37,9 @@ enum class Icon {
     Scale,         // corner arrow out of a box: scale tool
     RectTool,      // rectangle with handles: rect tool
     Grid,          // 2x2 squares: layout / preview options
+    Save,          // a disk: save
+    Undo,          // arrow curving back to the left
+    Redo,          // arrow curving on to the right
 };
 
 /// Draws `icon` centred in `area`.

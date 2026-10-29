@@ -6,6 +6,7 @@
 // code and tools talk to Lantern; Lantern talks to the backend in src/.
 
 #include "lantern/core/Engine.hpp"
+#include "lantern/scene/Scene.hpp"
 #include "lantern/ui/Context.hpp"
 
 #include <cstdint>
@@ -42,6 +43,13 @@ struct PresentationSettings {
     /// at the bottom-left to (worldWidth, worldHeight) at the top-right.
     int worldWidth = 1280;
     int worldHeight = 720;
+
+    /// The scene shown when the window opens. Empty: Lantern's start scene.
+    std::shared_ptr<const Scene> scene;
+
+    /// Called when the user clicks the window's close button. Return false to
+    /// keep the window open (e.g. to ask about unsaved changes first).
+    std::function<bool()> onCloseRequested;
 
     /// Turns on the Lantern UI layer (lantern_ui) drawn over the window.
     /// Called once when the window is ready: build your widgets here.
@@ -85,26 +93,6 @@ struct RunReport {
     double averageFps() const { return elapsedSeconds > 0.0 ? static_cast<double>(framesRendered) / elapsedSeconds : 0.0; }
 };
 
-/// A read-only snapshot of one object in the running scene, for tools such as
-/// the editor's hierarchy and inspector panels.
-struct SceneNodeInfo {
-    std::uint64_t id = 0;        // unique while the application runs (not saved to disk)
-    std::uint64_t parentId = 0;  // 0 = top level
-    int depth = 0;               // 0 = top level
-    std::string name;            // empty if the object has no name
-    std::string kind;            // "Node", "Shape", "Sprite", "Text", ...
-    float x = 0.0f;              // position relative to the parent, in points
-    float y = 0.0f;
-    float rotationDegrees = 0.0f;
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
-    float width = 0.0f;          // content size, in points (0 for pure containers)
-    float height = 0.0f;
-    int drawOrder = 0;           // higher draws on top of siblings
-    bool visible = true;
-    std::size_t childCount = 0;
-};
-
 /// The off-screen world image, ready for a ui::ImageView.
 struct WorldImage {
     ui::TextureId texture = 0;  // 0 when the world is not drawn off-screen
@@ -123,8 +111,12 @@ public:
     int worldWidth() const noexcept;
     int worldHeight() const noexcept;
 
-    /// A snapshot of every object in the game world, parents before children.
-    const std::vector<SceneNodeInfo>& sceneOutline();
+    /// Shows `scene` in the world from the next frame on. The runtime keeps
+    /// it alive while shown and redraws it whenever its revision() changes.
+    void showScene(std::shared_ptr<const Scene> scene);
+
+    /// Changes the window's title bar text.
+    void setWindowTitle(const std::string& title);
 
     /// Frames per second, smoothed.
     float framesPerSecond() const noexcept;
@@ -167,6 +159,9 @@ public:
     /// Asks the main loop to finish after the current frame. Safe to call from
     /// the per-frame or UI callback.
     void requestQuit();
+
+    /// Shows `scene` (same as UiFrame::showScene); may be called before run().
+    void showScene(std::shared_ptr<const Scene> scene);
 
     /// Called once per frame before drawing. Game logic will hook in here.
     void setFrameCallback(std::function<void(const FrameInfo&)> callback);

@@ -1,6 +1,7 @@
 #include "Panels.hpp"
 
 #include "lantern/ui/Context.hpp"
+#include "lantern/ui/widgets/Menu.hpp"
 
 namespace lantern::editor {
 
@@ -27,37 +28,23 @@ ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string toolti
     return button;
 }
 
-// ---------------------------------------------------------------------------
-// Assets and Assets Preview: placeholders until projects exist (Milestone 3)
-// ---------------------------------------------------------------------------
-AssetsPanel::AssetsPanel()
-    : ui::Column(0.0f)
+void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items)
 {
-    auto& toolbar = makePanelToolbar(*this);
-    addToolButton(toolbar, ui::Icon::Plus, std::string("Create an asset. ") + kComingWithScenes);
-    auto& search = toolbar.emplace<ui::TextField>("Search assets");
-    search.setLeadingIcon(ui::Icon::Search);
-    search.setStretch(1.0f);
-    search.setEnabled(false);
-    search.setTooltip(kComingWithScenes);
-    addToolButton(toolbar, ui::Icon::Refresh, std::string("Refresh. ") + kComingWithScenes);
-
-    emplace<ui::EmptyState>(ui::Icon::Folder, "No project open",
-                            "Your game's images, sounds and scenes will be listed here once Lantern projects "
-                            "arrive in Milestone 3.");
+    ctx.openOverlay(std::make_unique<ui::MenuPopup>(std::move(items)),
+                    ui::OverlayOptions{.position = {anchor.x, anchor.bottom() + 2.0f}});
 }
 
 AssetsPreviewPanel::AssetsPreviewPanel()
     : ui::Column(0.0f)
 {
     auto& toolbar = makePanelToolbar(*this);
-    addToolButton(toolbar, ui::Icon::ChevronLeft, std::string("Back. ") + kComingWithScenes);
-    addToolButton(toolbar, ui::Icon::ChevronRight, std::string("Forward. ") + kComingWithScenes);
+    addToolButton(toolbar, ui::Icon::ChevronLeft, std::string("Back. ") + kComingWithAssets);
+    addToolButton(toolbar, ui::Icon::ChevronRight, std::string("Forward. ") + kComingWithAssets);
     toolbar.emplace<ui::IconView>(ui::Icon::Folder, 14.0f).setFixedSize({22.0f, 14.0f});
     toolbar.emplace<ui::Label>("assets", ui::Label::Style::Dim);
 
     emplace<ui::EmptyState>(ui::Icon::Eye, "Nothing to preview",
-                            "Select a folder in Assets to see its contents here as thumbnails.");
+                            "Thumbnails of images and other assets arrive with asset import in Milestone 4.");
 }
 
 } // namespace lantern::editor

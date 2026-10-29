@@ -54,4 +54,45 @@ std::filesystem::path userConfigDirectory()
     return userConfigDirectory(currentOs(), realEnvironment);
 }
 
+std::filesystem::path defaultProjectsDirectory(HostOs os, const EnvironmentLookup& env)
+{
+    std::optional<std::string> home = os == HostOs::Windows ? env("USERPROFILE") : env("HOME");
+    if (!home || home->empty()) {
+        return {};
+    }
+    return std::filesystem::path(*home) / "Documents" / "Lantern Projects";
+}
+
+std::filesystem::path defaultProjectsDirectory()
+{
+    return defaultProjectsDirectory(currentOs(), realEnvironment);
+}
+
+bool revealInFileManager(const std::filesystem::path& folder)
+{
+    // Quoted for the shell, so spaces and quotes in the path are safe.
+#if defined(_WIN32)
+    std::string quoted = "\"";
+    for (char c : folder.string()) {
+        if (c != '"') {
+            quoted += c;
+        }
+    }
+    quoted += "\"";
+    const std::string command = "explorer " + quoted;
+#else
+    std::string quoted = "'";
+    for (char c : folder.string()) {
+        quoted += c == '\'' ? std::string("'\\''") : std::string(1, c);
+    }
+    quoted += "'";
+#if defined(__APPLE__)
+    const std::string command = "open " + quoted;
+#else
+    const std::string command = "xdg-open " + quoted + " >/dev/null 2>&1 &";
+#endif
+#endif
+    return std::system(command.c_str()) == 0;
+}
+
 } // namespace lantern::editor

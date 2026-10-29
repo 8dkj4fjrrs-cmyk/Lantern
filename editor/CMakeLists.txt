@@ -1,7 +1,8 @@
 # The Lantern editor.
 #
 #   lantern_editor_core  editor logic with no UI toolkit and no backend:
-#                        console log, preferences, settings paths, command line.
+#                        scene documents, undo/redo commands, console log,
+#                        preferences, settings paths, command line.
 #                        Always built and unit-tested (also in the `core` preset).
 #   lantern_editor       the editor application: panels built with Lantern UI
 #                        (engine/ui) on top of lantern_runtime. Needs the
@@ -12,12 +13,14 @@
 
 add_library(lantern_editor_core STATIC
     model/CommandLine.cpp
+    model/Commands.cpp
     model/ConsoleLog.cpp
     model/EditorPaths.cpp
     model/EditorState.cpp
-    model/Preferences.cpp)
+    model/Preferences.cpp
+    model/SceneDocument.cpp)
 target_include_directories(lantern_editor_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/model")
-target_link_libraries(lantern_editor_core PUBLIC lantern::core)
+target_link_libraries(lantern_editor_core PUBLIC lantern::core lantern::scene)
 lantern_set_warnings(lantern_editor_core)
 
 if(NOT TARGET lantern_runtime)
@@ -28,6 +31,7 @@ endif()
 add_executable(lantern_editor
     application/main.cpp
     application/EditorApp.cpp
+    panels/AssetsPanel.cpp
     panels/ConsolePanel.cpp
     panels/HierarchyPanel.cpp
     panels/PanelCommon.cpp

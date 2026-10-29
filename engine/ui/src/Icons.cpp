@@ -250,6 +250,34 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
             }
         }
         break;
+    case Icon::Save: {
+        const Rect body{g(2.0f, 2.0f).x, g(2.0f, 2.0f).y, 12.0f * u, 12.0f * u};
+        draw.strokeRoundedRect(body, 1.5f * u, color, w * 0.9f);
+        draw.fillRect(Rect{g(5.0f, 2.5f).x, g(5.0f, 2.5f).y, 6.0f * u, 3.5f * u}, color);   // shutter
+        draw.strokeRoundedRect(Rect{g(4.5f, 9.0f).x, g(4.5f, 9.0f).y, 7.0f * u, 4.5f * u}, 0.5f * u, color, w * 0.8f);
+        break;
+    }
+    case Icon::Undo:
+    case Icon::Redo: {
+        const bool undo = icon == Icon::Undo;
+        // A half-circle hook with an arrowhead at its start.
+        const float cx = 8.5f;
+        const float cy = 9.0f;
+        const float r = 4.2f;
+        std::array<Vec2, 14> arc{};
+        for (std::size_t i = 0; i < arc.size(); ++i) {
+            const float a = -1.5707963f + 3.1415927f * static_cast<float>(i) / static_cast<float>(arc.size() - 1);
+            const float x = cx + std::cos(a) * r;
+            arc[i] = g(undo ? x : 16.0f - x, cy + std::sin(a) * r);
+        }
+        draw.polyline(arc, color, w * 0.9f);
+        const Vec2 tip = undo ? g(cx - 1.0f, cy - r) : g(16.0f - cx + 1.0f, cy - r);
+        draw.line(tip, undo ? g(cx + 0.5f, cy - r) : g(16.0f - cx - 0.5f, cy - r), color, w * 0.9f);
+        arrowHead(draw, undo ? g(2.5f, cy - r) : g(13.5f, cy - r), undo ? Vec2{-1.0f, 0.0f} : Vec2{1.0f, 0.0f},
+                  3.2f * u, color);
+        draw.line(undo ? g(3.5f, cy - r) : g(12.5f, cy - r), tip, color, w * 0.9f);
+        break;
+    }
     case Icon::Grid:
         for (float x : {2.0f, 9.0f}) {
             for (float y : {2.0f, 9.0f}) {

@@ -17,6 +17,13 @@ struct EditorOptions {
     /// Tests point this at a temporary folder so they never touch real settings.
     std::string configDirectory;
 
+    /// A project folder to open (default: the last project used).
+    std::string projectPath;
+    /// Start without opening any project (not even the last one).
+    bool noProject = false;
+    /// Create a new project in this folder (named after the folder) and open it.
+    std::string newProjectPath;
+
     /// Ignore the saved panel layout and start with the default one.
     bool resetLayout = false;
 

@@ -1,5 +1,7 @@
 #include "Panels.hpp"
 
+#include "lantern/ui/Context.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <unordered_map>
@@ -10,20 +12,7 @@ namespace lantern::editor {
 
 namespace {
 
-bool sameItems(const std::vector<ui::TreeItem>& a, const std::vector<ui::TreeItem>& b)
-{
-    if (a.size() != b.size()) {
-        return false;
-    }
-    for (std::size_t i = 0; i < a.size(); ++i) {
-        if (a[i].id != b[i].id || a[i].parentId != b[i].parentId || a[i].depth != b[i].depth
-            || a[i].label != b[i].label || a[i].detail != b[i].detail || a[i].hasChildren != b[i].hasChildren
-            || a[i].icon != b[i].icon) {
-            return false;
-        }
-    }
-    return true;
-}
+constexpr std::uint64_t kSceneRow = EditorState::kSceneSelected;
 
 bool containsIgnoringCase(std::string_view text, std::string_view needle)
 {
@@ -35,72 +24,141 @@ bool containsIgnoringCase(std::string_view text, std::string_view needle)
 
 } // namespace
 
-HierarchyPanel::HierarchyPanel(EditorState& state)
+// The tree, plus the keys that act on the selected object.
+class HierarchyPanel::SceneTree final : public ui::TreeView {
+public:
+    explicit SceneTree(EditorServices& editor)
+        : m_editor(editor)
+    {
+    }
+
+    bool onKeyDown(ui::Context& ctx, const ui::KeyEvent& event) override
+    {
+        if (!m_editor.selection().isNull() && event.modifiers.none()) {
+            if (event.key == ui::Key::Delete || event.key == ui::Key::Backspace) {
+                m_editor.deleteSelection();
+                return true;
+            }
+            if (event.key == ui::Key::F2) {
+                m_editor.renameSelection();
+                return true;
+            }
+        }
+        return TreeView::onKeyDown(ctx, event);
+    }
+
+private:
+    EditorServices& m_editor;
+};
+
+HierarchyPanel::HierarchyPanel(EditorServices& editor)
     : ui::Column(0.0f)
-    , m_state(state)
+    , m_editor(editor)
 {
     auto& toolbar = makePanelToolbar(*this);
-    addToolButton(toolbar, ui::Icon::Plus, std::string("Create an object. ") + kComingWithEditing);
+    m_create = &addToolButton(toolbar, ui::Icon::Plus, "Create an object", [this] {
+        const bool hasSelection = !m_editor.selection().isNull();
+        const auto item = [this](const char* label, NewEntityKind kind, bool child) {
+            ui::MenuItem m;
+            m.label = label;
+            m.action = [this, kind, child] { m_editor.createEntity(kind, child); };
+            return m;
+        };
+        std::vector<ui::MenuItem> items{item("Empty Object", NewEntityKind::Empty, false),
+                                        item("Rectangle", NewEntityKind::Rectangle, false),
+                                        item("Ellipse", NewEntityKind::Ellipse, false), ui::MenuItem::divider(),
+                                        item("Empty Child of Selection", NewEntityKind::Empty, true),
+                                        item("Rectangle Child of Selection", NewEntityKind::Rectangle, true)};
+        for (std::size_t i = 4; i < items.size(); ++i) {
+            items[i].isEnabled = [hasSelection] { return hasSelection; };
+        }
+        openMenuAt(m_editor.ui(), m_create->bounds(), std::move(items));
+    });
     auto& search = toolbar.emplace<ui::TextField>("Search name");
     search.setLeadingIcon(ui::Icon::Search);
     search.setClearButton(true);
     search.setStretch(1.0f);
     search.setOnChange([this](const std::string& text) { m_filter = text; });
 
-    auto tree = std::make_unique<ui::TreeView>();
+    auto tree = std::make_unique<SceneTree>(editor);
     tree->setStretch(1.0f);
-    tree->setAutoExpandDepth(2); // World and its direct children start open
+    tree->setAutoExpandDepth(2); // the scene and its top-level objects start open
     tree->setEmptyText("The scene is empty.");
-    tree->setOnSelect([this](std::uint64_t id) { m_state.selectedNodeId = id; });
+    tree->setOnSelect([this](std::uint64_t id) {
+        if (id == kSceneRow) {
+            m_editor.selectScene();
+        } else {
+            m_editor.select(EntityId(id));
+        }
+    });
+    tree->setOnActivate([this](std::uint64_t id) {
+        if (id != kSceneRow) {
+            m_editor.renameSelection();
+        }
+    });
     m_tree = &addChild(std::move(tree));
 }
 
-void HierarchyPanel::update(UiFrame& frame)
+void HierarchyPanel::update(UiFrame&)
 {
-    const std::vector<SceneNodeInfo>& nodes = frame.sceneOutline();
+    const Scene& scene = m_editor.document().scene();
+    if (m_editor.documentGeneration() != m_shownGeneration || scene.revision() != m_shownRevision
+        || m_filter != m_shownFilter) {
+        rebuild();
+        m_shownGeneration = m_editor.documentGeneration();
+        m_shownRevision = scene.revision();
+        m_shownFilter = m_filter;
+    }
+    // The selection can change elsewhere (Inspector, viewport, undo).
+    const std::uint64_t selected = m_editor.isSceneSelected() ? kSceneRow : m_editor.selection().value();
+    if (m_tree->selectedId() != selected) {
+        m_tree->setSelectedId(selected);
+        m_tree->reveal(selected);
+    }
+}
 
-    // With a search: the matching objects, plus their parents so each match
-    // still appears in its place in the tree.
-    std::unordered_set<std::uint64_t> keep;
+void HierarchyPanel::rebuild()
+{
+    const Scene& scene = m_editor.document().scene();
+
+    // With a search: matching objects plus the objects they sit inside.
+    std::unordered_set<EntityId> keep;
     if (!m_filter.empty()) {
-        std::unordered_map<std::uint64_t, std::uint64_t> parentOf;
-        for (const SceneNodeInfo& node : nodes) {
-            parentOf[node.id] = node.parentId;
-        }
-        for (const SceneNodeInfo& node : nodes) {
-            if (containsIgnoringCase(node.name, m_filter)) {
-                for (std::uint64_t id = node.id; id != 0 && keep.insert(id).second; id = parentOf[id]) {
+        scene.forEach([&](const Entity& e, int) {
+            if (containsIgnoringCase(e.name(), m_filter)) {
+                for (const Entity* p = &e; p != nullptr && keep.insert(p->id()).second; p = scene.find(p->parent())) {
                 }
             }
-        }
+        });
     }
 
     std::vector<ui::TreeItem> items;
-    items.reserve(nodes.size());
-    for (const SceneNodeInfo& node : nodes) {
-        if (!m_filter.empty() && keep.count(node.id) == 0) {
-            continue;
+    ui::TreeItem root;
+    root.id = kSceneRow;
+    root.label = scene.name();
+    root.icon = ui::Icon::Flame;
+    root.hasChildren = !scene.empty();
+    items.push_back(root);
+
+    std::unordered_map<EntityId, bool> active; // effectively active (all parents active too)
+    scene.forEach([&](const Entity& e, int depth) {
+        const auto parent = active.find(e.parent());
+        const bool on = e.isActive() && (parent == active.end() || parent->second);
+        active[e.id()] = on;
+        if (!m_filter.empty() && keep.count(e.id()) == 0) {
+            return;
         }
         ui::TreeItem item;
-        item.id = node.id;
-        item.parentId = node.parentId;
-        item.depth = node.depth;
-        item.label = node.name.empty() ? "(unnamed)" : node.name;
-        item.detail = node.kind;
-        item.hasChildren = node.childCount > 0;
-        if (node.depth == 0) {
-            item.icon = ui::Icon::Flame; // the scene's root
-        }
+        item.id = e.id().value();
+        item.parentId = e.parent().isNull() ? kSceneRow : e.parent().value();
+        item.depth = depth + 1;
+        item.label = e.name().empty() ? "(unnamed)" : e.name();
+        item.hasChildren = !e.children().empty();
+        item.dimmed = !on;
         items.push_back(std::move(item));
-    }
+    });
     m_tree->setEmptyText(m_filter.empty() ? "The scene is empty." : "No objects match “" + m_filter + "”.");
-    if (!sameItems(items, m_tree->items())) {
-        m_tree->setItems(std::move(items));
-    }
-    // The selection can also change elsewhere (or vanish with its object).
-    if (m_tree->selectedId() != m_state.selectedNodeId) {
-        m_tree->setSelectedId(m_state.selectedNodeId);
-    }
+    m_tree->setItems(std::move(items));
 }
 
 } // namespace lantern::editor

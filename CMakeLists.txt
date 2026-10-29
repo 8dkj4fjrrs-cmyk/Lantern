@@ -19,7 +19,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.2.0
+    VERSION 0.3.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
 
@@ -81,6 +81,7 @@ endif()
 # Our modules
 # ---------------------------------------------------------------------------
 add_subdirectory(engine/core)
+add_subdirectory(engine/scene)
 add_subdirectory(engine/ui)
 
 if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")

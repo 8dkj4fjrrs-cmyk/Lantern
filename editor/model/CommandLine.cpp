@@ -29,6 +29,17 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
             opt.showVersion = true;
         } else if (arg == "--reset-layout") {
             opt.resetLayout = true;
+        } else if (arg == "--no-project") {
+            opt.noProject = true;
+        } else if (arg == "--project" || arg == "--new-project") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            if (value.empty()) {
+                result.error = std::string(arg) + " needs a folder path.";
+                return result;
+            }
+            (arg == "--project" ? opt.projectPath : opt.newProjectPath) = std::string(value);
         } else if (arg == "--config-dir") {
             if (!nextValue(value)) {
                 return result;
@@ -64,6 +75,11 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
     if (!opt.screenshotPath.empty() && opt.maxFrames == 0) {
         result.error = "--screenshot needs --frames N, so the editor knows which frame to capture.";
     }
+    const int projectOptions = (opt.projectPath.empty() ? 0 : 1) + (opt.newProjectPath.empty() ? 0 : 1)
+                               + (opt.noProject ? 1 : 0);
+    if (projectOptions > 1) {
+        result.error = "Use only one of --project, --new-project and --no-project.";
+    }
     return result;
 }
 
@@ -74,6 +90,9 @@ std::string editorHelpText()
            "Options:\n"
            "  --help              Show this message\n"
            "  --version           Print version information and exit\n"
+           "  --project FOLDER    Open the Lantern project in FOLDER\n"
+           "  --new-project FOLDER  Create a new project in FOLDER and open it\n"
+           "  --no-project        Start without opening the last project\n"
            "  --reset-layout      Start with the default panel layout\n"
            "  --config-dir DIR    Keep preferences and layout in DIR instead of the\n"
            "                      per-user settings folder\n"

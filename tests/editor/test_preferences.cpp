@@ -132,3 +132,30 @@ TEST_CASE("Window sizes are clamped and unknown sizes ignored", "[editor][state]
     state.setWindowSize(0, 0); // e.g. the window never opened
     CHECK(state.windowWidth == EditorState::kMinWindowSize);
 }
+
+TEST_CASE("Recent projects are remembered newest first, without repeats", "[editor][state]")
+{
+    using lantern::editor::EditorState;
+    using lantern::editor::Preferences;
+    EditorState state;
+    state.addRecentProject("/a");
+    state.addRecentProject("/b");
+    state.addRecentProject("/a");
+    CHECK(state.recentProjects == std::vector<std::string>{"/a", "/b"});
+    for (int i = 0; i < 20; ++i) {
+        state.addRecentProject("/p" + std::to_string(i));
+    }
+    CHECK(state.recentProjects.size() == EditorState::kMaxRecent);
+    CHECK(state.recentProjects.front() == "/p19");
+    state.lastScene = "/p19/scenes/main.lscene";
+
+    Preferences prefs;
+    state.saveTo(prefs);
+    EditorState loaded;
+    loaded.loadFrom(prefs);
+    CHECK(loaded.recentProjects == state.recentProjects);
+    CHECK(loaded.lastScene == state.lastScene);
+
+    loaded.removeRecentProject("/p19");
+    CHECK(loaded.recentProjects.front() == "/p18");
+}

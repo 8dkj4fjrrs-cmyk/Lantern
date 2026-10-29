@@ -17,6 +17,7 @@ struct MenuItem {
     std::function<void()> action;
     std::function<bool()> isChecked;      // optional: shows a tick when true
     std::function<bool()> isEnabled;      // optional: greyed out when false
+    std::function<std::string()> dynamicLabel; // optional: label worked out when the menu opens ("Undo Rename")
     bool separator = false;
 
     static MenuItem divider()

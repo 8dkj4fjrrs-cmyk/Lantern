@@ -1,7 +1,8 @@
 #include "lantern/ui/DockLayout.hpp"
 
+#include "lantern/core/Numbers.hpp"
+
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <cstdio>
 
@@ -407,12 +408,14 @@ struct Reader {
         while (pos < text.size() && ((text[pos] >= '0' && text[pos] <= '9') || text[pos] == '.')) {
             ++pos;
         }
-        float value = 0.0f;
-        const auto [p, ec] = std::from_chars(text.data() + start, text.data() + pos, value);
-        if (ec != std::errc{} || p != text.data() + pos || start == pos) {
+        if (start == pos) {
             return std::nullopt;
         }
-        return value;
+        const auto value = parseNumber(text.substr(start, pos - start));
+        if (!value) {
+            return std::nullopt;
+        }
+        return static_cast<float>(*value);
     }
     static bool isIdChar(char c)
     {

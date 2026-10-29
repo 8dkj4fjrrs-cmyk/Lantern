@@ -7,6 +7,8 @@
 #include "Preferences.hpp"
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 namespace lantern::editor {
 
@@ -27,9 +29,20 @@ struct EditorState {
     int windowWidth = kDefaultWindowWidth;
     int windowHeight = kDefaultWindowHeight;
 
-    /// Selected object in the running scene (session-only id); 0 = nothing.
-    /// Deliberately not saved: these ids are only valid while the editor runs.
+    /// The selected entity's ID value (0 = nothing; kSceneSelected = the
+    /// scene itself). Not saved: selection is part of a session, not the scene.
     std::uint64_t selectedNodeId = 0;
+    static constexpr std::uint64_t kSceneSelected = ~std::uint64_t{0};
+
+    /// Project folders opened recently, newest first (at most kMaxRecent).
+    std::vector<std::string> recentProjects;
+    static constexpr std::size_t kMaxRecent = 8;
+    /// The scene file open when the editor last closed (reopened next time).
+    std::string lastScene;
+
+    /// Puts `folder` at the top of the recent list (no duplicates).
+    void addRecentProject(const std::string& folder);
+    void removeRecentProject(const std::string& folder);
 
     /// Set by "View > Reset Layout"; the UI rebuilds the default docking
     /// layout on its next frame and clears the flag.

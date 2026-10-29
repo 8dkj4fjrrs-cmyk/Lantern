@@ -83,8 +83,11 @@ bool Dialog::onKeyDown(Context& ctx, const KeyEvent& event)
 
 Dialog& showDialog(Context& ctx, std::unique_ptr<Dialog> dialog)
 {
-    Widget& w = ctx.openOverlay(std::move(dialog),
-                                OverlayOptions{.centered = true, .modal = true, .closeOnOutsideClick = false});
+    std::function<void()> onClosed = dialog->onClosed();
+    Widget& w = ctx.openOverlay(std::move(dialog), OverlayOptions{.centered = true,
+                                                                  .modal = true,
+                                                                  .closeOnOutsideClick = false,
+                                                                  .onClosed = std::move(onClosed)});
     ctx.focusNext(); // put keyboard focus inside the dialog
     return static_cast<Dialog&>(w);
 }

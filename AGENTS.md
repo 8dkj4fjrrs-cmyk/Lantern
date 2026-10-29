@@ -22,7 +22,9 @@ and AI assistants.
 - `engine/ui` must not depend on Axmol, GLFW or any graphics API: it turns widgets into a list of triangles, and `engine/runtime/src/UiHost.*` draws them. Keep it unit-testable without a window.
 - `editor/model/` must not include UI or runtime/backend headers: it is the editor logic, unit-tested without a window.
 - Editor UI code (`editor/application`, `editor/panels`) may use `lantern/ui/*` and `lantern/runtime/*.hpp`, never Axmol headers.
-- Editor operations that change project data must go through the undo/redo command system (from Milestone 3).
+- Editor operations that change scene or project data must go through the undo/redo command system: panels call the editor's `execute()` with a `Command` (`editor/model/Commands.hpp`), never `Scene` setters directly.
+- Scenes are `lantern::Scene` data (`engine/scene`); Axmol nodes are created only by `engine/runtime/src/SceneRenderer.*`. New component types describe their properties with `ComponentTypeBuilder` so the Inspector, files and undo handle them automatically.
+- File formats (`docs/formats/`) are versioned: changing one means bumping its version, adding an upgrade step and a test with an old file.
 - No global mutable state. Pass `Engine&` / `Logger&` explicitly.
 - Ownership: RAII and `std::unique_ptr` by default; raw pointers only as non-owning observers.
 - Errors: return `lantern::Status` (or a richer result type later) with a user-actionable message. No exceptions across module boundaries.

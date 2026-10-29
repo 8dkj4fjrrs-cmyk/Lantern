@@ -26,6 +26,7 @@ add_library(lantern_ui STATIC
     src/widgets/Box.cpp
     src/widgets/Dialog.cpp
     src/widgets/DockSpace.cpp
+    src/widgets/Fields.cpp
     src/widgets/Inspector.cpp
     src/widgets/Menu.cpp
     src/widgets/Scroll.cpp
@@ -45,6 +46,7 @@ target_include_directories(lantern_ui
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(lantern_ui SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/third_party/stb")
 target_compile_features(lantern_ui PUBLIC cxx_std_20)
+target_link_libraries(lantern_ui PUBLIC lantern::core)   # text <-> number helpers
 lantern_set_warnings(lantern_ui)
 
 # Third-party and generated files are not held to our warning rules.

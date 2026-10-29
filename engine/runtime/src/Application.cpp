@@ -5,7 +5,8 @@
 //   lantern::Application::run()
 //     └─ creates BackendApp (an ax::Application) and calls its run()
 //          └─ Axmol calls BackendApp::applicationDidFinishLaunching()
-//               └─ Impl::startWindow(): window, diagnostics, the world,
+//               └─ Impl::startWindow(): window, diagnostics, the world
+//                  (a SceneRenderer drawing a lantern::Scene),
 //                  the optional UI layer (UiHost), the per-frame callback
 //          └─ Axmol's main loop, every frame:
 //               update → Impl::onFrame(): game callback, then the UI is
@@ -20,8 +21,7 @@
 #include "lantern/runtime/Application.hpp"
 
 #include "AxmolLogBridge.hpp"
-#include "SceneOutline.hpp"
-#include "StartScene.hpp"
+#include "SceneRenderer.hpp"
 #include "UiHost.hpp"
 
 #include <axmol.h>
@@ -109,13 +109,13 @@ struct Application::Impl {
     std::string startupError;
 
     ax::Node* world = nullptr;                  // owned by the scene
+    std::unique_ptr<detail::SceneRenderer> renderer;
+    std::shared_ptr<const Scene> pendingScene;  // shown once the window exists
+    const Scene* shownScene = nullptr;          // for logging scene changes
     ax::RenderTexture* worldTexture = nullptr;  // retained here (Offscreen only)
     std::unique_ptr<detail::UiHost> ui;
     float fps = 0.0f;
 
-    detail::NodeIdRegistry nodeIds;
-    std::vector<SceneNodeInfo> outline;
-    std::uint64_t outlineFrame = UINT64_MAX;    // frame the outline was built in
 
     Logger& log() { return engine.logger(); }
     bool uiEnabled() const { return static_cast<bool>(presentation.uiSetup); }
@@ -126,6 +126,14 @@ struct Application::Impl {
     void onFrame(float deltaSeconds);
     void finish();
     void releaseBackendObjects();
+    void showScene(std::shared_ptr<const Scene> scene)
+    {
+        if (renderer) {
+            renderer->show(std::move(scene));
+        } else {
+            pendingScene = std::move(scene);
+        }
+    }
 };
 
 // UiFrame talks to the Impl through this small bridge.
@@ -196,8 +204,21 @@ bool Application::Impl::startWindow()
 
     auto* scene = ax::Scene::create();
     scene->setName("Root");
-    world = detail::createStartWorld(worldW, worldH);
+    // The world: an empty node the Lantern scene is drawn under.
+    world = ax::Node::create();
+    world->setName("World");
+    world->setContentSize(ax::Size(worldW, worldH));
     scene->addChild(world);
+    renderer = std::make_unique<detail::SceneRenderer>(*world);
+    std::shared_ptr<const Scene> first = pendingScene != nullptr ? pendingScene : presentation.scene;
+    if (first == nullptr) {
+        first = std::make_shared<const Scene>(makeStartScene(worldW, worldH));
+    }
+    renderer->show(std::move(first));
+    renderer->update();
+    shownScene = renderer->scene().get();
+    log().info(kCategory, "Showing scene '" + shownScene->name() + "' (" + std::to_string(shownScene->size())
+                              + " entities)");
 
     if (presentation.worldDisplay == WorldDisplay::Offscreen) {
         worldTexture = ax::RenderTexture::create(presentation.worldWidth, presentation.worldHeight,
@@ -229,6 +250,15 @@ bool Application::Impl::startWindow()
     if (uiEnabled()) {
         startUi(*scene, *view);
     }
+
+    // The window's close button: let the application say "not yet" (e.g. to
+    // ask about unsaved changes). Axmol asks through this event.
+    director->getEventDispatcher()->addCustomEventListener(
+        ax::RenderViewImpl::EVENT_WINDOW_CLOSE, [this](ax::EventCustom* event) {
+            if (presentation.onCloseRequested && !finishing && !presentation.onCloseRequested()) {
+                *static_cast<bool*>(event->getUserData()) = false;
+            }
+        });
 
     // Axmol announces EVENT_RESET while shutting down, while the window and
     // graphics context still exist: the right moment to release the UI layer
@@ -303,6 +333,15 @@ void Application::Impl::onFrame(float deltaSeconds)
         }
         ui->endFrame();
     }
+    if (renderer) {
+        const Scene* before = shownScene;
+        renderer->update(); // redraw the scene if it changed this frame
+        shownScene = renderer->scene().get();
+        if (shownScene != before && shownScene != nullptr) {
+            log().info(kCategory, "Showing scene '" + shownScene->name() + "' ("
+                                      + std::to_string(shownScene->size()) + " entities)");
+        }
+    }
 
     if (finishing) {
         return;
@@ -350,9 +389,9 @@ void Application::Impl::releaseBackendObjects()
         }
         ui.reset(); // restores Axmol's input callbacks, frees UI textures
     }
+    renderer.reset();
     AX_SAFE_RELEASE_NULL(worldTexture);
     world = nullptr;
-    outline.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -408,18 +447,19 @@ void UiFrame::requestQuit()
     m_access.impl.quitRequested = true;
 }
 
-const std::vector<SceneNodeInfo>& UiFrame::sceneOutline()
+void UiFrame::showScene(std::shared_ptr<const Scene> scene)
 {
-    Application::Impl& impl = m_access.impl;
-    // Build at most once per frame, however many panels ask.
-    if (impl.outlineFrame != impl.report.framesRendered) {
-        impl.outline.clear();
-        if (impl.world != nullptr) {
-            detail::buildSceneOutline(*impl.world, impl.nodeIds, impl.outline);
+    m_access.impl.showScene(std::move(scene));
+}
+
+void UiFrame::setWindowTitle(const std::string& title)
+{
+    if (auto* view = ax::Director::getInstance()->getRenderView()) {
+        view->setViewName(title);
+        if (auto* glfwView = dynamic_cast<ax::RenderViewImpl*>(view)) {
+            glfwSetWindowTitle(glfwView->getWindow(), title.c_str());
         }
-        impl.outlineFrame = impl.report.framesRendered;
     }
-    return impl.outline;
 }
 
 // ---------------------------------------------------------------------------
@@ -431,6 +471,11 @@ Application::Application(Engine& engine, WindowSettings window, PresentationSett
 }
 
 Application::~Application() = default;
+
+void Application::showScene(std::shared_ptr<const Scene> scene)
+{
+    m_impl->showScene(std::move(scene));
+}
 
 void Application::requestQuit()
 {

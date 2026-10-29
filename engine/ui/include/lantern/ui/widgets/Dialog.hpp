@@ -28,12 +28,18 @@ public:
     Button& addButton(std::string text, Button::Style style = Button::Style::Normal,
                       std::function<void()> action = {});
 
+    /// Runs when the dialog closes for any reason: a button, Escape, or the
+    /// program closing it. (Set it before showDialog().)
+    void setOnClosed(std::function<void()> onClosed) { m_onClosed = std::move(onClosed); }
+    const std::function<void()>& onClosed() const noexcept { return m_onClosed; }
+
     Size measure(Context& ctx, Size available) override;
     void arrange(Context& ctx, Rect rect) override;
     void paint(Context& ctx, DrawList& draw) override;
     bool onKeyDown(Context& ctx, const KeyEvent& event) override;
 
 private:
+    std::function<void()> m_onClosed;
     std::string m_title;
     float m_width;
     Column* m_body = nullptr;

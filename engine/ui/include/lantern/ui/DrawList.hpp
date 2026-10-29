@@ -52,6 +52,9 @@ public:
 
     // --- Shapes ---------------------------------------------------------
     void fillRect(Rect rect, Color color);
+    /// A rectangle whose colour blends between its four corners
+    /// (top-left, top-right, bottom-right, bottom-left), e.g. for colour pickers.
+    void fillRectGradient(Rect rect, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft);
     void fillRoundedRect(Rect rect, float radius, Color color);
     void strokeRoundedRect(Rect rect, float radius, Color color, float thickness = 1.0f);
     void fillCircle(Vec2 center, float radius, Color color);

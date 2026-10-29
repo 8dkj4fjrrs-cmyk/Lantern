@@ -17,6 +17,10 @@ struct PlayerOptions {
     bool showHelp = false;
     bool showVersion = false;
 
+    // What to show (both empty: Lantern's start scene).
+    std::string projectPath;   // a project folder: plays its start scene
+    std::string scenePath;     // a .lscene file
+
     // Window.
     std::string title = "Lantern Engine";
     int width = 1280;

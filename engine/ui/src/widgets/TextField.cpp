@@ -177,6 +177,7 @@ TextField::TextField(std::string placeholder)
 void TextField::setText(std::string text)
 {
     m_state.setText(std::move(text));
+    m_textAtFocus = m_state.text(); // the new committed text (Escape returns to it)
     m_scrollX = 0.0f;
 }
 
@@ -189,7 +190,8 @@ Rect TextField::textArea() const
 {
     const Rect b = bounds();
     const float left = kHorizontalPadding + (m_icon ? kIconWidth : 0.0f);
-    const float right = kHorizontalPadding + (m_clearButton && !m_state.text().empty() ? 18.0f : 0.0f);
+    const float right =
+        kHorizontalPadding + m_rightInset + (m_clearButton && !m_state.text().empty() ? 18.0f : 0.0f);
     return Rect{b.x + left, b.y, std::max(0.0f, b.width - left - right), b.height};
 }
 
@@ -375,6 +377,10 @@ bool TextField::onKeyDown(Context& ctx, const KeyEvent& event)
         }
         break;
     case Key::Enter:
+        if (m_onCommit) {
+            commit(ctx);
+            m_state.selectAll();
+        }
         if (m_onSubmit) {
             ctx.post([this] {
                 if (m_onSubmit) {
@@ -384,6 +390,12 @@ bool TextField::onKeyDown(Context& ctx, const KeyEvent& event)
         }
         break;
     case Key::Escape:
+        if (m_onCommit) {
+            // Cancel: back to the text from before editing, and leave the field.
+            m_state.setText(m_textAtFocus);
+            ctx.setFocus(nullptr);
+            break;
+        }
         if (m_state.hasSelection()) {
             m_state.setCaret(m_state.caret());
             break;
@@ -435,9 +447,27 @@ bool TextField::onText(Context& ctx, std::string_view text)
 void TextField::onFocusChanged(Context& ctx, bool focused)
 {
     m_caretTime = ctx.time();
-    if (!focused) {
+    if (focused) {
+        m_textAtFocus = m_state.text();
+        if (m_selectAllOnFocus) {
+            m_state.selectAll();
+        }
+    } else {
+        commit(ctx);
         m_state.setCaret(m_state.caret()); // drop the selection highlight
+        m_scrollX = 0.0f;
     }
+}
+
+void TextField::commit(Context& ctx)
+{
+    if (!m_onCommit || m_state.text() == m_textAtFocus) {
+        return;
+    }
+    m_textAtFocus = m_state.text();
+    // Copy the callback: the field itself may be gone by the time it runs
+    // (e.g. leaving the field selected another object and rebuilt the panel).
+    ctx.post([onCommit = m_onCommit, text = m_state.text()] { onCommit(text); });
 }
 
 CursorShape TextField::cursor(Vec2 point) const

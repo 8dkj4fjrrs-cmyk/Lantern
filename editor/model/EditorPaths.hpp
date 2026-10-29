@@ -32,6 +32,14 @@ std::filesystem::path userConfigDirectory(HostOs os, const EnvironmentLookup& en
 /// Same, for the current OS and real environment.
 std::filesystem::path userConfigDirectory();
 
+/// Where new projects are suggested: <Documents>/Lantern Projects
+/// (Windows: %USERPROFILE%\Documents). Empty if the home folder is unknown.
+std::filesystem::path defaultProjectsDirectory(HostOs os, const EnvironmentLookup& env);
+std::filesystem::path defaultProjectsDirectory();
+
+/// Shows `folder` in Finder / Explorer / the file manager. False if that failed.
+bool revealInFileManager(const std::filesystem::path& folder);
+
 /// File names inside the config directory.
 inline constexpr const char* kPreferencesFileName = "editor.prefs";
 inline constexpr const char* kLayoutFileName = "panels.dock"; // "layout.dock" held the 4-panel layout of 0.2.0 previews

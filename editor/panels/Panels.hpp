@@ -4,20 +4,22 @@
 //
 // Each panel is a widget that lives in the editor's DockSpace for the whole
 // session. Once per frame the editor calls update(), which refreshes what the
-// panel shows from the running scene or the console log. Panels read and
-// change editor state from editor/model; they never talk to the backend
-// directly, only through lantern::UiFrame.
+// panel shows. Panels never change the scene directly: they ask
+// EditorServices to run a Command, so every edit can be undone.
 //
 // Controls for features that do not exist yet are shown disabled, with a
-// tooltip saying which milestone brings them (see kComingIn* below), so the
+// tooltip saying which milestone brings them (kComing* below), so the
 // editor's layout is complete without pretending to do more than it does.
 
 #include "../model/ConsoleLog.hpp"
 #include "../model/EditorState.hpp"
+#include "../model/SceneDocument.hpp"
 
 #include "lantern/runtime/Application.hpp"
+#include "lantern/scene/Project.hpp"
 #include "lantern/ui/widgets/Basic.hpp"
 #include "lantern/ui/widgets/Box.hpp"
+#include "lantern/ui/widgets/Fields.hpp"
 #include "lantern/ui/widgets/Inspector.hpp"
 #include "lantern/ui/widgets/Scroll.hpp"
 #include "lantern/ui/widgets/TextField.hpp"
@@ -25,6 +27,8 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -39,83 +43,141 @@ inline constexpr const char* kPreviewPanel = "preview";
 inline constexpr const char* kConsolePanel = "console";
 
 // Tooltips for controls that are visible but not working yet.
-inline constexpr const char* kComingWithScenes = "Coming in Milestone 3, with Lantern scenes and projects";
-inline constexpr const char* kComingWithEditing = "Coming with scene editing (Milestone 3)";
+inline constexpr const char* kComingWithViewportTools =
+    "Coming in Milestone 4, with moving objects in the viewport and camera controls";
+inline constexpr const char* kComingWithAssets = "Coming in Milestone 4, with importing images and other assets";
+inline constexpr const char* kComingWithPlayMode = "Coming in Milestone 5, with gameplay code and play mode";
 inline constexpr const char* kComingWithBuilds = "Coming in Milestone 8: building your game for players";
-inline constexpr const char* kComingLater = "Coming in a later milestone";
+
+enum class NewEntityKind { Empty, Rectangle, Ellipse };
+
+/// What panels can ask the editor to do. Implemented by EditorApp.
+class EditorServices {
+public:
+    virtual ~EditorServices() = default;
+
+    virtual SceneDocument& document() = 0;
+    /// Goes up whenever another document is opened (scene addresses can be reused).
+    virtual std::uint64_t documentGeneration() const = 0;
+    virtual const ComponentRegistry& registry() const = 0;
+    /// The open project, if any.
+    virtual const Project* project() const = 0;
+    virtual ui::Context& ui() = 0;
+
+    // Selection.
+    virtual EntityId selection() const = 0;
+    virtual bool isSceneSelected() const = 0;
+    virtual void select(EntityId id) = 0;
+    virtual void selectScene() = 0;
+
+    /// Runs a command on the open scene (undoable). False if it changed nothing.
+    virtual bool execute(std::unique_ptr<Command> command) = 0;
+    /// Ends a continuous edit (e.g. a drag), so the next edit is a new undo step.
+    virtual void endEdit() = 0;
+
+    // Actions shared by menus, toolbars and panels.
+    virtual void createEntity(NewEntityKind kind, bool asChildOfSelection) = 0;
+    virtual void deleteSelection() = 0;
+    virtual void duplicateSelection() = 0;
+    virtual void renameSelection() = 0;
+    virtual void openScene(const std::filesystem::path& path) = 0;
+    virtual void newScene() = 0;
+    virtual void newProject() = 0;
+    virtual void openProject() = 0;
+    virtual void showMessage(const std::string& title, const std::string& text) = 0;
+};
 
 /// A toolbar strip along the top of a panel.
 ui::Row& makePanelToolbar(ui::Widget& parent);
 /// A small icon-only button for toolbars. Without an action it is shown
 /// disabled; its tooltip then says when the feature arrives.
 ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string tooltip, std::function<void()> action = {});
+/// Opens a menu just below `anchor`.
+void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items);
 
-/// The game world as the player would see it, scaled to fit the panel.
+/// The game world, scaled to fit. Click an object to select it.
 class ViewportPanel final : public ui::Column {
 public:
-    ViewportPanel();
+    explicit ViewportPanel(EditorServices& editor);
     void update(UiFrame& frame);
 
 private:
-    ui::ImageView* m_image = nullptr;
+    class SceneView;
+    SceneView* m_view = nullptr;
     ui::Label* m_zoom = nullptr;
 };
 
-/// Tree of objects in the running scene; clicking selects, typing filters.
+/// The scene's objects as a tree; select, create, delete, search.
 class HierarchyPanel final : public ui::Column {
 public:
-    explicit HierarchyPanel(EditorState& state);
+    explicit HierarchyPanel(EditorServices& editor);
     void update(UiFrame& frame);
 
 private:
-    EditorState& m_state;
-    ui::TreeView* m_tree = nullptr;
+    class SceneTree;
+    void rebuild();
+
+    EditorServices& m_editor;
+    SceneTree* m_tree = nullptr;
+    ui::Button* m_create = nullptr;
     std::string m_filter;
+    std::uint64_t m_shownGeneration = 0;
+    std::uint64_t m_shownRevision = 0;
+    std::string m_shownFilter;
 };
 
-/// The project's files. Projects arrive in Milestone 3; until then it says so.
+/// The project's files: double-click a scene to open it.
 class AssetsPanel final : public ui::Column {
 public:
-    AssetsPanel();
+    explicit AssetsPanel(EditorServices& editor);
+    void update(UiFrame& frame);
+    /// Re-reads the project folder (also done every few seconds).
+    void refresh();
+
+private:
+    void rebuild();
+
+    EditorServices& m_editor;
+    ui::Widget* m_noProject = nullptr;
+    ui::Widget* m_browser = nullptr;
+    ui::TreeView* m_tree = nullptr;
+    std::string m_filter;
+    std::vector<std::string> m_paths;   // project-relative; item id = index + 1
+    const Project* m_shownProject = nullptr;
+    std::filesystem::path m_shownFolder;
+    double m_lastScan = -100.0;
 };
 
-/// Previews the contents of the folder selected in Assets (Milestone 3).
+/// Thumbnails of the folder selected in Assets (Milestone 4).
 class AssetsPreviewPanel final : public ui::Column {
 public:
     AssetsPreviewPanel();
 };
 
-/// Properties of the selected object (read-only until Milestone 3).
+/// The selected object's (or the scene's) properties, editable.
 class InspectorPanel final : public ui::Column {
 public:
-    explicit InspectorPanel(EditorState& state);
+    explicit InspectorPanel(EditorServices& editor);
     void update(UiFrame& frame);
+    /// Puts keyboard focus in the name field (Edit > Rename).
+    void focusName();
 
 private:
-    struct Fields {
-        ui::ValueBox* active = nullptr;
-        ui::ValueBox* name = nullptr;
-        ui::Section* node = nullptr;
-        std::array<ui::ValueBox*, 2> position{};
-        ui::ValueBox* rotation = nullptr;
-        std::array<ui::ValueBox*, 2> scale{};
-        std::array<ui::ValueBox*, 2> size{};
-        ui::Section* rendering = nullptr;
-        ui::ValueBox* kind = nullptr;
-        ui::ValueBox* drawOrder = nullptr;
-        ui::ValueBox* visible = nullptr;
-        ui::Section* hierarchy = nullptr;
-        ui::ValueBox* parent = nullptr;
-        ui::ValueBox* children = nullptr;
-        ui::ValueBox* sessionId = nullptr;
-    };
+    void rebuild();
+    void buildEntity(ui::Column& content, const Entity& entity);
+    void buildScene(ui::Column& content);
+    void buildComponent(ui::Column& content, const Entity& entity, const Component& component);
+    void addPropertyEditor(ui::Section& section, EntityId id, const std::string& typeId, const PropertyInfo& info);
+    void openComponentMenu(ui::Section& section, EntityId id, const std::string& typeId);
+    void openAddComponentMenu(ui::Button& button, EntityId id);
+    std::string signature() const;
 
-    void showHelp(const char* title, const char* text);
-
-    EditorState& m_state;
-    ui::Widget* m_empty = nullptr;    // shown when nothing is selected
+    EditorServices& m_editor;
+    ui::Widget* m_empty = nullptr;
     ui::ScrollView* m_details = nullptr;
-    Fields m_fields;
+    ui::TextField* m_name = nullptr;
+    std::string m_builtFor;                      // signature() when last built
+    std::vector<std::function<void()>> m_refresh; // copy scene values into the widgets
 };
 
 /// Log messages from the engine, the backend and the editor.

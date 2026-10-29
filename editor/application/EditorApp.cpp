@@ -8,9 +8,11 @@
 #include "lantern/ui/widgets/Box.hpp"
 #include "lantern/ui/widgets/Dialog.hpp"
 #include "lantern/ui/widgets/DockSpace.hpp"
+#include "lantern/ui/widgets/Fields.hpp"
 #include "lantern/ui/widgets/Inspector.hpp"
 #include "lantern/ui/widgets/Menu.hpp"
 
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -49,15 +51,37 @@ bool isEditorPanel(std::string_view id)
     return false;
 }
 
-// A disabled toolbar button for a feature that is not built yet.
-ui::Button& addComingSoonButton(ui::Row& bar, ui::Icon icon, std::string text, std::string tooltip)
+ui::Button& addToolbarButton(ui::Row& bar, ui::Icon icon, std::string text, std::string tooltip,
+                             std::function<void()> action)
 {
     auto& button = bar.emplace<ui::Button>(std::move(text));
     button.setIcon(icon);
     button.setStyle(ui::Button::Style::Subtle);
-    button.setEnabled(false);
     button.setTooltip(std::move(tooltip));
+    if (action) {
+        button.setOnClick(std::move(action));
+    } else {
+        button.setEnabled(false);
+    }
     return button;
+}
+
+ui::MenuItem menuItem(std::string label, std::string shortcut, std::function<void()> action,
+                      std::function<bool()> enabled = {})
+{
+    ui::MenuItem item;
+    item.label = std::move(label);
+    item.shortcut = std::move(shortcut);
+    item.action = std::move(action);
+    item.isEnabled = std::move(enabled);
+    return item;
+}
+
+std::string sceneDisplayName(const std::string& relativePath)
+{
+    std::string name = std::filesystem::path(relativePath).stem().string();
+    const std::string folder = std::filesystem::path(relativePath).parent_path().generic_string();
+    return folder.empty() || folder == "scenes" ? name : folder + "/" + name;
 }
 
 } // namespace
@@ -66,6 +90,7 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
     : m_engine(engine)
     , m_console(console)
     , m_options(std::move(options))
+    , m_document(std::make_unique<SceneDocument>(makeStartScene()))
 {
 }
 
@@ -145,88 +170,700 @@ void EditorApp::restoreLayout()
 }
 
 // ---------------------------------------------------------------------------
+// Selection and editing
+// ---------------------------------------------------------------------------
+EntityId EditorApp::selection() const
+{
+    if (m_state.selectedNodeId == EditorState::kSceneSelected) {
+        return {};
+    }
+    const EntityId id(m_state.selectedNodeId);
+    return m_document->scene().contains(id) ? id : EntityId{};
+}
+
+void EditorApp::select(EntityId id)
+{
+    m_state.selectedNodeId = id.value();
+}
+
+void EditorApp::selectScene()
+{
+    m_state.selectedNodeId = EditorState::kSceneSelected;
+}
+
+bool EditorApp::execute(std::unique_ptr<Command> command)
+{
+    return m_document->execute(std::move(command));
+}
+
+void EditorApp::endEdit()
+{
+    m_document->history().breakMerge();
+}
+
+void EditorApp::createEntity(NewEntityKind kind, bool asChildOfSelection)
+{
+    const EntityId parent = asChildOfSelection ? selection() : EntityId{};
+    if (asChildOfSelection && parent.isNull()) {
+        return;
+    }
+    std::vector<std::unique_ptr<Component>> components;
+    // New top-level objects appear in the middle of the world; children at
+    // their parent's origin.
+    auto transform = std::make_unique<Transform>();
+    if (parent.isNull()) {
+        transform->position = Vec2{640.0f, 360.0f};
+    }
+    components.push_back(std::move(transform));
+    std::string name = "Object";
+    if (kind != NewEntityKind::Empty) {
+        auto shape = std::make_unique<Shape>();
+        shape->kind = kind == NewEntityKind::Rectangle ? ShapeKind::Rectangle : ShapeKind::Ellipse;
+        shape->color = Color{79, 179, 169, 255};
+        name = kind == NewEntityKind::Rectangle ? "Rectangle" : "Ellipse";
+        components.push_back(std::move(shape));
+    }
+    auto command = std::make_unique<CreateEntity>(name, parent, std::nullopt, std::move(components));
+    CreateEntity* raw = command.get();
+    if (execute(std::move(command))) {
+        endEdit();
+        select(raw->id());
+    }
+}
+
+void EditorApp::deleteSelection()
+{
+    const EntityId id = selection();
+    if (id.isNull()) {
+        return;
+    }
+    // Select a neighbour so the keyboard keeps working in the tree.
+    const Scene& scene = m_document->scene();
+    const auto& siblings = scene.childrenOf(scene.find(id)->parent());
+    const std::size_t index = scene.indexOf(id).value_or(0);
+    EntityId next = scene.find(id)->parent();
+    if (index + 1 < siblings.size()) {
+        next = siblings[index + 1];
+    } else if (index > 0) {
+        next = siblings[index - 1];
+    }
+    if (execute(std::make_unique<DeleteEntity>(id))) {
+        endEdit();
+        select(next);
+    }
+}
+
+void EditorApp::duplicateSelection()
+{
+    const EntityId id = selection();
+    if (id.isNull()) {
+        return;
+    }
+    auto command = std::make_unique<DuplicateEntity>(id);
+    DuplicateEntity* raw = command.get();
+    if (execute(std::move(command))) {
+        endEdit();
+        select(raw->copyId());
+    }
+}
+
+void EditorApp::renameSelection()
+{
+    if (selection().isNull() && !isSceneSelected()) {
+        return;
+    }
+    if (m_dock != nullptr) {
+        m_dock->setOpen(kInspectorPanel, true);
+    }
+    m_renamePending = true; // done after the Inspector has caught up with the selection
+}
+
+void EditorApp::moveSelection(int direction)
+{
+    const EntityId id = selection();
+    if (id.isNull()) {
+        return;
+    }
+    const Scene& scene = m_document->scene();
+    const EntityId parent = scene.find(id)->parent();
+    const std::size_t index = scene.indexOf(id).value_or(0);
+    const std::size_t count = scene.childrenOf(parent).size();
+    if ((direction < 0 && index == 0) || (direction > 0 && index + 1 >= count)) {
+        return;
+    }
+    const std::size_t target = direction < 0 ? index - 1 : index + 1;
+    if (execute(std::make_unique<MoveEntity>(id, parent, target))) {
+        endEdit();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Files
+// ---------------------------------------------------------------------------
+void EditorApp::reportIssues(const std::filesystem::path& file, const std::vector<FileIssue>& issues)
+{
+    for (const FileIssue& issue : issues) {
+        const std::string text = file.filename().string() + ": " + issue.toString();
+        if (issue.isError()) {
+            log().error("scene", text);
+        } else {
+            log().warning("scene", text);
+        }
+    }
+}
+
+void EditorApp::setDocument(std::unique_ptr<SceneDocument> document)
+{
+    m_document = std::move(document);
+    ++m_documentGeneration;
+    m_state.selectedNodeId = 0;
+    if (!m_document->isUntitled()) {
+        m_state.lastScene = m_document->path().string();
+    }
+}
+
+void EditorApp::openScene(const std::filesystem::path& path)
+{
+    if (!m_document->isUntitled() && m_document->path() == path) {
+        return; // already open
+    }
+    confirmDiscard("opening another scene", [this, path] {
+        std::vector<FileIssue> issues;
+        auto opened = SceneDocument::open(path, m_registry, issues);
+        reportIssues(path, issues);
+        if (!opened) {
+            showMessage("Could Not Open Scene", "The scene " + path.filename().string()
+                                                    + " could not be opened. The Console has the details.");
+            return;
+        }
+        setDocument(std::make_unique<SceneDocument>(std::move(*opened)));
+        log().info(kCategory, "Opened scene " + path.filename().string() + ".");
+    });
+}
+
+void EditorApp::newScene()
+{
+    confirmDiscard("creating a new scene", [this] {
+        setDocument(std::make_unique<SceneDocument>(Scene("New Scene")));
+        selectScene();
+        log().info(kCategory, "New scene. Save it with File > Save Scene.");
+    });
+}
+
+void EditorApp::reloadScene()
+{
+    if (m_document->isUntitled()) {
+        return;
+    }
+    const std::filesystem::path path = m_document->path();
+    const auto reload = [this, path] {
+        std::vector<FileIssue> issues;
+        auto opened = SceneDocument::open(path, m_registry, issues);
+        reportIssues(path, issues);
+        if (opened) {
+            const std::uint64_t keep = m_state.selectedNodeId;
+            setDocument(std::make_unique<SceneDocument>(std::move(*opened)));
+            m_state.selectedNodeId = keep;
+            log().info(kCategory, "Reverted " + path.filename().string() + " to its saved version.");
+        }
+    };
+    if (!m_document->isDirty()) {
+        return; // nothing to revert
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Revert to Saved?", 420.0f);
+    dialog->body()
+        .emplace<ui::Label>("Your unsaved changes to “" + m_document->displayName() + "” will be lost.")
+        .setWrap(true);
+    dialog->addButton("Cancel");
+    dialog->addButton("Revert", ui::Button::Style::Primary, reload);
+    ui::showDialog(*m_ui, std::move(dialog));
+}
+
+void EditorApp::saveScene(std::function<void()> then)
+{
+    if (m_document->isUntitled()) {
+        saveSceneAs(std::move(then));
+        return;
+    }
+    if (const Status status = m_document->save(); !status) {
+        log().error(kCategory, "Could not save the scene: " + status.message);
+        showMessage("Could Not Save", status.message);
+        return;
+    }
+    log().info(kCategory, "Saved " + m_document->displayName() + ".");
+    if (m_assets != nullptr) {
+        m_assets->refresh();
+    }
+    if (then) {
+        then();
+    }
+}
+
+void EditorApp::saveSceneAs(std::function<void()> then)
+{
+    if (!m_project) {
+        // Scenes live in projects: offer to make one, keeping this scene.
+        showNewProjectDialog(true, std::move(then));
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Save Scene", 420.0f);
+    ui::Column& body = dialog->body();
+    body.emplace<ui::Label>("Scene name", ui::Label::Style::Dim);
+    auto& name = body.emplace<ui::TextField>("");
+    std::string suggestion = m_document->isUntitled() ? m_document->scene().name()
+                                                      : m_document->path().stem().string() + " copy";
+    if (!Project::isValidName(suggestion)) {
+        suggestion = "New Scene";
+    }
+    name.setText(suggestion);
+    auto& where = body.emplace<ui::Label>("", ui::Label::Style::Faint);
+    where.setWrap(true);
+    auto& error = body.emplace<ui::Label>("");
+    error.setColor(m_ui->theme().error);
+    error.setWrap(true);
+
+    const auto target = [this](const std::string& text) {
+        return m_project->absolute(std::string(ProjectFormat::kScenesFolder) + "/" + text
+                                   + std::string(SceneFormat::kExtension));
+    };
+    const auto updateHint = [this, &where, &name] {
+        where.setText("Saved as " + std::string(ProjectFormat::kScenesFolder) + "/" + name.text()
+                      + std::string(SceneFormat::kExtension) + " in " + m_project->settings().name + ".");
+    };
+    updateHint();
+    name.setOnChange([updateHint](const std::string&) { updateHint(); });
+
+    // Saving is checked first; the dialog only closes when it worked.
+    auto save = [this, &name, &error, target, then](ui::Dialog& d) {
+        const std::string text = name.text();
+        if (!Project::isValidName(text)) {
+            error.setText("A scene name cannot be empty or contain / \\ : * ? \" < > |.");
+            return;
+        }
+        const std::filesystem::path path = target(text);
+        std::error_code ec;
+        if (std::filesystem::exists(path, ec)) {
+            error.setText("A scene called “" + text + "” already exists. Choose another name.");
+            return;
+        }
+        if (const Status status = m_document->saveAs(path); !status) {
+            error.setText(status.message);
+            return;
+        }
+        m_state.lastScene = path.string();
+        ++m_documentGeneration; // the document is now a different file
+        log().info(kCategory, "Saved " + path.filename().string() + ".");
+        if (m_assets != nullptr) {
+            m_assets->refresh();
+        }
+        m_ui->closeOverlay(&d);
+        if (then) {
+            m_ui->post(then);
+        }
+    };
+    dialog->addButton("Cancel");
+    ui::Button& ok = dialog->addButton("Save", ui::Button::Style::Primary);
+    ui::Dialog& d = ui::showDialog(*m_ui, std::move(dialog));
+    ok.setOnClick([save, &d] { save(d); });
+    name.setOnSubmit([save, &d](const std::string&) { save(d); });
+    m_ui->setFocus(&name);
+    name.state().selectAll();
+}
+
+void EditorApp::confirmDiscard(const std::string& action, std::function<void()> then)
+{
+    if (!m_document->isDirty()) {
+        then();
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Save Changes?", 440.0f);
+    dialog->body()
+        .emplace<ui::Label>("“" + m_document->displayName() + "” has unsaved changes. Save them before "
+                            + action + "?")
+        .setWrap(true);
+    dialog->addButton("Don’t Save", ui::Button::Style::Normal, then);
+    dialog->addButton("Cancel");
+    dialog->addButton("Save", ui::Button::Style::Primary, [this, then] { saveScene(then); });
+    ui::showDialog(*m_ui, std::move(dialog));
+}
+
+bool EditorApp::openProjectFolder(const std::filesystem::path& folder, bool reportErrors)
+{
+    std::string error;
+    auto project = Project::open(folder, &error);
+    if (!project) {
+        log().error(kCategory, error);
+        if (reportErrors) {
+            showMessage("Could Not Open Project", error);
+        }
+        return false;
+    }
+    m_project = std::move(*project);
+    m_state.addRecentProject(m_project->folder().string());
+    log().info(kCategory, "Opened project '" + m_project->settings().name + "' (" + m_project->folder().string() + ")");
+
+    // The scene open last time, if it is in this project; otherwise the start scene.
+    std::filesystem::path scene = m_project->absolute(m_project->settings().startScene);
+    std::error_code ec;
+    if (!m_state.lastScene.empty() && m_project->relative(m_state.lastScene)
+        && std::filesystem::exists(m_state.lastScene, ec)) {
+        scene = m_state.lastScene;
+    }
+    std::vector<FileIssue> issues;
+    auto opened = SceneDocument::open(scene, m_registry, issues);
+    reportIssues(scene, issues);
+    if (opened) {
+        setDocument(std::make_unique<SceneDocument>(std::move(*opened)));
+        log().info(kCategory, "Opened scene " + scene.filename().string() + ".");
+    } else {
+        log().warning(kCategory, "The project's start scene could not be opened; starting a new scene.");
+        setDocument(std::make_unique<SceneDocument>(Scene("New Scene")));
+    }
+    if (m_assets != nullptr) {
+        m_assets->refresh();
+    }
+    return true;
+}
+
+void EditorApp::openInitialContent()
+{
+    if (!m_options.newProjectPath.empty()) {
+        const std::filesystem::path folder = m_options.newProjectPath;
+        std::string error;
+        if (Project::create(folder, folder.filename().string(), &error)) {
+            log().info(kCategory, "Created project in " + folder.string());
+            openProjectFolder(folder, false);
+        } else {
+            log().error(kCategory, error);
+        }
+        return;
+    }
+    if (!m_options.projectPath.empty()) {
+        openProjectFolder(m_options.projectPath, false);
+        return;
+    }
+    if (!m_options.noProject && !m_state.recentProjects.empty()) {
+        const std::string last = m_state.recentProjects.front();
+        std::error_code ec;
+        if (std::filesystem::exists(std::filesystem::path(last) / ProjectFormat::kFileName, ec)) {
+            openProjectFolder(last, false);
+            return;
+        }
+        m_state.removeRecentProject(last);
+    }
+    log().info(kCategory, "No project open: showing the start scene. Use File > New Project to create one.");
+}
+
+void EditorApp::newProject()
+{
+    confirmDiscard("creating a project", [this] { showNewProjectDialog(false); });
+}
+
+void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()> then)
+{
+    auto dialog = std::make_unique<ui::Dialog>("New Project", 460.0f);
+    ui::Column& body = dialog->body();
+    if (keepCurrentScene) {
+        body.emplace<ui::Label>("Scenes are saved inside a project. Create one now; this scene becomes its first "
+                                "scene.",
+                                ui::Label::Style::Dim)
+            .setWrap(true);
+    }
+    body.emplace<ui::Label>("Project name", ui::Label::Style::Dim);
+    auto& name = body.emplace<ui::TextField>("");
+    name.setText("My Game");
+    body.emplace<ui::Label>("Location", ui::Label::Style::Dim);
+    auto& location = body.emplace<ui::TextField>("");
+    location.setText(defaultProjectsDirectory().string());
+    auto& hint = body.emplace<ui::Label>("", ui::Label::Style::Faint);
+    hint.setWrap(true);
+    auto& error = body.emplace<ui::Label>("");
+    error.setColor(m_ui->theme().error);
+    error.setWrap(true);
+
+    const auto updateHint = [&hint, &name, &location] {
+        hint.setText("Creates the folder " + (std::filesystem::path(location.text()) / name.text()).string());
+    };
+    updateHint();
+    name.setOnChange([updateHint](const std::string&) { updateHint(); });
+    location.setOnChange([updateHint](const std::string&) { updateHint(); });
+
+    auto create = [this, &name, &location, &error, keepCurrentScene, then](ui::Dialog& d) {
+        if (location.text().empty()) {
+            error.setText("Choose a location: the folder the project folder is created in.");
+            return;
+        }
+        const std::filesystem::path folder = std::filesystem::path(location.text()) / name.text();
+        std::string message;
+        auto project = Project::create(folder, name.text(), &message);
+        if (!project) {
+            error.setText(message);
+            return;
+        }
+        log().info(kCategory, "Created project '" + name.text() + "' in " + folder.string());
+        std::unique_ptr<SceneDocument> keep;
+        if (keepCurrentScene) {
+            keep = std::move(m_document);
+            m_document = std::make_unique<SceneDocument>(Scene()); // placeholder until the project opens
+        }
+        openProjectFolder(project->folder(), true);
+        if (keep) {
+            // The current scene replaces the project's first scene.
+            const std::filesystem::path path = m_project->absolute(m_project->settings().startScene);
+            if (const Status s = keep->saveAs(path); !s) {
+                log().error(kCategory, "Could not save the scene into the new project: " + s.message);
+            }
+            setDocument(std::move(keep));
+        }
+        m_ui->closeOverlay(&d);
+        if (then) {
+            m_ui->post(then);
+        }
+    };
+    dialog->addButton("Cancel");
+    ui::Button& ok = dialog->addButton("Create Project", ui::Button::Style::Primary);
+    ui::Dialog& d = ui::showDialog(*m_ui, std::move(dialog));
+    ok.setOnClick([create, &d] { create(d); });
+    name.setOnSubmit([create, &d](const std::string&) { create(d); });
+    location.setOnSubmit([create, &d](const std::string&) { create(d); });
+    m_ui->setFocus(&name);
+    name.state().selectAll();
+}
+
+void EditorApp::openProject()
+{
+    confirmDiscard("opening a project", [this] { showOpenProjectDialog(); });
+}
+
+void EditorApp::showOpenProjectDialog()
+{
+    auto dialog = std::make_unique<ui::Dialog>("Open Project", 480.0f);
+    ui::Column& body = dialog->body();
+    auto& error = body.emplace<ui::Label>("");
+    error.setColor(m_ui->theme().error);
+    error.setWrap(true);
+
+    auto open = [this, &error](ui::Dialog& d, const std::string& folder) {
+        if (folder.empty()) {
+            return;
+        }
+        std::error_code ec;
+        if (!std::filesystem::exists(std::filesystem::path(folder) / ProjectFormat::kFileName, ec)) {
+            error.setText("There is no Lantern project in " + folder + " (no project.lantern file).");
+            return;
+        }
+        if (openProjectFolder(folder, true)) {
+            m_ui->closeOverlay(&d);
+        }
+    };
+
+    if (!m_state.recentProjects.empty()) {
+        body.emplace<ui::Label>("Recent projects", ui::Label::Style::Dim);
+    }
+    std::vector<std::pair<ui::Button*, std::string>> recentButtons;
+    for (const std::string& folder : m_state.recentProjects) {
+        auto& button = body.emplace<ui::Button>(std::filesystem::path(folder).filename().string());
+        button.setStyle(ui::Button::Style::Subtle);
+        button.setIcon(ui::Icon::Folder);
+        button.setTooltip(folder);
+        recentButtons.emplace_back(&button, folder);
+    }
+    body.emplace<ui::Label>("Project folder", ui::Label::Style::Dim);
+    auto& path = body.emplace<ui::TextField>("Path to the folder containing project.lantern");
+    if (m_state.recentProjects.empty()) {
+        path.setText(defaultProjectsDirectory().string());
+    }
+    body.emplace<ui::Label>("Type or paste the folder's path. (A folder browser arrives with the project wizard in "
+                            "Milestone 8.)",
+                            ui::Label::Style::Faint)
+        .setWrap(true);
+
+    dialog->addButton("Cancel");
+    ui::Button& ok = dialog->addButton("Open", ui::Button::Style::Primary);
+    ui::Dialog& d = ui::showDialog(*m_ui, std::move(dialog));
+    ok.setOnClick([open, &d, &path] { open(d, path.text()); });
+    path.setOnSubmit([open, &d](const std::string& text) { open(d, text); });
+    for (auto& entry : recentButtons) {
+        entry.first->setOnClick([open, &d, target = entry.second] { open(d, target); });
+    }
+    m_ui->setFocus(&path);
+}
+
+void EditorApp::showMessage(const std::string& title, const std::string& text)
+{
+    if (m_ui == nullptr) {
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>(title, 420.0f);
+    dialog->body().emplace<ui::Label>(text).setWrap(true);
+    dialog->addButton("OK", ui::Button::Style::Primary);
+    ui::showDialog(*m_ui, std::move(dialog));
+}
+
+// ---------------------------------------------------------------------------
 // Workspace
 // ---------------------------------------------------------------------------
+void EditorApp::buildMenus(ui::Widget& root)
+{
+    const ui::Platform& platform = m_ui->platform();
+    const auto key = [&platform](std::string_view k) { return ui::primaryShortcutLabel(platform, k); };
+    const auto hasSelection = [this] { return !selection().isNull(); };
+
+    auto& menuBar = root.emplace<ui::MenuBar>();
+    menuBar.addMenu({"File",
+                     {menuItem("New Project…", "", [this] { newProject(); }),
+                      menuItem("Open Project…", "", [this] { openProject(); }),
+                      menuItem(
+                          "Show Project Folder", "",
+                          [this] {
+                              if (m_project) {
+                                  revealInFileManager(m_project->folder());
+                              }
+                          },
+                          [this] { return m_project.has_value(); }),
+                      ui::MenuItem::divider(),
+                      menuItem("New Scene", key("N"), [this] { newScene(); }),
+                      menuItem("Save Scene", key("S"), [this] { saveScene(); }),
+                      menuItem("Save Scene As…", platform.macConventions ? "⇧⌘S" : "Ctrl+Shift+S",
+                               [this] { saveSceneAs(); }),
+                      menuItem("Revert to Saved", "", [this] { reloadScene(); },
+                               [this] { return !m_document->isUntitled() && m_document->isDirty(); }),
+                      ui::MenuItem::divider(),
+                      menuItem("Quit Lantern Editor", key("Q"), [this] { closeRequested(); })}});
+
+    ui::MenuItem undo = menuItem("Undo", key("Z"), [this] { m_document->undo(); },
+                                 [this] { return m_document->history().canUndo(); });
+    undo.dynamicLabel = [this] {
+        const std::string what = m_document->history().undoLabel();
+        return what.empty() ? std::string("Undo") : "Undo " + what;
+    };
+    ui::MenuItem redo = menuItem("Redo", platform.macConventions ? "⇧⌘Z" : "Ctrl+Y",
+                                 [this] { m_document->redo(); }, [this] { return m_document->history().canRedo(); });
+    redo.dynamicLabel = [this] {
+        const std::string what = m_document->history().redoLabel();
+        return what.empty() ? std::string("Redo") : "Redo " + what;
+    };
+    menuBar.addMenu({"Edit",
+                     {std::move(undo), std::move(redo), ui::MenuItem::divider(),
+                      menuItem("New Empty Object", "", [this] { createEntity(NewEntityKind::Empty, false); }),
+                      menuItem("New Rectangle", "", [this] { createEntity(NewEntityKind::Rectangle, false); }),
+                      menuItem("New Ellipse", "", [this] { createEntity(NewEntityKind::Ellipse, false); }),
+                      ui::MenuItem::divider(),
+                      menuItem("Rename", "F2", [this] { renameSelection(); }, hasSelection),
+                      menuItem("Duplicate", key("D"), [this] { duplicateSelection(); }, hasSelection),
+                      menuItem("Delete", platform.macConventions ? "⌫" : "Delete", [this] { deleteSelection(); },
+                               hasSelection),
+                      ui::MenuItem::divider(),
+                      menuItem("Move Up", "", [this] { moveSelection(-1); }, hasSelection),
+                      menuItem("Move Down", "", [this] { moveSelection(1); }, hasSelection)}});
+
+    std::vector<ui::MenuItem> view;
+    for (const PanelInfo& panel : kPanels) {
+        const char* id = panel.id;
+        ui::MenuItem item;
+        item.label = panel.title;
+        item.isChecked = [this, id] { return m_dock->isOpen(id); };
+        item.action = [this, id] { m_dock->setOpen(id, !m_dock->isOpen(id)); };
+        view.push_back(std::move(item));
+    }
+    view.push_back(ui::MenuItem::divider());
+    view.push_back(menuItem("Reset Layout", "", [this] {
+        m_dock->resetLayout();
+        log().info(kCategory, "Panel layout reset.");
+    }));
+    menuBar.addMenu({"View", std::move(view)});
+    menuBar.addMenu({"Help", {menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
+}
+
+void EditorApp::buildToolbar(ui::Widget& root)
+{
+    const ui::Theme& theme = m_ui->theme();
+    const ui::Platform& platform = m_ui->platform();
+    //   [save] [undo] [redo] ...... [scene v] [play] [revert] ...... [build] [project folder]
+    auto& toolbar = root.emplace<ui::Row>(4.0f, ui::Insets::symmetric(8.0f, 0.0f));
+    toolbar.setBackground(theme.panelHeader);
+    toolbar.setCrossAlign(ui::CrossAlign::Center);
+    toolbar.setFixedSize({0.0f, theme.toolbarHeight});
+
+    const auto small = [](ui::Button& b) { b.setFixedSize({30.0f, 0.0f}); };
+    small(addToolbarButton(toolbar, ui::Icon::Save, "", "Save scene (" + ui::primaryShortcutLabel(platform, "S") + ")",
+                           [this] { saveScene(); }));
+    small(addToolbarButton(toolbar, ui::Icon::Undo, "", "Undo (" + ui::primaryShortcutLabel(platform, "Z") + ")",
+                           [this] { m_document->undo(); }));
+    small(addToolbarButton(toolbar, ui::Icon::Redo, "", "Redo", [this] { m_document->redo(); }));
+    toolbar.emplace<ui::Spacer>();
+
+    auto& scene = toolbar.emplace<ui::ChoiceField>();
+    scene.setStretch(0.0f);
+    scene.setFixedSize({210.0f, 0.0f});
+    scene.setTooltip("The scene being edited. Choose another scene of the project to open it.");
+    scene.setOnChoose([this](int index) {
+        if (index >= 0 && static_cast<std::size_t>(index) < m_sceneChoices.size() && m_project) {
+            const std::string rel = m_sceneChoices[static_cast<std::size_t>(index)];
+            if (!rel.empty()) {
+                openScene(m_project->absolute(rel));
+            }
+        }
+    });
+    m_sceneChoice = &scene;
+    small(addToolbarButton(toolbar, ui::Icon::Play, "",
+                           std::string("Play the game in the editor. ") + kComingWithPlayMode, nullptr));
+    small(addToolbarButton(toolbar, ui::Icon::Refresh, "", "Revert the scene to its saved version",
+                           [this] { reloadScene(); }));
+    toolbar.emplace<ui::Spacer>();
+    addToolbarButton(toolbar, ui::Icon::Send, "Build", kComingWithBuilds, nullptr);
+    small(addToolbarButton(toolbar, ui::Icon::Folder, "", "Show the project folder", [this] {
+        if (m_project) {
+            revealInFileManager(m_project->folder());
+        }
+    }));
+}
+
+void EditorApp::addShortcuts()
+{
+    ui::Modifiers primary;
+    (m_ui->platform().macConventions ? primary.super : primary.ctrl) = true;
+    ui::Modifiers primaryShift = primary;
+    primaryShift.shift = true;
+    m_ui->addShortcut(ui::Key::Q, primary, [this] { closeRequested(); });
+    m_ui->addShortcut(ui::Key::S, primary, [this] { saveScene(); });
+    m_ui->addShortcut(ui::Key::S, primaryShift, [this] { saveSceneAs(); });
+    m_ui->addShortcut(ui::Key::N, primary, [this] { newScene(); });
+    m_ui->addShortcut(ui::Key::Z, primary, [this] { m_document->undo(); });
+    m_ui->addShortcut(ui::Key::Z, primaryShift, [this] { m_document->redo(); });
+    m_ui->addShortcut(ui::Key::Y, primary, [this] { m_document->redo(); });
+    m_ui->addShortcut(ui::Key::D, primary, [this] { duplicateSelection(); });
+    m_ui->addShortcut(ui::Key::F2, {}, [this] { renameSelection(); });
+}
+
 void EditorApp::buildWorkspace(UiFrame& frame)
 {
     ui::Context& ctx = frame.ui();
+    m_ui = &ctx;
     const ui::Theme& theme = ctx.theme();
 
     auto root = std::make_unique<ui::Column>(0.0f);
     root->setBackground(theme.window);
-
-    // --- Menu bar --------------------------------------------------------------
-    auto& menuBar = root->emplace<ui::MenuBar>();
-    {
-        ui::MenuItem quit;
-        quit.label = "Quit Lantern Editor";
-        quit.shortcut = ui::primaryShortcutLabel(ctx.platform(), "Q");
-        quit.action = [this] { m_quitRequested = true; };
-        menuBar.addMenu({"File", {std::move(quit)}});
-    }
-    {
-        std::vector<ui::MenuItem> items;
-        for (const PanelInfo& panel : kPanels) {
-            const char* id = panel.id;
-            ui::MenuItem item;
-            item.label = panel.title;
-            item.isChecked = [this, id] { return m_dock->isOpen(id); };
-            item.action = [this, id] { m_dock->setOpen(id, !m_dock->isOpen(id)); };
-            items.push_back(std::move(item));
-        }
-        items.push_back(ui::MenuItem::divider());
-        ui::MenuItem reset;
-        reset.label = "Reset Layout";
-        reset.action = [this] {
-            m_dock->resetLayout();
-            log().info(kCategory, "Panel layout reset.");
-        };
-        items.push_back(std::move(reset));
-        menuBar.addMenu({"View", std::move(items)});
-    }
-    {
-        ui::MenuItem about;
-        about.label = "About Lantern Engine…";
-        about.action = [this, &ctx] { showAbout(ctx); };
-        menuBar.addMenu({"Help", {std::move(about)}});
-    }
-
-    // --- Main toolbar ---------------------------------------------------------------
-    //   [scene] [play] [reload]  ......................  [build] [project folder]
-    auto& toolbar = root->emplace<ui::Row>(4.0f, ui::Insets::symmetric(8.0f, 0.0f));
-    toolbar.setBackground(theme.panelHeader);
-    toolbar.setCrossAlign(ui::CrossAlign::Center);
-    toolbar.setFixedSize({0.0f, theme.toolbarHeight});
-    toolbar.emplace<ui::Spacer>();
-    auto& scene = toolbar.emplace<ui::ValueBox>("Start Scene", ui::ValueBox::Kind::Choice);
-    scene.setStretch(0.0f);
-    scene.setFixedSize({190.0f, 0.0f});
-    scene.setTooltip(std::string("The scene being edited. Choosing scenes: ") + kComingWithScenes);
-    addComingSoonButton(toolbar, ui::Icon::Play, "", std::string("Play the game in the editor. ") + kComingLater)
-        .setFixedSize({30.0f, 0.0f});
-    addComingSoonButton(toolbar, ui::Icon::Refresh, "", std::string("Reload the scene. ") + kComingWithScenes)
-        .setFixedSize({30.0f, 0.0f});
-    toolbar.emplace<ui::Spacer>();
-    addComingSoonButton(toolbar, ui::Icon::Send, "Build", kComingWithBuilds);
-    addComingSoonButton(toolbar, ui::Icon::Folder, "", std::string("Open the project folder. ") + kComingWithScenes)
-        .setFixedSize({30.0f, 0.0f});
+    buildMenus(*root);
+    buildToolbar(*root);
 
     // --- Panels ------------------------------------------------------------------
     auto& dock = root->emplace<ui::DockSpace>();
     dock.setStretch(1.0f);
+    m_dock = &dock;
     for (const PanelInfo& panel : kPanels) {
         std::unique_ptr<ui::Widget> content;
         const std::string id = panel.id;
         if (id == kViewportPanel) {
-            auto p = std::make_unique<ViewportPanel>();
+            auto p = std::make_unique<ViewportPanel>(*this);
             m_viewport = p.get();
             content = std::move(p);
         } else if (id == kHierarchyPanel) {
-            auto p = std::make_unique<HierarchyPanel>(m_state);
+            auto p = std::make_unique<HierarchyPanel>(*this);
             m_hierarchy = p.get();
             content = std::move(p);
         } else if (id == kInspectorPanel) {
-            auto p = std::make_unique<InspectorPanel>(m_state);
+            auto p = std::make_unique<InspectorPanel>(*this);
             m_inspector = p.get();
             content = std::move(p);
         } else if (id == kConsolePanel) {
@@ -234,7 +871,9 @@ void EditorApp::buildWorkspace(UiFrame& frame)
             m_consolePanel = p.get();
             content = std::move(p);
         } else if (id == kAssetsPanel) {
-            content = std::make_unique<AssetsPanel>();
+            auto p = std::make_unique<AssetsPanel>(*this);
+            m_assets = p.get();
+            content = std::move(p);
         } else {
             content = std::make_unique<AssetsPreviewPanel>();
         }
@@ -245,10 +884,9 @@ void EditorApp::buildWorkspace(UiFrame& frame)
         m_layoutDirty = true;
         m_layoutChangedAt = ctx.time();
     });
-    m_dock = &dock;
 
     // --- Status bar ----------------------------------------------------------------
-    //   60 fps  ........................  (i) 12  (!) 0  (x) 0   Version 0.2.0
+    //   60 fps  ........................  (i) 12  (!) 0  (x) 0   Version 0.3.0
     auto& status = root->emplace<ui::Row>(5.0f, ui::Insets::symmetric(theme.padding, 0.0f));
     status.setBackground(theme.panelHeader);
     status.setCrossAlign(ui::CrossAlign::Center);
@@ -272,11 +910,7 @@ void EditorApp::buildWorkspace(UiFrame& frame)
     version.setColor(theme.textDim);
 
     ctx.setRoot(std::move(root));
-
-    // Cmd+Q (macOS) / Ctrl+Q quits from anywhere in the editor.
-    ui::Modifiers primary;
-    (ctx.platform().macConventions ? primary.super : primary.ctrl) = true;
-    ctx.addShortcut(ui::Key::Q, primary, [this] { m_quitRequested = true; });
+    addShortcuts();
 }
 
 void EditorApp::updateStatusBar(UiFrame& frame)
@@ -289,7 +923,47 @@ void EditorApp::updateStatusBar(UiFrame& frame)
     m_statusCounts[2]->setText(std::to_string(m_console.count(LogLevel::Error)));
 }
 
-void EditorApp::showAbout(ui::Context& ctx)
+void EditorApp::updateTitle(UiFrame& frame)
+{
+    // Title bar: "main.lscene • — My Game — Lantern Editor" (• = unsaved changes).
+    std::string title = m_document->displayName() + (m_document->isDirty() ? " •" : "");
+    if (m_project) {
+        title += " — " + m_project->settings().name;
+    }
+    title += " — Lantern Editor";
+    if (title != m_shownTitle) {
+        frame.setWindowTitle(title);
+        m_shownTitle = title;
+    }
+
+    // The toolbar's scene picker: the project's scenes, the open one chosen.
+    std::vector<std::string> labels;
+    m_sceneChoices.clear();
+    int selected = -1;
+    if (m_project) {
+        const auto openRel = m_document->isUntitled() ? std::nullopt : m_project->relative(m_document->path());
+        for (const std::string& rel : m_project->sceneFiles()) {
+            if (openRel == rel) {
+                selected = static_cast<int>(labels.size());
+            }
+            labels.push_back(sceneDisplayName(rel));
+            m_sceneChoices.push_back(rel);
+        }
+    }
+    if (selected < 0) {
+        selected = static_cast<int>(labels.size());
+        labels.push_back(m_document->isUntitled() ? m_document->scene().name() + " (not saved)"
+                                                  : m_document->displayName());
+        m_sceneChoices.emplace_back();
+    }
+    if (m_document->isDirty()) {
+        labels[static_cast<std::size_t>(selected)] += "  •";
+    }
+    m_sceneChoice->setOptions(std::move(labels));
+    m_sceneChoice->setSelected(selected);
+}
+
+void EditorApp::showAbout()
 {
     auto dialog = std::make_unique<ui::Dialog>("About Lantern Engine", 400.0f);
     ui::Column& body = dialog->body();
@@ -302,7 +976,7 @@ void EditorApp::showAbout(ui::Context& ctx)
     body.emplace<ui::Label>("Third-party licenses are listed in THIRD_PARTY_NOTICES.md.", ui::Label::Style::Faint)
         .setWrap(true);
     dialog->addButton("Close", ui::Button::Style::Primary);
-    ui::showDialog(ctx, std::move(dialog));
+    ui::showDialog(*m_ui, std::move(dialog));
 }
 
 // ---------------------------------------------------------------------------
@@ -313,6 +987,33 @@ void EditorApp::setupUi(UiFrame& frame)
     buildWorkspace(frame);
     restoreLayout();
     m_layoutDirty = false;
+    openInitialContent();
+}
+
+bool EditorApp::closeRequested()
+{
+    if (m_quitRequested) {
+        return true;
+    }
+    if (m_quitting) {
+        return false; // the question is already on screen
+    }
+    if (!m_document->isDirty()) {
+        m_quitRequested = true;
+        return true;
+    }
+    m_quitting = true;
+    auto dialog = std::make_unique<ui::Dialog>("Save Changes?", 440.0f);
+    dialog->body()
+        .emplace<ui::Label>("“" + m_document->displayName()
+                            + "” has unsaved changes. Save them before quitting?")
+        .setWrap(true);
+    dialog->setOnClosed([this] { m_quitting = false; }); // Cancel, Escape, or an answer
+    dialog->addButton("Don’t Save", ui::Button::Style::Normal, [this] { m_quitRequested = true; });
+    dialog->addButton("Cancel");
+    dialog->addButton("Save", ui::Button::Style::Primary, [this] { saveScene([this] { m_quitRequested = true; }); });
+    ui::showDialog(*m_ui, std::move(dialog));
+    return false;
 }
 
 void EditorApp::updateUi(UiFrame& frame)
@@ -320,11 +1021,22 @@ void EditorApp::updateUi(UiFrame& frame)
     if (m_quitRequested) {
         frame.requestQuit();
     }
+    // Show the open document's scene (it changes when another scene is opened).
+    if (m_shownScene != m_document->sharedScene()) {
+        m_shownScene = m_document->sharedScene();
+        frame.showScene(m_shownScene);
+    }
     m_viewport->update(frame);
     m_hierarchy->update(frame);
+    m_assets->update(frame);
     m_inspector->update(frame);
+    if (m_renamePending) {
+        m_renamePending = false;
+        m_inspector->focusName();
+    }
     m_consolePanel->update(frame);
     updateStatusBar(frame);
+    updateTitle(frame);
 
     if (m_layoutDirty && frame.ui().time() - m_layoutChangedAt >= kLayoutSaveDelaySeconds) {
         saveLayout();
@@ -338,12 +1050,18 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_state.panels.hierarchy = m_dock->isOpen(kHierarchyPanel);
     m_state.panels.inspector = m_dock->isOpen(kInspectorPanel);
     m_state.panels.console = m_dock->isOpen(kConsolePanel);
+    if (!m_document->isUntitled()) {
+        m_state.lastScene = m_document->path().string();
+    }
     // The widgets are destroyed with the UI; forget them.
+    m_ui = nullptr;
     m_dock = nullptr;
     m_viewport = nullptr;
     m_hierarchy = nullptr;
+    m_assets = nullptr;
     m_inspector = nullptr;
     m_consolePanel = nullptr;
+    m_sceneChoice = nullptr;
     m_statusFps = nullptr;
     m_statusCounts = {};
 }
@@ -357,9 +1075,11 @@ Status EditorApp::run()
 
     PresentationSettings presentation;
     presentation.worldDisplay = WorldDisplay::Offscreen;
+    presentation.scene = m_document->sharedScene();
     presentation.uiSetup = [this](UiFrame& frame) { setupUi(frame); };
     presentation.uiUpdate = [this](UiFrame& frame) { updateUi(frame); };
     presentation.uiShutdown = [this](UiFrame& frame) { shutdownUi(frame); };
+    presentation.onCloseRequested = [this] { return closeRequested(); };
 
     Application app(m_engine,
                     WindowSettings{.title = "Lantern Editor",

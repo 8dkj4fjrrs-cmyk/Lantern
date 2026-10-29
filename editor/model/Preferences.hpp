@@ -11,6 +11,7 @@
 // Unknown keys are kept, so newer and older editor versions can share a file.
 
 #include "lantern/core/Engine.hpp" // lantern::Status
+#include "lantern/core/Files.hpp"
 
 #include <filesystem>
 #include <map>
@@ -60,10 +61,8 @@ private:
     std::map<std::string, std::string, std::less<>> m_values;
 };
 
-/// Reads a whole text file. Returns nullopt if it does not exist or cannot be read.
-std::optional<std::string> readTextFile(const std::filesystem::path& path);
-
-/// Writes a whole text file safely (temporary file + rename), creating folders.
-Status writeTextFileAtomically(const std::filesystem::path& path, std::string_view contents);
+// The file helpers moved to the engine core; editor code keeps using them by these names.
+using lantern::readTextFile;
+using lantern::writeTextFileAtomically;
 
 } // namespace lantern::editor

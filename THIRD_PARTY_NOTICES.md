@@ -83,8 +83,12 @@ Name only if the font itself is modified — we do not modify it.
 | [Catch2](https://github.com/catchorg/Catch2) | v3.16.1 | BSL-1.0 | Unit tests |
 | [PowerShell](https://github.com/PowerShell/PowerShell) | 7.x | MIT | Axmol's download helper during configure |
 
-## Planned
+## Scenes and project files (`engine/scene`)
 
-| Component | License | Notes |
-|---|---|---|
-| nlohmann/json | MIT | Project, scene and content files (Milestone 3). |
+| Component | Version | License | Shipped? |
+|---|---|---|---|
+| [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 (release archive, SHA-256 checked) | MIT | Yes: reads and writes project and scene files in the editor and in games |
+
+Downloaded by CMake at configure time (`engine/scene/CMakeLists.txt`), not
+copied into this repository. It is a header-only library; its MIT notice
+must accompany shipped games (handled by the packaging step, Milestone 8).

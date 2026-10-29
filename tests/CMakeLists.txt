@@ -28,8 +28,13 @@ add_executable(lantern_tests
     ui/test_ui_docking.cpp
     ui/test_ui_foundations.cpp
     ui/test_ui_widgets.cpp
-    ui/test_ui_inspector.cpp)
-target_link_libraries(lantern_tests PRIVATE lantern::core lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+    ui/test_ui_inspector.cpp
+    editor/test_commands.cpp
+    scene/test_scene.cpp
+    scene/test_scene_file.cpp
+    scene/test_project.cpp)
+target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)
 
@@ -44,7 +49,7 @@ endif()
 add_executable(lantern_runtime_tests
     player/test_command_line.cpp
     runtime/test_log_bridge.cpp
-    runtime/test_scene_outline.cpp)
+    runtime/test_scene_renderer.cpp)
 target_link_libraries(lantern_runtime_tests PRIVATE
     lantern_player_cli lantern::runtime ${_AX_CORE_LIB} Catch2::Catch2WithMain)
 # These tests check internal headers of lantern_runtime.
@@ -57,6 +62,17 @@ set_tests_properties(player.version PROPERTIES PASS_REGULAR_EXPRESSION "backend:
 
 add_test(NAME player.rejects_bad_option COMMAND lantern_player --frames zero)
 set_tests_properties(player.rejects_bad_option PROPERTIES WILL_FAIL TRUE)
+
+add_test(NAME player.plays_scene_file
+    COMMAND lantern_player --scene "${CMAKE_CURRENT_SOURCE_DIR}/data/test_card.lscene" --frames 30
+            --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_test_card.png")
+set_tests_properties(player.plays_scene_file PROPERTIES
+    PASS_REGULAR_EXPRESSION "Showing scene 'Test Card' \\(4 entities\\).*Screenshot saved"
+    FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+    TIMEOUT 60)
+
+add_test(NAME player.rejects_missing_scene COMMAND lantern_player --scene "no-such-file.lscene")
+set_tests_properties(player.rejects_missing_scene PROPERTIES WILL_FAIL TRUE)
 
 if(TARGET lantern_editor)
     add_test(NAME editor.version COMMAND lantern_editor --version)
@@ -93,7 +109,7 @@ if(TARGET lantern_editor)
 
     # 1) First run: default layout, then layout + preferences are saved.
     add_test(NAME editor.first_run
-        COMMAND lantern_editor --config-dir "${_editor_cfg}" --reset-layout --frames 120
+        COMMAND lantern_editor --config-dir "${_editor_cfg}" --no-project --reset-layout --frames 120
                 --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_screenshot.png")
     set_tests_properties(editor.first_run PROPERTIES
         PASS_REGULAR_EXPRESSION "Using the default panel layout.*Screenshot saved"
@@ -103,10 +119,43 @@ if(TARGET lantern_editor)
 
     # 2) Second run: the saved layout must be restored (persistence works).
     add_test(NAME editor.restores_layout
-        COMMAND lantern_editor --config-dir "${_editor_cfg}" --frames 60)
+        COMMAND lantern_editor --config-dir "${_editor_cfg}" --no-project --frames 60)
     set_tests_properties(editor.restores_layout PROPERTIES
         PASS_REGULAR_EXPRESSION "Restored the saved panel layout"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|Using the default panel layout"
         FIXTURES_REQUIRED editor_settings
+        TIMEOUT 60)
+
+    # 3) Projects, end to end: the editor creates one, opens it again (as the
+    #    last project used), and the player plays its start scene.
+    set(_project "${CMAKE_CURRENT_BINARY_DIR}/test-projects/Window Test Game")
+    set(_project_cfg "${CMAKE_CURRENT_BINARY_DIR}/editor-test-project-settings")
+    add_test(NAME editor.project_cleanup
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/test-projects" "${_project_cfg}")
+    set_tests_properties(editor.project_cleanup PROPERTIES FIXTURES_SETUP editor_project_clean)
+
+    add_test(NAME editor.creates_project
+        COMMAND lantern_editor --config-dir "${_project_cfg}" --new-project "${_project}" --frames 30)
+    set_tests_properties(editor.creates_project PROPERTIES
+        PASS_REGULAR_EXPRESSION "Created project in.*Opened scene main.lscene.*Showing scene 'Main'"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        FIXTURES_REQUIRED editor_project_clean
+        FIXTURES_SETUP editor_project
+        TIMEOUT 60)
+
+    add_test(NAME editor.reopens_last_project
+        COMMAND lantern_editor --config-dir "${_project_cfg}" --frames 30)
+    set_tests_properties(editor.reopens_last_project PROPERTIES
+        PASS_REGULAR_EXPRESSION "Opened project 'Window Test Game'.*Opened scene main.lscene"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        FIXTURES_REQUIRED editor_project
+        TIMEOUT 60)
+
+    add_test(NAME player.plays_project
+        COMMAND lantern_player --project "${_project}" --frames 30)
+    set_tests_properties(player.plays_project PROPERTIES
+        PASS_REGULAR_EXPRESSION "Showing scene 'Main' \\(18 entities\\)"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        FIXTURES_REQUIRED editor_project
         TIMEOUT 60)
 endif()
