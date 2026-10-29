@@ -1,11 +1,11 @@
-# Lantern
+# Lantern Engine
 
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
 > **Status: Milestone 0 (foundation).** The build system, core library, editor
 > entry point and test suite exist and pass. There is no window, renderer or
-> editor UI yet. "Lantern" is a working codename and can be renamed.
+> editor UI yet.
 
 ## Quick start
 

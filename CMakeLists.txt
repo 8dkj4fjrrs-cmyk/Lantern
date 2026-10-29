@@ -1,4 +1,4 @@
-# Lantern 2D Engine — root build configuration.
+# Lantern Engine — root build configuration.
 #
 # Targets (Milestone 0):
 #   lantern_core    static library: engine lifecycle, logging, version info
