@@ -14,8 +14,11 @@ the first time; you only install the tools below.
 
 ## macOS (Apple silicon) — primary platform
 
-Milestone 0 (core only) was verified on 2026-10-29 on the project owner's
-MacBook Pro (Homebrew 7.0.11, CMake 4.4.5, Ninja 1.13.2, Apple Clang).
+Milestone 1 was verified on 2026-10-29 on the project owner's Apple silicon
+MacBook Pro (macOS 15.4.1, Command Line Tools for Xcode 16.4 / Apple clang
+17.0.0, CMake 4.4.5, Ninja 1.13.2, PowerShell 7.6.9): full Axmol build, 33/33
+tests passed, including the two that open a real window. Full Xcode is
+**not** required.
 
 ### 1. One-time setup
 
@@ -111,6 +114,7 @@ cmake --workflow --preset dev
 
 | Message | Fix |
 |---|---|
+| `fatal error: 'AppKit/NSColor.h' file not found` (macOS) | Apple's Command Line Tools are damaged. Run `sudo rm -rf /Library/Developer/CommandLineTools`, then reinstall them: `xcode-select --install`, or download "Command Line Tools for Xcode" from developer.apple.com/download/all (pick a version your macOS supports). Then delete `build/` and build again. |
 | `PowerShell 7 ('pwsh') was not found` | Install it (see step 1), open a new Terminal, configure again. |
 | `external/axmol is not at the pinned commit` | Delete the `external/axmol` folder and configure again. |
 | `Could not download Axmol` | Check your internet connection; configure again. |

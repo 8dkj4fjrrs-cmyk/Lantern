@@ -73,7 +73,7 @@ The `external/` folder is shared by all build presets and ignored by git.
 
 - First configure downloads ~130 MB and the first build compiles Axmol
   (minutes); later builds are incremental.
-- macOS without full Xcode is expected to work (Command Line Tools only) but
-  must be confirmed on real hardware.
+- macOS with Command Line Tools only (no full Xcode) is confirmed working:
+  33/33 tests on the owner's MacBook Pro (macOS 15.4.1, CLT 16.4), 2026-10-29.
 - Re-enabling Axmol features later (ImGui for the editor, audio, physics) is a
   one-line change in `LanternAxmol.cmake` plus a `THIRD_PARTY_NOTICES.md` update.
