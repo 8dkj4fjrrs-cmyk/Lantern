@@ -1,0 +1,35 @@
+# Builds and tests on all three desktop platforms.
+# NOTE: written in Milestone 0 but not yet run — the repository is not on
+# GitHub yet. Treat the first run as the real verification.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-24.04, windows-2022]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Set up MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure, build and test
+        run: cmake --workflow --preset dev

@@ -1,0 +1,15 @@
+# Build output
+/build/
+/out/
+/cmake-build-*/
+
+# Local machine settings
+CMakeUserPresets.json
+.vscode/
+.idea/
+*.xcworkspace/
+xcuserdata/
+.DS_Store
+
+# clangd cache
+.cache/

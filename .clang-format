@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 110
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+AllowShortFunctionsOnASingleLine: Inline
+PointerAlignment: Left
+IncludeBlocks: Regroup
