@@ -3,19 +3,21 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 1 (runtime foundation).** `lantern_player` opens a
-> window and runs the main loop on the Axmol backend. The editor is still a
-> console program (its window arrives in Milestone 2).
+> **Status: Milestone 2 (minimal editor).** `lantern_editor` opens a
+> standalone editor with dockable Viewport, Hierarchy, Inspector and Console
+> panels and a remembered layout; `lantern_player` runs the game window.
+> Scenes you can create, edit and save arrive in Milestone 3.
 
 ## Quick start
 
 ```sh
 brew install cmake ninja git && brew install powershell   # macOS, once
 cmake --workflow --preset dev
-./build/dev/bin/lantern_player/lantern_player.app/Contents/MacOS/lantern_player
+./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
 ```
 
 Full instructions per platform: [docs/building.md](docs/building.md).
+Using the editor: [docs/editor.md](docs/editor.md).
 
 ## Repository layout
 
@@ -23,8 +25,10 @@ Full instructions per platform: [docs/building.md](docs/building.md).
 engine/core/     Engine lifecycle, logging, version (no third-party deps)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
-editor/          Standalone editor application (UI arrives in Milestone 2)
-tests/           Catch2 unit tests + editor smoke tests
+editor/model/    Editor logic without UI code (console, preferences, state)
+editor/panels/   Editor panels (Dear ImGui)
+editor/application/  Editor window, menus, docking layout
+tests/           Catch2 unit tests + window smoke tests
 cmake/           Shared CMake helpers, incl. the pinned Axmol download
 docs/            Build guide and architecture decision records (ADRs)
 external/        Downloaded Axmol + tools (created by CMake, not in git)

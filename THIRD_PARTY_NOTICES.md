@@ -13,6 +13,7 @@ by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
 |---|---|---|---|
 | [Axmol Engine](https://github.com/axmolengine/axmol) | 2.11.5 (`6c0dce6`) | MIT | Yes |
 | [axslcc](https://github.com/axmolengine/axslcc) shader compiler | 1.14.0 | see upstream | No — build tool only |
+| [Dear ImGui](https://github.com/ocornut/imgui) (docking branch, bundled as Axmol's ImGui extension, incl. `imgui_freetype` and `imgui_stdlib`) | 1.92.1 | MIT | Yes — editor UI; also linked into the player (unused there) |
 
 ### Libraries bundled by Axmol and linked into `lantern_player`
 
@@ -58,6 +59,14 @@ audio is enabled.
 - Shipped games must include these notices; the packaging step (Milestone 8)
   will generate them automatically.
 
+## Fonts
+
+The editor loads a font already installed on the user's computer (San
+Francisco / Arial on macOS, Segoe UI / Arial on Windows, DejaVu Sans /
+Liberation Sans on Linux) at run time. No font files are bundled or
+redistributed; otherwise Dear ImGui's built-in font (ProggyClean, MIT-style,
+part of Dear ImGui) is used.
+
 ## Development and test tools (not shipped)
 
 | Component | Version | License | Used for |
@@ -69,5 +78,4 @@ audio is enabled.
 
 | Component | License | Notes |
 |---|---|---|
-| Dear ImGui (docking) — bundled with Axmol | MIT | Editor UI (Milestone 2). |
 | nlohmann/json | MIT | Project, scene and content files (Milestone 3). |

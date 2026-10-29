@@ -5,7 +5,7 @@ A full build produces:
 | Program | What it is |
 |---|---|
 | `lantern_player` | The game runtime: opens a window and runs the main loop. A `.app` bundle on macOS. |
-| `lantern_editor` | The editor (console-only until Milestone 2). |
+| `lantern_editor` | The editor: dockable viewport, hierarchy, inspector and console panels. A `.app` bundle on macOS. See [editor.md](editor.md). |
 | `lantern_tests`, `lantern_runtime_tests` | Automated tests, run by `ctest`. |
 
 The window and rendering come from [Axmol](https://github.com/axmolengine/axmol)
@@ -70,8 +70,11 @@ frame-rate overlay. Press **Escape** or close the window to quit.
 ### 4. Run the editor
 
 ```sh
-./build/dev/bin/lantern_editor
+./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
 ```
+
+The editor window opens with its panels docked; quit with Cmd+Q or by closing
+the window. A guide to the panels is in [editor.md](editor.md).
 
 ## Presets
 
@@ -79,7 +82,7 @@ frame-rate overlay. Press **Escape** or close the window to quit.
 |---|---|
 | `dev` | Debug build with the Axmol runtime; warnings are errors. Use this day to day. |
 | `release` | Optimised build with the Axmol runtime. |
-| `core` | Core library, editor shell and tests only — no Axmol, no window. Builds in seconds. |
+| `core` | Core library, editor logic and their tests only — no Axmol, no window. Builds in seconds. |
 | `asan` | `core` + AddressSanitizer/UBSan, for hunting memory bugs. |
 
 Each preset builds into its own folder under `build/`. Downloaded Axmol lives
@@ -96,6 +99,7 @@ sudo apt install build-essential cmake ninja-build git pkg-config \
 sudo snap install powershell --classic     # or see Microsoft's install guide
 cmake --workflow --preset dev
 ./build/dev/bin/lantern_player/lantern_player
+./build/dev/bin/lantern_editor/lantern_editor
 ```
 
 On a machine without a screen (CI), run the tests under a virtual display:

@@ -1,14 +1,59 @@
-# lantern_editor — the standalone editor application.
+# The Lantern editor.
 #
-# Milestone 0: a console entry point that proves the editor target links
-# against the engine and starts/stops it. The Dear ImGui window, docking
-# and panels arrive in Milestone 2.
+#   lantern_editor_core  editor logic with no UI toolkit and no backend:
+#                        console log, preferences, settings paths, command line.
+#                        Always built and unit-tested (also in the `core` preset).
+#   lantern_editor       the editor application: Dear ImGui panels on top of
+#                        lantern_runtime. Needs the Axmol backend.
 #
 # Dependency rule: the editor may depend on the engine; the engine must
 # never depend on the editor.
 
-add_executable(lantern_editor
-    application/main.cpp)
+add_library(lantern_editor_core STATIC
+    model/CommandLine.cpp
+    model/ConsoleLog.cpp
+    model/EditorPaths.cpp
+    model/EditorState.cpp
+    model/Preferences.cpp)
+target_include_directories(lantern_editor_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/model")
+target_link_libraries(lantern_editor_core PUBLIC lantern::core)
+lantern_set_warnings(lantern_editor_core)
 
-target_link_libraries(lantern_editor PRIVATE lantern::core)
+if(NOT TARGET lantern_runtime)
+    message(STATUS "lantern_editor (the window) needs LANTERN_RUNTIME_BACKEND=axmol; building editor logic only.")
+    return()
+endif()
+
+add_executable(lantern_editor
+    application/main.cpp
+    application/EditorApp.cpp
+    application/Theme.cpp
+    panels/ConsolePanel.cpp
+    panels/HierarchyPanel.cpp
+    panels/InspectorPanel.cpp
+    panels/ViewportPanel.cpp)
+
+# lantern_imgui_headers gives the editor Dear ImGui's headers only — not
+# Axmol's — so editor code cannot reach into the backend by accident.
+target_link_libraries(lantern_editor PRIVATE lantern_editor_core lantern::runtime lantern_imgui_headers)
 lantern_set_warnings(lantern_editor)
+
+# Before Milestone 2 the editor was a single file at bin/lantern_editor; it is
+# now a folder (program + shaders). Remove the old file from existing builds.
+if(EXISTS "${CMAKE_BINARY_DIR}/bin/lantern_editor" AND NOT IS_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lantern_editor")
+    file(REMOVE "${CMAKE_BINARY_DIR}/bin/lantern_editor")
+endif()
+
+# Axmol's per-app setup (output folder, macOS bundle, compiled shaders).
+set(APP_NAME lantern_editor)
+set(_AX_EXTENSION_LIBS "")   # see player/CMakeLists.txt
+ax_setup_app_config(lantern_editor)
+
+if(APPLE)
+    set(MACOSX_BUNDLE_BUNDLE_NAME "Lantern Editor")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "dev.lantern-engine.editor")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+    set(MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2026 Oscar Hird. MIT License.")
+    set_target_properties(lantern_editor PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/cmake/MacOSXBundleInfo.plist.in")
+endif()

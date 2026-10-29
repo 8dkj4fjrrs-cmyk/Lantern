@@ -20,7 +20,7 @@ brief requires that game code talks to Lantern, not to the backend.
 | `lantern_runtime` | `lantern_core` (public), Axmol (**private**) | `lantern::Application`: window, main loop, per-frame callback, screenshots |
 | `lantern_player_cli` | nothing | `lantern_player` command-line parsing (unit-tested) |
 | `lantern_player` | `lantern_runtime`, `lantern_player_cli` | the game runtime executable (`.app` bundle on macOS) |
-| `lantern_editor` | `lantern_core` | editor shell (gets a window in Milestone 2) |
+| `lantern_editor` | `lantern_runtime`, `lantern_editor_core` | the editor (window since Milestone 2, see ADR 0003) |
 
 `lantern/runtime/Application.hpp` contains no Axmol types: implementation
 state lives behind a pointer (`Application::Impl`). Linking Axmol `PRIVATE`
@@ -75,5 +75,6 @@ The `external/` folder is shared by all build presets and ignored by git.
   (minutes); later builds are incremental.
 - macOS with Command Line Tools only (no full Xcode) is confirmed working:
   33/33 tests on the owner's MacBook Pro (macOS 15.4.1, CLT 16.4), 2026-10-29.
-- Re-enabling Axmol features later (ImGui for the editor, audio, physics) is a
-  one-line change in `LanternAxmol.cmake` plus a `THIRD_PARTY_NOTICES.md` update.
+- Re-enabling Axmol features later (audio, physics) is a one-line change in
+  `LanternAxmol.cmake` plus a `THIRD_PARTY_NOTICES.md` update. Milestone 2
+  re-enabled the ImGui extension this way (ADR 0003).

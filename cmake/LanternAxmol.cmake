@@ -146,7 +146,10 @@ set(ENV{AX_ROOT} "${LANTERN_AXMOL_DIR}")
 # THIRD_PARTY_NOTICES.md), e.g. ImGui for the editor, audio, physics.
 # ---------------------------------------------------------------------------
 set(AX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(AX_EXT_HINT OFF CACHE BOOL "" FORCE)            # no optional extensions
+set(AX_EXT_HINT OFF CACHE BOOL "" FORCE)            # no optional extensions...
+set(AX_ENABLE_EXT_IMGUI ON CACHE BOOL "" FORCE)     # ...except Dear ImGui (editor UI)
+set(AX_ENABLE_EXT_INSPECTOR OFF CACHE BOOL "" FORCE)
+set(AX_ENABLE_EXT_SDFGEN OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_3D OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_PHYSICS OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_AUDIO OFF CACHE BOOL "" FORCE)        # also keeps LGPL OpenAL Soft out for now
@@ -175,3 +178,12 @@ add_subdirectory("${_AX_ROOT}/core" "${ENGINE_BINARY_PATH}/axmol/core" SYSTEM)
 if(NOT TARGET ${_AX_CORE_LIB})
     message(FATAL_ERROR "Axmol did not create its core library target.")
 endif()
+if(NOT TARGET ImGui)
+    message(FATAL_ERROR "Axmol did not create its ImGui extension target.")
+endif()
+
+# Dear ImGui headers only (no Axmol include paths), for the editor's UI code.
+# The ImGui library itself is linked through lantern_runtime.
+add_library(lantern_imgui_headers INTERFACE)
+target_include_directories(lantern_imgui_headers SYSTEM INTERFACE
+    "${LANTERN_AXMOL_DIR}/extensions/ImGui/src/ImGui")

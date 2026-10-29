@@ -6,7 +6,8 @@
 #   lantern_runtime  static library: window, main loop, rendering backend.
 #                    Wraps Axmol privately (only with LANTERN_RUNTIME_BACKEND=axmol).
 #   lantern_player   the game runtime application (opens a window).
-#   lantern_editor   standalone editor executable (console-only until Milestone 2).
+#   lantern_editor_core  editor logic without UI code (always built, unit-tested).
+#   lantern_editor   the standalone editor application (Dear ImGui panels).
 #   lantern_tests    Catch2 unit tests (registered with CTest).
 #
 # Backend background: docs/adr/0001-runtime-foundation.md
@@ -14,7 +15,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
 

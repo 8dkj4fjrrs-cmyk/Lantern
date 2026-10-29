@@ -18,6 +18,9 @@ and AI assistants.
 
 - Dependency direction: `editor` → `engine`; never the reverse. Tests may use anything.
 - Public engine headers (`engine/*/include/lantern/...`) must not include backend (Cocos/Axmol) or ImGui headers.
+- `editor/model/` must not include ImGui or any runtime/backend header: it is the editor logic that survives a UI-library change, and it is unit-tested without a window.
+- Editor UI code (`editor/application`, `editor/panels`) may use Dear ImGui and `lantern/runtime/*.hpp`, never Axmol headers.
+- Editor operations that change project data must go through the undo/redo command system (from Milestone 3).
 - No global mutable state. Pass `Engine&` / `Logger&` explicitly.
 - Ownership: RAII and `std::unique_ptr` by default; raw pointers only as non-owning observers.
 - Errors: return `lantern::Status` (or a richer result type later) with a user-actionable message. No exceptions across module boundaries.
@@ -34,6 +37,8 @@ and AI assistants.
 ## Commands
 
 ```sh
-cmake --workflow --preset dev   # configure + build + test
+cmake --workflow --preset dev   # configure + build + test (window tests need a display;
+                                # on headless Linux: xvfb-run -a ctest --preset dev)
+cmake --workflow --preset core  # fast: no Axmol, no window
 cmake --build --preset asan && ctest --preset asan   # memory-error check
 ```
