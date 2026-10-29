@@ -40,13 +40,16 @@ See [AGENTS.md](AGENTS.md) for the full contributor rules.
 
 ## Runtime backend
 
-The brief calls for Cocos2d-x. Upstream Cocos2d-x 4.0 was evaluated and
-cannot be built natively on Apple silicon or linked on current Linux without
-rebuilding its dependencies; the maintained fork Axmol is the recommended
-alternative. Details and evidence: [docs/adr/0001-runtime-foundation.md](docs/adr/0001-runtime-foundation.md).
+Lantern Engine runs on [Axmol](https://github.com/axmolengine/axmol), the
+maintained fork of Cocos2d-x (wired in from Milestone 1). Upstream Cocos2d-x
+4.0 was evaluated first but cannot be built natively on Apple silicon or
+linked on current Linux. Details and evidence:
+[docs/adr/0001-runtime-foundation.md](docs/adr/0001-runtime-foundation.md).
 
 ## License
 
-Not yet chosen, so this project is **not open source yet**. MIT is proposed
-(matching both Cocos2d-x and Axmol). Third-party notices:
+Lantern Engine is released under the [MIT License](LICENSE).
+Copyright (c) 2026 Oscar Hird.
+
+Third-party components keep their own licenses; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
