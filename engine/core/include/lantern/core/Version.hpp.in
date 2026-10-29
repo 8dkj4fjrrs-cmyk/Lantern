@@ -10,10 +10,13 @@ inline constexpr int kVersionMinor = @PROJECT_VERSION_MINOR@;
 inline constexpr int kVersionPatch = @PROJECT_VERSION_PATCH@;
 inline constexpr std::string_view kVersionString = "@PROJECT_VERSION@";
 
+/// Runtime backend chosen at configure time, e.g. "Axmol 2.11.5" or "none".
+inline constexpr std::string_view kRuntimeBackend = "@LANTERN_BACKEND_DISPLAY_NAME@";
+
 /// "major.minor.patch", e.g. "0.0.1".
 std::string_view versionString() noexcept;
 
-/// Name of the runtime backend compiled in ("none" until Milestone 1).
+/// Name of the runtime backend this build was configured with.
 std::string_view runtimeBackendName() noexcept;
 
 } // namespace lantern

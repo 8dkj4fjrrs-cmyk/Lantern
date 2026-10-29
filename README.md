@@ -3,15 +3,16 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 0 (foundation).** The build system, core library, editor
-> entry point and test suite exist and pass. There is no window, renderer or
-> editor UI yet.
+> **Status: Milestone 1 (runtime foundation).** `lantern_player` opens a
+> window and runs the main loop on the Axmol backend. The editor is still a
+> console program (its window arrives in Milestone 2).
 
 ## Quick start
 
 ```sh
+brew install cmake ninja git && brew install --cask powershell   # macOS, once
 cmake --workflow --preset dev
-./build/dev/bin/lantern_editor
+./build/dev/bin/lantern_player/lantern_player.app/Contents/MacOS/lantern_player
 ```
 
 Full instructions per platform: [docs/building.md](docs/building.md).
@@ -20,10 +21,13 @@ Full instructions per platform: [docs/building.md](docs/building.md).
 
 ```
 engine/core/     Engine lifecycle, logging, version (no third-party deps)
+engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
+player/          lantern_player, the game runtime application
 editor/          Standalone editor application (UI arrives in Milestone 2)
 tests/           Catch2 unit tests + editor smoke tests
-cmake/           Shared CMake helpers
+cmake/           Shared CMake helpers, incl. the pinned Axmol download
 docs/            Build guide and architecture decision records (ADRs)
+external/        Downloaded Axmol + tools (created by CMake, not in git)
 ```
 
 Further modules (renderer, scene, serialization, dialogue, quests, …) are
@@ -40,8 +44,8 @@ See [AGENTS.md](AGENTS.md) for the full contributor rules.
 
 ## Runtime backend
 
-Lantern Engine runs on [Axmol](https://github.com/axmolengine/axmol), the
-maintained fork of Cocos2d-x (wired in from Milestone 1). Upstream Cocos2d-x
+Lantern Engine runs on [Axmol](https://github.com/axmolengine/axmol) v2.11.5,
+the maintained fork of Cocos2d-x, pinned to an exact commit. Upstream Cocos2d-x
 4.0 was evaluated first but cannot be built natively on Apple silicon or
 linked on current Linux. Details and evidence:
 [docs/adr/0001-runtime-foundation.md](docs/adr/0001-runtime-foundation.md).

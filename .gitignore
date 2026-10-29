@@ -13,3 +13,6 @@ xcuserdata/
 
 # clangd cache
 .cache/
+
+# Downloaded engines and tools (Axmol, axslcc) — fetched by CMake
+/external/

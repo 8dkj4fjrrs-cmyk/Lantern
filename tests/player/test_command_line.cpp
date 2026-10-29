@@ -1,0 +1,85 @@
+#include "CommandLine.hpp"
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <initializer_list>
+#include <string_view>
+#include <vector>
+
+using lantern::player::parseCommandLine;
+using lantern::player::ParseResult;
+
+namespace {
+ParseResult parse(std::initializer_list<std::string_view> args)
+{
+    const std::vector<std::string_view> list(args);
+    return parseCommandLine(list);
+}
+} // namespace
+
+TEST_CASE("No arguments gives the defaults", "[player][cli]")
+{
+    const ParseResult r = parse({});
+    REQUIRE(r.ok());
+    CHECK(r.options.width == 1280);
+    CHECK(r.options.height == 720);
+    CHECK(r.options.maxFrames == 0);
+    CHECK(r.options.showStats);
+    CHECK(r.options.screenshotPath.empty());
+}
+
+TEST_CASE("Window options are read", "[player][cli]")
+{
+    const ParseResult r = parse({"--title", "My Game", "--width", "800", "--height", "600", "--no-stats"});
+    REQUIRE(r.ok());
+    CHECK(r.options.title == "My Game");
+    CHECK(r.options.width == 800);
+    CHECK(r.options.height == 600);
+    CHECK_FALSE(r.options.showStats);
+}
+
+TEST_CASE("Frame limit and screenshot are read", "[player][cli]")
+{
+    const ParseResult r = parse({"--frames", "90", "--screenshot", "shot.png"});
+    REQUIRE(r.ok());
+    CHECK(r.options.maxFrames == 90);
+    CHECK(r.options.screenshotPath == "shot.png");
+}
+
+TEST_CASE("A screenshot without a frame limit is rejected", "[player][cli]")
+{
+    const ParseResult r = parse({"--screenshot", "shot.png"});
+    CHECK_FALSE(r.ok());
+    CHECK(r.error.find("--frames") != std::string::npos);
+}
+
+TEST_CASE("Bad numbers are rejected with a helpful message", "[player][cli]")
+{
+    CHECK_FALSE(parse({"--frames", "zero"}).ok());
+    CHECK_FALSE(parse({"--frames", "0"}).ok());
+    CHECK_FALSE(parse({"--frames", "-5"}).ok());
+    CHECK_FALSE(parse({"--width", "10"}).ok());       // below minimum
+    CHECK_FALSE(parse({"--width", "800px"}).ok());    // trailing junk
+    CHECK(parse({"--width", "abc"}).error.find("--width") != std::string::npos);
+}
+
+TEST_CASE("Options missing their value are rejected", "[player][cli]")
+{
+    const ParseResult r = parse({"--title"});
+    CHECK_FALSE(r.ok());
+    CHECK(r.error == "--title needs a value.");
+}
+
+TEST_CASE("Unknown options are rejected", "[player][cli]")
+{
+    const ParseResult r = parse({"--fullscreen"});
+    CHECK_FALSE(r.ok());
+    CHECK(r.error == "Unknown option: --fullscreen");
+}
+
+TEST_CASE("Help and version flags are recognised", "[player][cli]")
+{
+    CHECK(parse({"--help"}).options.showHelp);
+    CHECK(parse({"-h"}).options.showHelp);
+    CHECK(parse({"--version"}).options.showVersion);
+}

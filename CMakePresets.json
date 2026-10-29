@@ -1,50 +1,145 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "dev",
-      "displayName": "Development (Debug, Ninja)",
+      "displayName": "Development (Debug, Ninja, Axmol runtime)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/dev",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "LANTERN_RUNTIME_BACKEND": "axmol",
         "LANTERN_WARNINGS_AS_ERRORS": "ON"
+      },
+      "warnings": {
+        "dev": false
       }
     },
     {
       "name": "release",
-      "displayName": "Release (Ninja)",
+      "displayName": "Release (Ninja, Axmol runtime)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "LANTERN_RUNTIME_BACKEND": "axmol"
+      },
+      "warnings": {
+        "dev": false
+      }
+    },
+    {
+      "name": "core",
+      "displayName": "Core only (no window, no Axmol; builds in seconds)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/core",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LANTERN_RUNTIME_BACKEND": "none",
+        "LANTERN_WARNINGS_AS_ERRORS": "ON"
+      },
+      "warnings": {
+        "dev": false
+      }
     },
     {
       "name": "asan",
-      "displayName": "Debug + Address/UB sanitizers",
-      "inherits": "dev",
+      "displayName": "Core only + Address/UB sanitizers",
+      "inherits": "core",
       "binaryDir": "${sourceDir}/build/asan",
-      "cacheVariables": { "LANTERN_ENABLE_SANITIZERS": "ON" }
+      "cacheVariables": {
+        "LANTERN_ENABLE_SANITIZERS": "ON"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "dev", "configurePreset": "dev" },
-    { "name": "release", "configurePreset": "release" },
-    { "name": "asan", "configurePreset": "asan" }
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "core",
+      "configurePreset": "core"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    }
   ],
   "testPresets": [
-    { "name": "dev", "configurePreset": "dev", "output": { "outputOnFailure": true } },
-    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } },
-    { "name": "asan", "configurePreset": "asan", "output": { "outputOnFailure": true } }
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "core",
+      "configurePreset": "core",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ],
   "workflowPresets": [
     {
       "name": "dev",
-      "displayName": "Configure, build and test (Debug)",
+      "displayName": "Configure, build and test (Debug, with window)",
       "steps": [
-        { "type": "configure", "name": "dev" },
-        { "type": "build", "name": "dev" },
-        { "type": "test", "name": "dev" }
+        {
+          "type": "configure",
+          "name": "dev"
+        },
+        {
+          "type": "build",
+          "name": "dev"
+        },
+        {
+          "type": "test",
+          "name": "dev"
+        }
+      ]
+    },
+    {
+      "name": "core",
+      "displayName": "Configure, build and test (core only)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "core"
+        },
+        {
+          "type": "build",
+          "name": "core"
+        },
+        {
+          "type": "test",
+          "name": "core"
+        }
       ]
     }
   ]

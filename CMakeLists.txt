@@ -1,19 +1,22 @@
 # Lantern Engine — root build configuration.
 #
-# Targets (Milestone 0):
-#   lantern_core    static library: engine lifecycle, logging, version info
-#   lantern_editor  standalone editor executable (console-only until Milestone 2)
-#   lantern_tests   Catch2 unit tests (registered with CTest)
+# Targets:
+#   lantern_core     static library: engine lifecycle, logging, version info.
+#                    Depends only on the C++ standard library.
+#   lantern_runtime  static library: window, main loop, rendering backend.
+#                    Wraps Axmol privately (only with LANTERN_RUNTIME_BACKEND=axmol).
+#   lantern_player   the game runtime application (opens a window).
+#   lantern_editor   standalone editor executable (console-only until Milestone 2).
+#   lantern_tests    Catch2 unit tests (registered with CTest).
 #
-# The Cocos-family runtime backend is NOT wired in yet. See
-# docs/adr/0001-runtime-foundation.md for why, and LANTERN_RUNTIME_BACKEND below.
+# Backend background: docs/adr/0001-runtime-foundation.md
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.0.1
-    DESCRIPTION "A C++-first 2D game engine and editor"
-    LANGUAGES CXX)
+    VERSION 0.1.0
+    DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
+    LANGUAGES C CXX)
 
 # ---------------------------------------------------------------------------
 # Global settings
@@ -23,7 +26,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)   # lets editors/clangd understand the code
 
-# Put all executables in one folder so they are easy to find after a build.
+# Put our executables in one folder so they are easy to find after a build.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -40,16 +43,15 @@ option(LANTERN_BUILD_EDITOR "Build the standalone editor" ON)
 option(LANTERN_BUILD_TESTS "Build unit tests" ON)
 option(LANTERN_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(LANTERN_ENABLE_SANITIZERS "Build with AddressSanitizer + UBSan (Clang/GCC)" OFF)
+option(LANTERN_WINDOW_TESTS "Register tests that open a real window (needs a display)" ON)
 
-# Which rendering/runtime backend to link. Only "none" exists today; the
-# choice between upstream Cocos2d-x and a maintained fork is pending
-# (docs/adr/0001-runtime-foundation.md).
-set(LANTERN_RUNTIME_BACKEND "none" CACHE STRING "Runtime backend to link")
-set_property(CACHE LANTERN_RUNTIME_BACKEND PROPERTY STRINGS none)
-if(NOT LANTERN_RUNTIME_BACKEND STREQUAL "none")
-    message(FATAL_ERROR
-        "LANTERN_RUNTIME_BACKEND='${LANTERN_RUNTIME_BACKEND}' is not implemented yet. "
-        "Only 'none' is available in Milestone 0. See docs/adr/0001-runtime-foundation.md.")
+# Which rendering/runtime backend to link:
+#   axmol  the real engine runtime (default)
+#   none   core library, editor shell and tests only; no window, very fast to build
+set(LANTERN_RUNTIME_BACKEND "axmol" CACHE STRING "Runtime backend to link")
+set_property(CACHE LANTERN_RUNTIME_BACKEND PROPERTY STRINGS axmol none)
+if(NOT LANTERN_RUNTIME_BACKEND MATCHES "^(axmol|none)$")
+    message(FATAL_ERROR "LANTERN_RUNTIME_BACKEND must be 'axmol' or 'none', not '${LANTERN_RUNTIME_BACKEND}'.")
 endif()
 
 if(LANTERN_ENABLE_SANITIZERS AND NOT MSVC)
@@ -58,9 +60,27 @@ if(LANTERN_ENABLE_SANITIZERS AND NOT MSVC)
 endif()
 
 # ---------------------------------------------------------------------------
-# Modules
+# Third-party backend
+# ---------------------------------------------------------------------------
+if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")
+    if(APPLE)
+        enable_language(OBJC OBJCXX)   # Axmol's macOS platform layer is Objective-C++
+    endif()
+    include(LanternAxmol)
+    set(LANTERN_BACKEND_DISPLAY_NAME "Axmol ${LANTERN_AXMOL_VERSION}")
+else()
+    set(LANTERN_BACKEND_DISPLAY_NAME "none")
+endif()
+
+# ---------------------------------------------------------------------------
+# Our modules
 # ---------------------------------------------------------------------------
 add_subdirectory(engine/core)
+
+if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")
+    add_subdirectory(engine/runtime)
+    add_subdirectory(player)
+endif()
 
 if(LANTERN_BUILD_EDITOR)
     add_subdirectory(editor)
@@ -71,5 +91,5 @@ if(LANTERN_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-message(STATUS "Lantern ${PROJECT_VERSION}: editor=${LANTERN_BUILD_EDITOR} "
-               "tests=${LANTERN_BUILD_TESTS} backend=${LANTERN_RUNTIME_BACKEND}")
+message(STATUS "Lantern ${PROJECT_VERSION}: backend=${LANTERN_BACKEND_DISPLAY_NAME} "
+               "editor=${LANTERN_BUILD_EDITOR} tests=${LANTERN_BUILD_TESTS}")

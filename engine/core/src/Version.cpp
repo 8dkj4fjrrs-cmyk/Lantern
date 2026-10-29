@@ -9,8 +9,7 @@ std::string_view versionString() noexcept
 
 std::string_view runtimeBackendName() noexcept
 {
-    // Becomes the real backend name once Milestone 1 links one in.
-    return "none";
+    return kRuntimeBackend;
 }
 
 } // namespace lantern

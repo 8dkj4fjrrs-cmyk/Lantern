@@ -12,7 +12,8 @@ TEST_CASE("Version string matches the numeric version", "[core][version]")
     CHECK(lantern::versionString() == expected);
 }
 
-TEST_CASE("No runtime backend is linked in Milestone 0", "[core][version]")
+TEST_CASE("The runtime backend name is either none or Axmol", "[core][version]")
 {
-    CHECK(lantern::runtimeBackendName() == "none");
+    const std::string_view name = lantern::runtimeBackendName();
+    CHECK((name == "none" || name.starts_with("Axmol ")));
 }
