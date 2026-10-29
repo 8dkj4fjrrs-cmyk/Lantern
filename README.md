@@ -10,7 +10,7 @@ RPGs, pixel-art adventures, tile-based and story-driven games.
 ## Quick start
 
 ```sh
-brew install cmake ninja git && brew install --cask powershell   # macOS, once
+brew install cmake ninja git && brew install powershell   # macOS, once
 cmake --workflow --preset dev
 ./build/dev/bin/lantern_player/lantern_player.app/Contents/MacOS/lantern_player
 ```

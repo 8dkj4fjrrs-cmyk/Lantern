@@ -22,10 +22,12 @@ MacBook Pro (Homebrew 7.0.11, CMake 4.4.5, Ninja 1.13.2, Apple Clang).
 ```sh
 xcode-select --install            # Apple's compiler (skip if already installed)
 brew install cmake ninja git      # build tools (Homebrew: https://brew.sh)
-brew install --cask powershell    # needed by Axmol's download helper
+brew install powershell    # needed by Axmol's download helper
 ```
 
-The PowerShell install asks for your Mac password. Open a **new** Terminal
+If that fails, install the official package from
+https://aka.ms/powershell-release?tag=stable (the `osx-arm64.pkg` file).
+Open a **new** Terminal
 window afterwards, then check:
 
 ```sh
