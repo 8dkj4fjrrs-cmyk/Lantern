@@ -231,3 +231,34 @@ TEST_CASE("The scene can be renamed and renamed back", "[editor][commands]")
     f.doc.undo();
     CHECK(f.doc.scene().name() == "Test");
 }
+
+TEST_CASE("A tool drag changing several properties is one undo step", "[editor][commands]")
+{
+    Fixture f;
+    const EntityId box = f.make("Box");
+    f.scene().addComponent(box, std::make_unique<Shape>());
+    const std::string before = serialized(f.scene());
+
+    // A resize drag: size and position change together, many times.
+    for (int step = 1; step <= 5; ++step) {
+        const float w = 100.0f + 10.0f * static_cast<float>(step);
+        REQUIRE(f.doc.execute(std::make_unique<SetProperties>(
+            box,
+            std::vector<SetProperties::Change>{{"lantern.Shape", "size", Vec2{w, 100.0f}},
+                                               {"lantern.Transform", "position", Vec2{(w - 100.0f) * 0.5f, 0.0f}}},
+            "Resize Box")));
+    }
+    f.doc.history().breakMerge();
+    CHECK(f.scene().find(box)->get<Shape>()->size == Vec2{150.0f, 100.0f});
+    CHECK(f.scene().find(box)->transform().position == Vec2{25.0f, 0.0f});
+    CHECK(f.doc.history().undoLabel() == "Resize Box");
+
+    REQUIRE(f.doc.undo());
+    CHECK(serialized(f.scene()) == before);
+    REQUIRE(f.doc.redo());
+    CHECK(f.scene().find(box)->get<Shape>()->size == Vec2{150.0f, 100.0f});
+
+    // Changing nothing makes no step.
+    CHECK_FALSE(f.doc.execute(std::make_unique<SetProperties>(
+        box, std::vector<SetProperties::Change>{{"lantern.Shape", "size", Vec2{150.0f, 100.0f}}}, "Resize Box")));
+}

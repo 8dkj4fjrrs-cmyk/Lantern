@@ -8,7 +8,12 @@
 #include <renderer/backend/ProgramManager.h>
 #include <renderer/backend/ProgramState.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 #include <algorithm>
+#include <cwchar>
 #include <cmath>
 
 namespace lantern::detail {
@@ -70,7 +75,38 @@ ui::Key toKey(int key)
 } // namespace
 
 // Plain functions GLFW can call; each forwards to Axmol first, then to us.
+// GLFW gives file paths as UTF-8 on every platform. macOS and Linux use
+// UTF-8 for narrow paths already; Windows needs a conversion to UTF-16.
+std::filesystem::path pathFromUtf8(const char* utf8)
+{
+#if defined(_WIN32)
+    const int length = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
+    std::wstring wide(static_cast<std::size_t>(std::max(length, 1)), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, wide.data(), length);
+    wide.resize(std::wcslen(wide.c_str()));
+    return std::filesystem::path(wide);
+#else
+    return std::filesystem::path(utf8);
+#endif
+}
+
 struct UiHostCallbacks {
+    static void drop(GLFWwindow* w, int count, const char** paths)
+    {
+        if (g_activeHost == nullptr) {
+            return;
+        }
+        if (g_activeHost->m_prevDrop != nullptr) {
+            g_activeHost->m_prevDrop(w, count, paths);
+        }
+        if (g_activeHost != nullptr && g_activeHost->m_onDrop && count > 0) {
+            std::vector<std::filesystem::path> files;
+            for (int i = 0; i < count; ++i) {
+                files.push_back(pathFromUtf8(paths[i]));
+            }
+            g_activeHost->m_onDrop(files);
+        }
+    }
     static void key(GLFWwindow* w, int key, int scancode, int action, int mods)
     {
         if (g_activeHost == nullptr) {
@@ -212,6 +248,7 @@ UiHost::UiHost(const Logger& logger, GLFWwindow* window, ax::Scene& scene, ax::T
 
 UiHost::~UiHost()
 {
+    forgetTextures();
     restoreCallbacks();
     for (GLFWcursor*& cursor : m_cursors) {
         if (cursor != nullptr) {
@@ -237,6 +274,7 @@ void UiHost::installCallbacks()
     m_prevCursorPos = glfwSetCursorPosCallback(m_window, &UiHostCallbacks::cursorPos);
     m_prevCursorEnter = glfwSetCursorEnterCallback(m_window, &UiHostCallbacks::cursorEnter);
     m_prevScroll = glfwSetScrollCallback(m_window, &UiHostCallbacks::scroll);
+    m_prevDrop = glfwSetDropCallback(m_window, &UiHostCallbacks::drop);
 }
 
 void UiHost::restoreCallbacks()
@@ -250,6 +288,7 @@ void UiHost::restoreCallbacks()
     glfwSetCursorPosCallback(m_window, m_prevCursorPos);
     glfwSetCursorEnterCallback(m_window, m_prevCursorEnter);
     glfwSetScrollCallback(m_window, m_prevScroll);
+    glfwSetDropCallback(m_window, m_prevDrop);
     g_activeHost = nullptr;
 }
 
@@ -329,6 +368,7 @@ void UiHost::beginFrame(double deltaSeconds)
     glfwGetWindowSize(m_window, &windowW, &windowH);
     glfwGetFramebufferSize(m_window, &framebufferW, &framebufferH);
     const float scale = windowW > 0 ? static_cast<float>(framebufferW) / static_cast<float>(windowW) : 1.0f;
+    m_pixelScale = scale > 0.0f ? scale : 1.0f;
     m_context->setViewport({static_cast<float>(windowW), static_cast<float>(windowH)}, scale);
     m_context->advanceTime(deltaSeconds);
 }
@@ -367,6 +407,30 @@ void UiHost::uploadAtlas()
     m_atlasVersion = atlas.version();
 }
 
+ui::TextureId UiHost::textureId(ax::Texture2D* texture)
+{
+    if (texture == nullptr) {
+        return 0;
+    }
+    if (const auto it = m_imageIds.find(texture); it != m_imageIds.end()) {
+        return it->second;
+    }
+    const ui::TextureId id = m_nextImageId++;
+    texture->retain(); // ours until forgetTextures(), even if its file is reloaded meanwhile
+    m_images[id] = texture;
+    m_imageIds[texture] = id;
+    return id;
+}
+
+void UiHost::forgetTextures()
+{
+    for (auto& [id, texture] : m_images) {
+        texture->release();
+    }
+    m_images.clear();
+    m_imageIds.clear();
+}
+
 ax::Texture2D* UiHost::textureFor(ui::TextureId id) const
 {
     if (id == ui::kAtlasTexture) {
@@ -375,7 +439,8 @@ ax::Texture2D* UiHost::textureFor(ui::TextureId id) const
     if (id == kWorldTexture) {
         return m_worldTexture;
     }
-    return nullptr;
+    const auto it = m_images.find(id);
+    return it != m_images.end() ? it->second : nullptr;
 }
 
 void UiHost::post(ax::Renderer* renderer, std::function<void()> fn)

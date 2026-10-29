@@ -82,6 +82,7 @@ endif()
 # ---------------------------------------------------------------------------
 add_subdirectory(engine/core)
 add_subdirectory(engine/scene)
+add_subdirectory(engine/assets)
 add_subdirectory(engine/ui)
 
 if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")

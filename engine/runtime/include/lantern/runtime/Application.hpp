@@ -6,10 +6,12 @@
 // code and tools talk to Lantern; Lantern talks to the backend in src/.
 
 #include "lantern/core/Engine.hpp"
+#include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/scene/Scene.hpp"
 #include "lantern/ui/Context.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -96,9 +98,31 @@ struct RunReport {
 /// The off-screen world image, ready for a ui::ImageView.
 struct WorldImage {
     ui::TextureId texture = 0;  // 0 when the world is not drawn off-screen
-    ui::Size size;              // the world's resolution, in points
+    ui::Size size;              // the image's size, in points
     ui::Vec2 uv0;               // texture corners (the image may be stored upside down)
     ui::Vec2 uv1;
+};
+
+/// Which part of the world the off-screen image shows (the editor's view).
+/// The image is `pixelWidth` x `pixelHeight` pixels; world point `center`
+/// is in its middle, and one world point covers `pixelsPerPoint` pixels.
+struct WorldView {
+    Vec2 center;
+    float pixelsPerPoint = 1.0f;
+    int pixelWidth = 0;    // 0 = the game's resolution
+    int pixelHeight = 0;
+};
+
+/// Where the scene's Camera component looks (see lantern::Camera).
+struct GameCameraView {
+    Vec2 center;
+    float zoom = 1.0f;
+};
+
+/// An image file loaded for the UI (e.g. a thumbnail).
+struct UiImage {
+    ui::TextureId texture = 0;
+    ui::Size size;   // in pixels
 };
 
 /// Runtime services for the UI layer. Valid inside the ui* callbacks only.
@@ -117,6 +141,22 @@ public:
 
     /// Changes the window's title bar text.
     void setWindowTitle(const std::string& title);
+
+    /// Sets which part of the world the off-screen image shows, and its size.
+    void setWorldView(const WorldView& view);
+    /// The scene's game camera, if it has one.
+    std::optional<GameCameraView> gameCamera() const;
+
+    /// The project's assets, used to draw sprites (null when no project is
+    /// open). The database must stay alive while set.
+    void setAssets(const AssetDatabase* assets);
+
+    /// An image file as a UI texture (loaded once; again if the file
+    /// changes). Nothing if it cannot be loaded.
+    std::optional<UiImage> loadImage(const std::filesystem::path& path, bool pixelArt);
+
+    /// Called with the files dropped onto the window (e.g. from Finder).
+    void setDropHandler(std::function<void(const std::vector<std::filesystem::path>&)> handler);
 
     /// Frames per second, smoothed.
     float framesPerSecond() const noexcept;
@@ -162,6 +202,10 @@ public:
 
     /// Shows `scene` (same as UiFrame::showScene); may be called before run().
     void showScene(std::shared_ptr<const Scene> scene);
+
+    /// The assets sprites are drawn from (same as UiFrame::setAssets); may be
+    /// called before run(). The database must outlive the run.
+    void setAssets(const AssetDatabase* assets);
 
     /// Called once per frame before drawing. Game logic will hook in here.
     void setFrameCallback(std::function<void(const FrameInfo&)> callback);

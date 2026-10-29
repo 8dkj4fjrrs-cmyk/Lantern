@@ -22,6 +22,7 @@
 
 #include "AxmolLogBridge.hpp"
 #include "SceneRenderer.hpp"
+#include "TextureStore.hpp"
 #include "UiHost.hpp"
 
 #include <axmol.h>
@@ -52,35 +53,40 @@ std::string toString(ax::Vec2 size)
 
 // Renders the (hidden) world into a texture every frame. The world stays in
 // the running scene so its animations and timers run normally; it is only
-// made visible for the moment it is drawn into the texture.
+// made visible for the moment it is drawn into the texture. What it draws,
+// and how, is decided by Application::Impl::captureWorld().
 class WorldCaptureNode final : public ax::Node {
 public:
-    static WorldCaptureNode* create(ax::Node* world, ax::RenderTexture* target)
+    static WorldCaptureNode* create(std::function<void(ax::Renderer*)> capture)
     {
-        auto* node = new WorldCaptureNode(world, target);
+        auto* node = new WorldCaptureNode(std::move(capture));
         node->autorelease();
         return node;
     }
 
     void visit(ax::Renderer* renderer, const ax::Mat4& /*parentTransform*/, uint32_t /*parentFlags*/) override
     {
-        m_target->beginWithClear(0.0f, 0.0f, 0.0f, 1.0f);
-        m_world->setVisible(true);
-        m_world->visit(renderer, ax::Mat4::IDENTITY, ax::Node::FLAGS_TRANSFORM_DIRTY);
-        m_world->setVisible(false);
-        m_target->end();
+        m_capture(renderer);
     }
 
 private:
-    WorldCaptureNode(ax::Node* world, ax::RenderTexture* target)
-        : m_world(world)
-        , m_target(target)
+    explicit WorldCaptureNode(std::function<void(ax::Renderer*)> capture)
+        : m_capture(std::move(capture))
     {
     }
 
-    ax::Node* m_world;           // owned by the scene
-    ax::RenderTexture* m_target; // owned by Application::Impl
+    std::function<void(ax::Renderer*)> m_capture;
 };
+
+// The transform that shows world point `center` in the middle of a
+// `width` x `height` area, one world point covering `scale` units.
+ax::Mat4 viewTransform(Vec2 center, float scale, float width, float height)
+{
+    ax::Mat4 m;
+    ax::Mat4::createTranslation(width * 0.5f - center.x * scale, height * 0.5f - center.y * scale, 0.0f, &m);
+    m.scale(scale, scale, 1.0f);
+    return m;
+}
 
 } // namespace
 
@@ -109,7 +115,11 @@ struct Application::Impl {
     std::string startupError;
 
     ax::Node* world = nullptr;                  // owned by the scene
+    std::unique_ptr<detail::TextureStore> textures;
     std::unique_ptr<detail::SceneRenderer> renderer;
+    const AssetDatabase* assets = nullptr;      // the project's assets (not owned)
+    WorldView worldView;                        // what the off-screen image shows
+    std::uint64_t uiTextureGeneration = 0;
     std::shared_ptr<const Scene> pendingScene;  // shown once the window exists
     const Scene* shownScene = nullptr;          // for logging scene changes
     ax::RenderTexture* worldTexture = nullptr;  // retained here (Offscreen only)
@@ -126,6 +136,16 @@ struct Application::Impl {
     void onFrame(float deltaSeconds);
     void finish();
     void releaseBackendObjects();
+    void captureWorld(ax::Renderer* renderer);
+    bool resizeWorldTexture(int width, int height);
+    void applyGameCamera();
+    void setAssets(const AssetDatabase* db)
+    {
+        assets = db;
+        if (renderer) {
+            renderer->setAssets(db);
+        }
+    }
     void showScene(std::shared_ptr<const Scene> scene)
     {
         if (renderer) {
@@ -209,7 +229,9 @@ bool Application::Impl::startWindow()
     world->setName("World");
     world->setContentSize(ax::Size(worldW, worldH));
     scene->addChild(world);
-    renderer = std::make_unique<detail::SceneRenderer>(*world);
+    textures = std::make_unique<detail::TextureStore>(log());
+    renderer = std::make_unique<detail::SceneRenderer>(*world, textures.get());
+    renderer->setAssets(assets);
     std::shared_ptr<const Scene> first = pendingScene != nullptr ? pendingScene : presentation.scene;
     if (first == nullptr) {
         first = std::make_shared<const Scene>(makeStartScene(worldW, worldH));
@@ -221,17 +243,16 @@ bool Application::Impl::startWindow()
                               + " entities)");
 
     if (presentation.worldDisplay == WorldDisplay::Offscreen) {
-        worldTexture = ax::RenderTexture::create(presentation.worldWidth, presentation.worldHeight,
-                                                 ax::backend::PixelFormat::RGBA8,
-                                                 ax::backend::PixelFormat::D24S8);
-        if (worldTexture == nullptr) {
+        worldView.center = {worldW * 0.5f, worldH * 0.5f};
+        if (!resizeWorldTexture(presentation.worldWidth, presentation.worldHeight)) {
             startupError = "Could not create the off-screen world image.";
             return false;
         }
-        worldTexture->retain();
         world->setVisible(false); // drawn only by the capture node
-        scene->addChild(WorldCaptureNode::create(world, worldTexture), -100);
+        scene->addChild(WorldCaptureNode::create([this](ax::Renderer* r) { captureWorld(r); }), -100);
         director->setClearColor(ax::Color4F(0.08f, 0.08f, 0.10f, 1.0f));
+    } else {
+        applyGameCamera();
     }
 
     director->runWithScene(scene);
@@ -269,6 +290,80 @@ bool Application::Impl::startWindow()
     // Run onFrame() every frame (interval 0) for as long as the loop lives.
     director->getScheduler()->schedule([this](float dt) { onFrame(dt); }, this, 0.0f, false, "lantern.frame");
     return true;
+}
+
+bool Application::Impl::resizeWorldTexture(int width, int height)
+{
+    width = std::clamp(width, 1, 8192);
+    height = std::clamp(height, 1, 8192);
+    if (worldTexture != nullptr) {
+        const ax::Vec2 current = worldTexture->getSprite()->getTexture()->getContentSizeInPixels();
+        if (static_cast<int>(current.x) == width && static_cast<int>(current.y) == height) {
+            return true;
+        }
+    }
+    // The size is in pixels: with a content scale factor other than 1 Axmol
+    // would multiply it, so divide first.
+    const float scale = ax::Director::getInstance()->getContentScaleFactor();
+    auto* texture = ax::RenderTexture::create(static_cast<int>(static_cast<float>(width) / scale),
+                                              static_cast<int>(static_cast<float>(height) / scale),
+                                              ax::backend::PixelFormat::RGBA8, ax::backend::PixelFormat::D24S8);
+    if (texture == nullptr) {
+        return false;
+    }
+    texture->retain();
+    texture->setKeepMatrix(true); // captureWorld() sets the projection itself
+    AX_SAFE_RELEASE_NULL(worldTexture);
+    worldTexture = texture;
+    if (ui) {
+        ui->setWorldTexture(worldTexture->getSprite()->getTexture());
+    }
+    return true;
+}
+
+void Application::Impl::captureWorld(ax::Renderer* r)
+{
+    if (worldTexture == nullptr || world == nullptr) {
+        return;
+    }
+    ax::Director* director = ax::Director::getInstance();
+    const ax::Vec2 size = worldTexture->getSprite()->getTexture()->getContentSizeInPixels();
+
+    // Draw in texture pixels: (0, 0) bottom-left to (width, height) top-right.
+    // RenderTexture would otherwise stretch the window's design area over the
+    // texture, which blurs or distorts when the panel and game sizes differ.
+    director->pushMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
+    ax::Mat4 projection;
+    ax::Mat4::createOrthographicOffCenter(0.0f, size.x, 0.0f, size.y, -1024.0f, 1024.0f, &projection);
+    director->loadMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION, projection);
+    director->pushMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
+    director->loadIdentityMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
+
+    worldTexture->beginWithClear(0.106f, 0.106f, 0.114f, 1.0f); // the editor's backdrop
+    world->setVisible(true);
+    world->visit(r, viewTransform(worldView.center, worldView.pixelsPerPoint, size.x, size.y),
+                 ax::Node::FLAGS_TRANSFORM_DIRTY);
+    world->setVisible(false);
+    worldTexture->end();
+
+    director->popMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
+    director->popMatrix(ax::MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
+}
+
+void Application::Impl::applyGameCamera()
+{
+    if (world == nullptr || renderer == nullptr) {
+        return;
+    }
+    // Without a camera the window shows the world from (0, 0) to the game's
+    // resolution; with one, it is centred on the camera.
+    const auto view = renderer->camera();
+    const auto w = static_cast<float>(presentation.worldWidth);
+    const auto h = static_cast<float>(presentation.worldHeight);
+    const Vec2 center = view ? view->center : Vec2{w * 0.5f, h * 0.5f};
+    const float zoom = view ? std::max(0.01f, view->zoom) : 1.0f;
+    world->setScale(zoom);
+    world->setPosition(w * 0.5f - center.x * zoom, h * 0.5f - center.y * zoom);
 }
 
 void Application::Impl::startUi(ax::Scene& scene, ax::RenderView& view)
@@ -333,9 +428,17 @@ void Application::Impl::onFrame(float deltaSeconds)
         }
         ui->endFrame();
     }
+    if (ui && textures && textures->generation() != uiTextureGeneration) {
+        // A thumbnail's image was loaded again: let the UI ask for the new one.
+        // (Done before the UI runs, so it never draws a forgotten texture.)
+        uiTextureGeneration = textures->generation();
+    }
     if (renderer) {
         const Scene* before = shownScene;
         renderer->update(); // redraw the scene if it changed this frame
+        if (presentation.worldDisplay == WorldDisplay::FullWindow) {
+            applyGameCamera();
+        }
         shownScene = renderer->scene().get();
         if (shownScene != before && shownScene != nullptr) {
             log().info(kCategory, "Showing scene '" + shownScene->name() + "' ("
@@ -390,6 +493,7 @@ void Application::Impl::releaseBackendObjects()
         ui.reset(); // restores Axmol's input callbacks, frees UI textures
     }
     renderer.reset();
+    textures.reset();
     AX_SAFE_RELEASE_NULL(worldTexture);
     world = nullptr;
 }
@@ -415,7 +519,9 @@ WorldImage UiFrame::worldImage() const
     }
     WorldImage image;
     image.texture = detail::UiHost::kWorldTexture;
-    image.size = {static_cast<float>(impl.presentation.worldWidth), static_cast<float>(impl.presentation.worldHeight)};
+    const ax::Vec2 pixels = impl.worldTexture->getSprite()->getTexture()->getContentSizeInPixels();
+    const float pixelScale = impl.ui ? impl.ui->pixelScale() : 1.0f;
+    image.size = {pixels.x / pixelScale, pixels.y / pixelScale};
 #if AX_USE_GL
     // OpenGL stores render textures upside down.
     image.uv0 = {0.0f, 1.0f};
@@ -452,6 +558,56 @@ void UiFrame::showScene(std::shared_ptr<const Scene> scene)
     m_access.impl.showScene(std::move(scene));
 }
 
+void UiFrame::setWorldView(const WorldView& view)
+{
+    Application::Impl& impl = m_access.impl;
+    impl.worldView = view;
+    impl.worldView.pixelsPerPoint = std::clamp(view.pixelsPerPoint, 0.01f, 256.0f);
+    const int width = view.pixelWidth > 0 ? view.pixelWidth : impl.presentation.worldWidth;
+    const int height = view.pixelHeight > 0 ? view.pixelHeight : impl.presentation.worldHeight;
+    if (impl.presentation.worldDisplay == WorldDisplay::Offscreen && !impl.resizeWorldTexture(width, height)) {
+        impl.log().error(kCategory, "Could not resize the off-screen world image.");
+    }
+}
+
+std::optional<GameCameraView> UiFrame::gameCamera() const
+{
+    const Application::Impl& impl = m_access.impl;
+    if (!impl.renderer) {
+        return std::nullopt;
+    }
+    if (const auto view = impl.renderer->camera()) {
+        return GameCameraView{view->center, view->zoom};
+    }
+    return std::nullopt;
+}
+
+void UiFrame::setAssets(const AssetDatabase* assets)
+{
+    m_access.impl.setAssets(assets);
+}
+
+std::optional<UiImage> UiFrame::loadImage(const std::filesystem::path& path, bool pixelArt)
+{
+    Application::Impl& impl = m_access.impl;
+    if (!impl.textures || !impl.ui) {
+        return std::nullopt;
+    }
+    ax::Texture2D* texture = impl.textures->get(path, pixelArt);
+    if (texture == nullptr) {
+        return std::nullopt;
+    }
+    const ax::Vec2 size = texture->getContentSizeInPixels();
+    return UiImage{impl.ui->textureId(texture), {size.x, size.y}};
+}
+
+void UiFrame::setDropHandler(std::function<void(const std::vector<std::filesystem::path>&)> handler)
+{
+    if (m_access.impl.ui) {
+        m_access.impl.ui->setDropHandler(std::move(handler));
+    }
+}
+
 void UiFrame::setWindowTitle(const std::string& title)
 {
     if (auto* view = ax::Director::getInstance()->getRenderView()) {
@@ -475,6 +631,11 @@ Application::~Application() = default;
 void Application::showScene(std::shared_ptr<const Scene> scene)
 {
     m_impl->showScene(std::move(scene));
+}
+
+void Application::setAssets(const AssetDatabase* assets)
+{
+    m_impl->setAssets(assets);
 }
 
 void Application::requestQuit()

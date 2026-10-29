@@ -66,7 +66,9 @@ HierarchyPanel::HierarchyPanel(EditorServices& editor)
         };
         std::vector<ui::MenuItem> items{item("Empty Object", NewEntityKind::Empty, false),
                                         item("Rectangle", NewEntityKind::Rectangle, false),
-                                        item("Ellipse", NewEntityKind::Ellipse, false), ui::MenuItem::divider(),
+                                        item("Ellipse", NewEntityKind::Ellipse, false),
+                                        item("Sprite", NewEntityKind::Sprite, false),
+                                        item("Camera", NewEntityKind::Camera, false), ui::MenuItem::divider(),
                                         item("Empty Child of Selection", NewEntityKind::Empty, true),
                                         item("Rectangle Child of Selection", NewEntityKind::Rectangle, true)};
         for (std::size_t i = 4; i < items.size(); ++i) {

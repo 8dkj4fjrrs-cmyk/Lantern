@@ -437,16 +437,27 @@ Affine2 Scene::worldTransform(EntityId id) const
     return result;
 }
 
+std::optional<LocalBounds> localBounds(const Entity& entity)
+{
+    if (const Shape* shape = entity.get<Shape>()) {
+        return LocalBounds{shape->size, shape->kind == ShapeKind::Ellipse};
+    }
+    if (const Sprite* sprite = entity.get<Sprite>()) {
+        return LocalBounds{sprite->size, false};
+    }
+    return std::nullopt;
+}
+
 std::optional<std::array<Vec2, 4>> Scene::worldCorners(EntityId id) const
 {
     const Entity* e = find(id);
-    const Shape* shape = e != nullptr ? e->get<Shape>() : nullptr;
-    if (shape == nullptr) {
+    const auto bounds = e != nullptr ? localBounds(*e) : std::nullopt;
+    if (!bounds) {
         return std::nullopt;
     }
     const Affine2 world = worldTransform(id);
-    const float hw = shape->size.x * 0.5f;
-    const float hh = shape->size.y * 0.5f;
+    const float hw = bounds->size.x * 0.5f;
+    const float hh = bounds->size.y * 0.5f;
     return std::array<Vec2, 4>{world.apply({-hw, -hh}), world.apply({hw, -hh}), world.apply({hw, hh}),
                                world.apply({-hw, hh})};
 }
@@ -466,8 +477,8 @@ EntityId Scene::hitTest(Vec2 worldPoint) const
     // Everything in drawing order; the last hit is the one on top.
     EntityId hit;
     forEach([&](const Entity& e, int) {
-        const Shape* shape = e.get<Shape>();
-        if (shape == nullptr || shape->size.x <= 0.0f || shape->size.y <= 0.0f || !isEffectivelyActive(e)) {
+        const auto bounds = localBounds(e);
+        if (!bounds || bounds->size.x <= 0.0f || bounds->size.y <= 0.0f || !isEffectivelyActive(e)) {
             return;
         }
         const auto inverse = worldTransform(e.m_id).inverse();
@@ -475,10 +486,10 @@ EntityId Scene::hitTest(Vec2 worldPoint) const
             return;
         }
         const Vec2 p = inverse->apply(worldPoint);
-        const float hw = shape->size.x * 0.5f;
-        const float hh = shape->size.y * 0.5f;
+        const float hw = bounds->size.x * 0.5f;
+        const float hh = bounds->size.y * 0.5f;
         bool inside = false;
-        if (shape->kind == ShapeKind::Rectangle) {
+        if (!bounds->ellipse) {
             inside = std::abs(p.x) <= hw && std::abs(p.y) <= hh;
         } else {
             const float nx = p.x / hw;

@@ -32,8 +32,9 @@ add_executable(lantern_tests
     editor/test_commands.cpp
     scene/test_scene.cpp
     scene/test_scene_file.cpp
-    scene/test_project.cpp)
-target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+    scene/test_project.cpp
+    assets/test_assets.cpp)
+target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)

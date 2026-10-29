@@ -274,6 +274,73 @@ bool SetProperty::mergeWith(const Command& next)
     return true;
 }
 
+// --- SetProperties ------------------------------------------------------------------------------
+
+SetProperties::SetProperties(EntityId id, std::vector<Change> changes, std::string label)
+    : m_id(id)
+    , m_changes(std::move(changes))
+    , m_label(std::move(label))
+{
+}
+
+bool SetProperties::apply(Scene& scene)
+{
+    const Entity* entity = scene.find(m_id);
+    if (entity == nullptr) {
+        return false;
+    }
+    m_previous.assign(m_changes.size(), std::nullopt);
+    bool changed = false;
+    for (std::size_t i = 0; i < m_changes.size(); ++i) {
+        Change& c = m_changes[i];
+        const Component* component = entity->component(c.componentType);
+        const PropertyInfo* info = component != nullptr ? component->type().findProperty(c.key) : nullptr;
+        const auto current = component != nullptr ? component->get(c.key) : std::nullopt;
+        const auto wanted = info != nullptr ? info->coerce(c.value) : std::nullopt;
+        if (!current || !wanted || *wanted == *current) {
+            continue;
+        }
+        c.value = *wanted;
+        m_previous[i] = current;
+        changed = scene.setProperty(m_id, c.componentType, c.key, c.value) || changed;
+    }
+    return changed;
+}
+
+void SetProperties::revert(Scene& scene)
+{
+    for (std::size_t i = m_changes.size(); i-- > 0;) {
+        if (m_previous[i]) {
+            scene.setProperty(m_id, m_changes[i].componentType, m_changes[i].key, *m_previous[i]);
+        }
+    }
+}
+
+bool SetProperties::mergeWith(const Command& next)
+{
+    const auto* other = dynamic_cast<const SetProperties*>(&next);
+    if (other == nullptr || other->m_id != m_id || other->m_changes.size() != m_changes.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < m_changes.size(); ++i) {
+        if (other->m_changes[i].componentType != m_changes[i].componentType
+            || other->m_changes[i].key != m_changes[i].key) {
+            return false;
+        }
+    }
+    // Take the newest values; keep our "previous" values (where the next
+    // command changed something we did not, take its previous value).
+    for (std::size_t i = 0; i < m_changes.size(); ++i) {
+        if (other->m_previous[i]) {
+            m_changes[i].value = other->m_changes[i].value;
+            if (!m_previous[i]) {
+                m_previous[i] = other->m_previous[i];
+            }
+        }
+    }
+    return true;
+}
+
 // --- AddComponent / RemoveComponent ---------------------------------------------------------------------
 
 AddComponent::AddComponent(EntityId id, std::unique_ptr<Component> component)

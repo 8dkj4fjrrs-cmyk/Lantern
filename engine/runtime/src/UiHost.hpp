@@ -17,7 +17,10 @@
 #include <platform/RenderViewImpl.h> // brings in GLFW the way Axmol expects
 #include <renderer/backend/VertexLayout.h>
 
+#include <filesystem>
+#include <functional>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace lantern::detail {
@@ -37,6 +40,24 @@ public:
     UiHost& operator=(const UiHost&) = delete;
 
     ui::Context& context() noexcept { return *m_context; }
+    /// Framebuffer pixels per window point (2 on a Retina screen).
+    float pixelScale() const noexcept { return m_pixelScale; }
+
+    /// Replaces the world image (it is re-created when the viewport resizes).
+    void setWorldTexture(ax::Texture2D* texture) { m_worldTexture = texture; }
+
+    /// Makes `texture` drawable by the UI (e.g. a thumbnail) and returns its
+    /// id; the same texture always gets the same id. The host keeps a
+    /// reference to it until forgetTextures().
+    ui::TextureId textureId(ax::Texture2D* texture);
+    /// Drops every texture registered with textureId().
+    void forgetTextures();
+
+    /// Called with the files dropped onto the window.
+    void setDropHandler(std::function<void(const std::vector<std::filesystem::path>&)> handler)
+    {
+        m_onDrop = std::move(handler);
+    }
 
     /// Updates window size, pixel density and time. Call once per frame
     /// before the application changes the UI.
@@ -73,6 +94,10 @@ private:
     UiRenderNode* m_node = nullptr;          // retained; lives in the scene
     ax::Texture2D* m_atlasTexture = nullptr; // owned
     ax::Texture2D* m_worldTexture = nullptr; // owned by the render texture
+    std::unordered_map<ui::TextureId, ax::Texture2D*> m_images;      // thumbnails etc. (retained)
+    std::unordered_map<ax::Texture2D*, ui::TextureId> m_imageIds;
+    ui::TextureId m_nextImageId = 100;
+    float m_pixelScale = 1.0f;
     std::uint64_t m_atlasVersion = 0;
     int m_atlasWidth = 0;
     int m_atlasHeight = 0;
@@ -96,6 +121,8 @@ private:
     GLFWcursorposfun m_prevCursorPos = nullptr;
     GLFWcursorenterfun m_prevCursorEnter = nullptr;
     GLFWscrollfun m_prevScroll = nullptr;
+    GLFWdropfun m_prevDrop = nullptr;
+    std::function<void(const std::vector<std::filesystem::path>&)> m_onDrop;
 
     friend struct UiHostCallbacks;
 };

@@ -68,6 +68,11 @@ std::optional<PropertyValue> PropertyInfo::coerce(const PropertyValue& value) co
             return *s;
         }
         return std::nullopt;
+    case PropertyKind::Asset:
+        if (const AssetId* id = std::get_if<AssetId>(&value)) {
+            return *id; // whether the asset exists is checked by the asset database
+        }
+        return std::nullopt;
     case PropertyKind::Choice:
         if (const int* i = std::get_if<int>(&value)) {
             if (*i >= 0 && static_cast<std::size_t>(*i) < options.choices.size()) {
@@ -132,6 +137,8 @@ ComponentRegistry ComponentRegistry::withBuiltins()
     ComponentRegistry registry;
     static_cast<void>(registry.add(Transform::componentType()));
     static_cast<void>(registry.add(Shape::componentType()));
+    static_cast<void>(registry.add(Sprite::componentType()));
+    static_cast<void>(registry.add(Camera::componentType()));
     return registry;
 }
 
@@ -186,6 +193,34 @@ const ComponentType& Shape::componentType()
             .property("filled", "Filled", &Shape::filled)
             .property("lineWidth", "Line Width", &Shape::lineWidth,
                       {.min = 0.0f, .max = 100.0f, .step = 0.5f, .help = "Outline thickness, when not filled.", .unit = "pt"})
+            .build();
+    return type;
+}
+
+const ComponentType& Sprite::componentType()
+{
+    static const ComponentType type =
+        ComponentTypeBuilder<Sprite>("lantern.Sprite", "Sprite")
+            .description("Draws an image centred on the object, stretched to Size. Color tints the image "
+                         "(white keeps its own colours); its alpha makes it see-through.")
+            .property("image", "Image", &Sprite::image,
+                      {.help = "An image asset from the project.", .assetType = "image"})
+            .property("size", "Size", &Sprite::size, {.min = 0.0f, .step = 1.0f})
+            .property("color", "Color", &Sprite::color)
+            .property("flipX", "Flip X", &Sprite::flipX, {.help = "Mirror the image left to right."})
+            .property("flipY", "Flip Y", &Sprite::flipY, {.help = "Mirror the image top to bottom."})
+            .build();
+    return type;
+}
+
+const ComponentType& Camera::componentType()
+{
+    static const ComponentType type =
+        ComponentTypeBuilder<Camera>("lantern.Camera", "Camera")
+            .description("Decides what the player sees: the game view is centred on this object. The first "
+                         "active Camera in the scene is used. Rotation and scale of the object are ignored.")
+            .property("zoom", "Zoom", &Camera::zoom,
+                      {.min = 0.05f, .max = 20.0f, .step = 0.1f, .help = "2 shows everything twice as large."})
             .build();
     return type;
 }

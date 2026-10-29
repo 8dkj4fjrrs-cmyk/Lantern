@@ -34,17 +34,5 @@ void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> ite
                     ui::OverlayOptions{.position = {anchor.x, anchor.bottom() + 2.0f}});
 }
 
-AssetsPreviewPanel::AssetsPreviewPanel()
-    : ui::Column(0.0f)
-{
-    auto& toolbar = makePanelToolbar(*this);
-    addToolButton(toolbar, ui::Icon::ChevronLeft, std::string("Back. ") + kComingWithAssets);
-    addToolButton(toolbar, ui::Icon::ChevronRight, std::string("Forward. ") + kComingWithAssets);
-    toolbar.emplace<ui::IconView>(ui::Icon::Folder, 14.0f).setFixedSize({22.0f, 14.0f});
-    toolbar.emplace<ui::Label>("assets", ui::Label::Style::Dim);
-
-    emplace<ui::EmptyState>(ui::Icon::Eye, "Nothing to preview",
-                            "Thumbnails of images and other assets arrive with asset import in Milestone 4.");
-}
 
 } // namespace lantern::editor

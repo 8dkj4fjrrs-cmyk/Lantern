@@ -3,28 +3,42 @@
 // SceneRenderer: shows a lantern::Scene with Axmol nodes.
 //
 // Lantern scenes are plain data; Axmol draws node trees. The renderer keeps
-// an Axmol node tree that mirrors the scene: one node per entity, with a
-// DrawNode for entities that have a Shape. When the scene changes (its
-// revision number goes up) the mirror is rebuilt. Rebuilding everything is
-// simple and fast enough for editor-sized scenes; finer-grained updates can
-// come later without changing this interface.
+// an Axmol node tree that mirrors the scene: one node per entity, carrying
+// the entity's transform, with its visible content (a Shape's DrawNode, a
+// Sprite's image) as a child drawn below the entity's own children.
+//
+// When the scene changes (its revision number goes up), or the project's
+// assets change, the mirror is rebuilt. Rebuilding everything is simple and
+// fast enough for editor-sized scenes; finer-grained updates can come later
+// without changing this interface.
 //
 // Internal to lantern_runtime.
 
+#include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/scene/Scene.hpp"
 
 #include <axmol.h>
 
 #include <memory>
+#include <optional>
 
 namespace lantern::detail {
+
+class TextureStore;
+
+/// Where the scene's Camera is looking, in world coordinates.
+struct CameraView {
+    Vec2 center;
+    float zoom = 1.0f;
+};
 
 class SceneRenderer {
 public:
     /// `root` is the node the scene is drawn under (owned by the Axmol scene).
-    /// With `drawShapes` false, shapes get plain nodes instead of DrawNodes:
-    /// DrawNodes need a graphics context, which unit tests do not have.
-    explicit SceneRenderer(ax::Node& root, bool drawShapes = true);
+    /// `textures` loads images for sprites; may be null (sprites then show a
+    /// placeholder). With `drawContent` false, entities get plain nodes only:
+    /// DrawNodes and sprites need a graphics context, which unit tests lack.
+    SceneRenderer(ax::Node& root, TextureStore* textures, bool drawContent = true);
     ~SceneRenderer();
 
     SceneRenderer(const SceneRenderer&) = delete;
@@ -34,21 +48,35 @@ public:
     void show(std::shared_ptr<const Scene> scene);
     const std::shared_ptr<const Scene>& scene() const noexcept { return m_scene; }
 
-    /// Rebuilds the Axmol nodes if the scene or its contents changed.
+    /// The project's assets, used to find sprite images (null: no project).
+    /// Must stay alive while set.
+    void setAssets(const AssetDatabase* assets);
+
+    /// Rebuilds the Axmol nodes if the scene, the assets or the loaded
+    /// images changed.
     void update();
+
+    /// The first active Camera in the scene, if there is one.
+    std::optional<CameraView> camera() const;
 
     /// Number of times the node tree has been built (for diagnostics and tests).
     std::uint64_t buildCount() const noexcept { return m_builds; }
 
 private:
     void rebuild();
+    ax::Node* makeSpriteNode(const Sprite& sprite);
 
     ax::Node& m_root;
-    bool m_drawShapes;
+    TextureStore* m_textures;
+    bool m_drawContent;
+    const AssetDatabase* m_assets = nullptr;
     ax::Node* m_container = nullptr;   // child of m_root; holds the mirror
     std::shared_ptr<const Scene> m_scene;
     const Scene* m_builtScene = nullptr;
     std::uint64_t m_builtRevision = 0;
+    const AssetDatabase* m_builtAssets = nullptr;
+    std::uint64_t m_builtAssetsRevision = 0;
+    std::uint64_t m_builtTextures = 0;
     std::uint64_t m_builds = 0;
 };
 

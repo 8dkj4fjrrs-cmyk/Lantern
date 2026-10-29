@@ -1,5 +1,7 @@
 #include "SceneRenderer.hpp"
 
+#include "TextureStore.hpp"
+
 #include <unordered_map>
 
 namespace lantern::detail {
@@ -38,11 +40,27 @@ void drawShape(ax::DrawNode& node, const Shape& shape)
     }
 }
 
+// What a sprite without a usable image looks like: a pink box with a cross,
+// impossible to mistake for real art.
+ax::Node* makePlaceholder(Vec2 size)
+{
+    auto* node = ax::DrawNode::create();
+    const float hw = std::max(4.0f, size.x * 0.5f);
+    const float hh = std::max(4.0f, size.y * 0.5f);
+    const ax::Color4F pink(1.0f, 0.2f, 0.75f, 1.0f);
+    node->drawSolidRect(ax::Vec2(-hw, -hh), ax::Vec2(hw, hh), ax::Color4F(1.0f, 0.2f, 0.75f, 0.25f));
+    node->drawRect(ax::Vec2(-hw, -hh), ax::Vec2(hw, hh), pink, 2.0f);
+    node->drawLine(ax::Vec2(-hw, -hh), ax::Vec2(hw, hh), pink, 2.0f);
+    node->drawLine(ax::Vec2(-hw, hh), ax::Vec2(hw, -hh), pink, 2.0f);
+    return node;
+}
+
 } // namespace
 
-SceneRenderer::SceneRenderer(ax::Node& root, bool drawShapes)
+SceneRenderer::SceneRenderer(ax::Node& root, TextureStore* textures, bool drawContent)
     : m_root(root)
-    , m_drawShapes(drawShapes)
+    , m_textures(textures)
+    , m_drawContent(drawContent)
 {
 }
 
@@ -58,12 +76,68 @@ void SceneRenderer::show(std::shared_ptr<const Scene> scene)
     m_scene = std::move(scene);
 }
 
+void SceneRenderer::setAssets(const AssetDatabase* assets)
+{
+    m_assets = assets;
+}
+
 void SceneRenderer::update()
 {
-    if (m_scene.get() == m_builtScene && (m_scene == nullptr || m_scene->revision() == m_builtRevision)) {
-        return;
+    const bool sceneChanged =
+        m_scene.get() != m_builtScene || (m_scene != nullptr && m_scene->revision() != m_builtRevision);
+    const bool assetsChanged =
+        m_assets != m_builtAssets || (m_assets != nullptr && m_assets->revision() != m_builtAssetsRevision);
+    const bool texturesChanged = m_textures != nullptr && m_textures->generation() != m_builtTextures;
+    if (sceneChanged || assetsChanged || texturesChanged) {
+        rebuild();
     }
-    rebuild();
+}
+
+std::optional<CameraView> SceneRenderer::camera() const
+{
+    if (m_scene == nullptr) {
+        return std::nullopt;
+    }
+    std::optional<CameraView> found;
+    m_scene->forEach([&](const Entity& entity, int) {
+        if (found) {
+            return;
+        }
+        const Camera* camera = entity.get<Camera>();
+        if (camera == nullptr) {
+            return;
+        }
+        for (const Entity* e = &entity; e != nullptr; e = m_scene->find(e->parent())) {
+            if (!e->isActive()) {
+                return;
+            }
+        }
+        found = CameraView{m_scene->worldTransform(entity.id()).apply({0.0f, 0.0f}), camera->zoom};
+    });
+    return found;
+}
+
+ax::Node* SceneRenderer::makeSpriteNode(const Sprite& sprite)
+{
+    const AssetRecord* asset = m_assets != nullptr && !sprite.image.isNull() ? m_assets->find(sprite.image) : nullptr;
+    ax::Texture2D* texture = nullptr;
+    if (asset != nullptr && asset->type == AssetType::Image && asset->isUsable() && m_textures != nullptr) {
+        texture = m_textures->get(m_assets->absolutePath(*asset), asset->filter == TextureFilter::Pixel);
+    }
+    if (texture == nullptr) {
+        // No image chosen yet: draw nothing in the game; a missing or broken image: a placeholder.
+        return sprite.image.isNull() ? ax::Node::create() : makePlaceholder(sprite.size);
+    }
+    auto* node = ax::Sprite::createWithTexture(texture);
+    const ax::Size natural = node->getContentSize();
+    if (natural.width > 0.0f && natural.height > 0.0f) {
+        node->setScale(sprite.size.x / natural.width, sprite.size.y / natural.height);
+    }
+    node->setFlippedX(sprite.flipX);
+    node->setFlippedY(sprite.flipY);
+    node->setColor(ax::Color3B(sprite.color.r, sprite.color.g, sprite.color.b));
+    node->setOpacity(sprite.color.a);
+    return node;
 }
 
 void SceneRenderer::rebuild()
@@ -74,8 +148,11 @@ void SceneRenderer::rebuild()
     }
     m_builtScene = m_scene.get();
     m_builtRevision = m_scene != nullptr ? m_scene->revision() : 0;
+    m_builtAssets = m_assets;
+    m_builtAssetsRevision = m_assets != nullptr ? m_assets->revision() : 0;
     ++m_builds;
     if (m_scene == nullptr) {
+        m_builtTextures = m_textures != nullptr ? m_textures->generation() : 0;
         return;
     }
 
@@ -85,20 +162,25 @@ void SceneRenderer::rebuild()
 
     std::unordered_map<EntityId, ax::Node*> nodes;
     m_scene->forEach([&](const Entity& entity, int) {
-        ax::Node* node = nullptr;
-        if (const Shape* shape = entity.get<Shape>(); shape != nullptr && m_drawShapes) {
-            auto* draw = ax::DrawNode::create();
-            drawShape(*draw, *shape);
-            node = draw;
-        } else {
-            node = ax::Node::create();
-        }
+        auto* node = ax::Node::create();
         node->setName(entity.name());
         const Transform& t = entity.transform();
         node->setPosition(t.position.x, t.position.y);
         node->setRotation(t.rotation); // both Axmol and Lantern: degrees, clockwise
         node->setScale(t.scale.x, t.scale.y);
         node->setVisible(entity.isActive());
+
+        // The entity's own content, drawn below its children (local z -1).
+        if (m_drawContent) {
+            if (const Shape* shape = entity.get<Shape>()) {
+                auto* draw = ax::DrawNode::create();
+                drawShape(*draw, *shape);
+                node->addChild(draw, -1);
+            }
+            if (const Sprite* sprite = entity.get<Sprite>()) {
+                node->addChild(makeSpriteNode(*sprite), -1);
+            }
+        }
 
         ax::Node* parent = m_container;
         if (const auto it = nodes.find(entity.parent()); it != nodes.end()) {
@@ -108,6 +190,8 @@ void SceneRenderer::rebuild()
         parent->addChild(node, static_cast<int>(m_scene->indexOf(entity.id()).value_or(0)));
         nodes.emplace(entity.id(), node);
     });
+    // Loading textures above may itself have bumped the generation.
+    m_builtTextures = m_textures != nullptr ? m_textures->generation() : 0;
 }
 
 } // namespace lantern::detail

@@ -22,6 +22,7 @@
 //         return type;
 //     }
 
+#include "lantern/scene/EntityId.hpp"
 #include "lantern/scene/Types.hpp"
 
 #include "lantern/core/Engine.hpp" // Status
@@ -39,11 +40,11 @@ namespace lantern {
 
 class Component;
 
-enum class PropertyKind { Bool, Int, Float, Vec2, Color, String, Choice };
+enum class PropertyKind { Bool, Int, Float, Vec2, Color, String, Choice, Asset };
 
 /// A property value of any supported kind. Choice properties hold the index
 /// of the chosen option (saved in files by name, so options can be reordered).
-using PropertyValue = std::variant<bool, int, float, Vec2, Color, std::string>;
+using PropertyValue = std::variant<bool, int, float, Vec2, Color, std::string, AssetId>;
 
 /// Optional settings when describing a property.
 struct PropertyOptions {
@@ -53,6 +54,7 @@ struct PropertyOptions {
     std::vector<std::string> choices;   // Choice: the option names saved in files
     std::string help;                   // one sentence for tooltips
     std::string unit;                   // shown after the value, e.g. "°"
+    std::string assetType;              // Asset: the kind of asset accepted, e.g. "image"
 };
 
 struct PropertyInfo {
@@ -152,6 +154,8 @@ constexpr PropertyKind propertyKindOf()
         return PropertyKind::Color;
     } else if constexpr (std::is_same_v<M, std::string>) {
         return PropertyKind::String;
+    } else if constexpr (std::is_same_v<M, AssetId>) {
+        return PropertyKind::Asset;
     } else {
         static_assert(std::is_enum_v<M>, "unsupported property type");
         return PropertyKind::Choice;

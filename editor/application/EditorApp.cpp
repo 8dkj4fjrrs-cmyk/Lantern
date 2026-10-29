@@ -184,11 +184,159 @@ EntityId EditorApp::selection() const
 void EditorApp::select(EntityId id)
 {
     m_state.selectedNodeId = id.value();
+    if (!id.isNull()) {
+        m_selectedAsset = {};
+    }
 }
 
 void EditorApp::selectScene()
 {
     m_state.selectedNodeId = EditorState::kSceneSelected;
+    m_selectedAsset = {};
+}
+
+void EditorApp::selectAsset(AssetId id)
+{
+    m_selectedAsset = id;
+    if (!id.isNull()) {
+        m_state.selectedNodeId = 0;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Assets
+// ---------------------------------------------------------------------------
+void EditorApp::refreshAssets()
+{
+    m_lastAssetScan = m_ui != nullptr ? m_ui->time() : 0.0;
+    if (!m_assetDb) {
+        return;
+    }
+    for (const FileIssue& issue : m_assetDb->refresh()) {
+        log().warning("assets", issue.where.empty() ? issue.message : issue.where + ": " + issue.message);
+    }
+}
+
+void EditorApp::checkSceneAssets()
+{
+    if (!m_assetDb || !m_document) {
+        return;
+    }
+    for (const FileIssue& issue : checkAssetReferences(m_document->scene(), *m_assetDb)) {
+        log().warning("assets", issue.where + ": " + issue.message);
+    }
+}
+
+void EditorApp::importFiles(const std::vector<std::filesystem::path>& files)
+{
+    if (!m_assetDb || !m_project) {
+        showMessage("No Project Open", "Assets belong to a project. Create or open a project first (File menu), "
+                                       "then drop the files again.");
+        return;
+    }
+    AssetId last;
+    std::vector<std::string> failures;
+    for (const std::filesystem::path& file : files) {
+        std::string error;
+        if (const auto id = m_assetDb->import(file, m_importFolder, &error)) {
+            last = *id;
+            log().info("assets", "Imported " + file.filename().string() + " as " + m_assetDb->find(*id)->path + ".");
+        } else {
+            log().error("assets", error);
+            failures.push_back(error);
+        }
+    }
+    if (!last.isNull()) {
+        selectAsset(last);
+    }
+    if (!failures.empty()) {
+        std::string text;
+        for (const std::string& f : failures) {
+            text += (text.empty() ? "" : "\n") + f;
+        }
+        showMessage(failures.size() == 1 ? "Could Not Import a File" : "Could Not Import Some Files", text);
+    }
+}
+
+void EditorApp::placeAsset(AssetId id, Vec2 worldPosition)
+{
+    const AssetRecord* asset = m_assetDb ? m_assetDb->find(id) : nullptr;
+    if (asset == nullptr) {
+        return;
+    }
+    std::vector<std::unique_ptr<Component>> components;
+    auto transform = std::make_unique<Transform>();
+    transform->position = {std::round(worldPosition.x), std::round(worldPosition.y)};
+    components.push_back(std::move(transform));
+    std::string name = asset->fileName();
+    if (const std::size_t dot = name.rfind('.'); dot != std::string::npos && dot > 0) {
+        name.resize(dot);
+    }
+    if (asset->type == AssetType::Image) {
+        auto sprite = std::make_unique<Sprite>();
+        sprite->image = id;
+        if (asset->image) {
+            sprite->size = {static_cast<float>(asset->image->width), static_cast<float>(asset->image->height)};
+        }
+        components.push_back(std::move(sprite));
+    } else {
+        showMessage("Cannot Place This Asset", asset->fileName() + " cannot be placed in a scene. Drag an image "
+                                                                   "into the Scene view to make a sprite.");
+        return;
+    }
+    auto command = std::make_unique<CreateEntity>(name, EntityId{}, std::nullopt, std::move(components));
+    CreateEntity* raw = command.get();
+    if (execute(std::move(command))) {
+        endEdit();
+        select(raw->id());
+    }
+}
+
+void EditorApp::dropAsset(AssetId id, ui::Vec2 windowPoint)
+{
+    if (m_viewport != nullptr) {
+        if (const auto world = m_viewport->worldAt(windowPoint)) {
+            placeAsset(id, *world);
+        }
+    }
+}
+
+void EditorApp::showImportDialog()
+{
+    if (!m_project) {
+        showMessage("No Project Open", "Assets belong to a project. Create or open a project first.");
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Import Assets", 460.0f);
+    ui::Column& body = dialog->body();
+    auto& hint = body.emplace<ui::Label>(
+        "The quickest way: drag files from Finder (or Explorer) onto this window. Or type or paste a file's "
+        "path here:",
+        ui::Label::Style::Dim);
+    hint.setWrap(true);
+    auto& path = body.emplace<ui::TextField>("/Users/you/Pictures/hero.png");
+    path.setFixedSize({0.0f, 26.0f});
+    auto& note = body.emplace<ui::Label>("Files are copied into the project's \"" + m_importFolder
+                                             + "\" folder. Supported: PNG and JPEG images, WAV, OGG and MP3 sounds, "
+                                               "TTF and OTF fonts.",
+                                         ui::Label::Style::Faint);
+    note.setWrap(true);
+    dialog->addButton("Cancel");
+    dialog->addButton("Import", ui::Button::Style::Primary, [this, &path] {
+        std::string text = path.text();
+        // Paths copied from Finder may come with quotes or a trailing space.
+        while (!text.empty() && (text.back() == ' ' || text.back() == '\'' || text.back() == '"')) {
+            text.pop_back();
+        }
+        while (!text.empty() && (text.front() == '\'' || text.front() == '"')) {
+            text.erase(text.begin());
+        }
+        if (!text.empty()) {
+            importFiles({std::filesystem::path(text)});
+        }
+    });
+    ui::showDialog(*m_ui, std::move(dialog));
+    m_ui->setFocus(&path);
 }
 
 bool EditorApp::execute(std::unique_ptr<Command> command)
@@ -216,7 +364,13 @@ void EditorApp::createEntity(NewEntityKind kind, bool asChildOfSelection)
     }
     components.push_back(std::move(transform));
     std::string name = "Object";
-    if (kind != NewEntityKind::Empty) {
+    if (kind == NewEntityKind::Sprite) {
+        name = "Sprite";
+        components.push_back(std::make_unique<Sprite>());
+    } else if (kind == NewEntityKind::Camera) {
+        name = "Camera";
+        components.push_back(std::make_unique<Camera>());
+    } else if (kind != NewEntityKind::Empty) {
         auto shape = std::make_unique<Shape>();
         shape->kind = kind == NewEntityKind::Rectangle ? ShapeKind::Rectangle : ShapeKind::Ellipse;
         shape->color = Color{79, 179, 169, 255};
@@ -320,6 +474,7 @@ void EditorApp::setDocument(std::unique_ptr<SceneDocument> document)
     if (!m_document->isUntitled()) {
         m_state.lastScene = m_document->path().string();
     }
+    checkSceneAssets();
 }
 
 void EditorApp::openScene(const std::filesystem::path& path)
@@ -500,6 +655,13 @@ bool EditorApp::openProjectFolder(const std::filesystem::path& folder, bool repo
     }
     m_project = std::move(*project);
     m_state.addRecentProject(m_project->folder().string());
+    if (m_assetDb) {
+        m_retiredAssetDbs.push_back(std::move(m_assetDb)); // the runtime may still draw from it this frame
+    }
+    m_assetDb = std::make_unique<AssetDatabase>(m_project->folder());
+    m_selectedAsset = {};
+    m_importFolder = std::string(AssetFormat::kDefaultFolder);
+    refreshAssets();
     log().info(kCategory, "Opened project '" + m_project->settings().name + "' (" + m_project->folder().string() + ")");
 
     // The scene open last time, if it is in this project; otherwise the start scene.
@@ -726,6 +888,9 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("Save Scene", key("S"), [this] { saveScene(); }),
                       menuItem("Save Scene As…", platform.macConventions ? "⇧⌘S" : "Ctrl+Shift+S",
                                [this] { saveSceneAs(); }),
+                      menuItem("Import Assets…", "", [this] { showImportDialog(); },
+                               [this] { return m_project.has_value(); }),
+                      ui::MenuItem::divider(),
                       menuItem("Revert to Saved", "", [this] { reloadScene(); },
                                [this] { return !m_document->isUntitled() && m_document->isDirty(); }),
                       ui::MenuItem::divider(),
@@ -748,6 +913,8 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("New Empty Object", "", [this] { createEntity(NewEntityKind::Empty, false); }),
                       menuItem("New Rectangle", "", [this] { createEntity(NewEntityKind::Rectangle, false); }),
                       menuItem("New Ellipse", "", [this] { createEntity(NewEntityKind::Ellipse, false); }),
+                      menuItem("New Sprite", "", [this] { createEntity(NewEntityKind::Sprite, false); }),
+                      menuItem("New Camera", "", [this] { createEntity(NewEntityKind::Camera, false); }),
                       ui::MenuItem::divider(),
                       menuItem("Rename", "F2", [this] { renameSelection(); }, hasSelection),
                       menuItem("Duplicate", key("D"), [this] { duplicateSelection(); }, hasSelection),
@@ -875,7 +1042,9 @@ void EditorApp::buildWorkspace(UiFrame& frame)
             m_assets = p.get();
             content = std::move(p);
         } else {
-            content = std::make_unique<AssetsPreviewPanel>();
+            auto p = std::make_unique<AssetsPreviewPanel>(*this);
+            m_preview = p.get();
+            content = std::move(p);
         }
         dock.addPanel(id, panel.title, std::move(content), panel.icon);
     }
@@ -988,6 +1157,8 @@ void EditorApp::setupUi(UiFrame& frame)
     restoreLayout();
     m_layoutDirty = false;
     openInitialContent();
+    // Files dragged from Finder / Explorer onto the window are imported.
+    frame.setDropHandler([this](const std::vector<std::filesystem::path>& files) { importFiles(files); });
 }
 
 bool EditorApp::closeRequested()
@@ -1021,6 +1192,16 @@ void EditorApp::updateUi(UiFrame& frame)
     if (m_quitRequested) {
         frame.requestQuit();
     }
+    // The project's assets: re-read every few seconds (files may be added,
+    // changed or deleted outside the editor), and handed to the runtime.
+    if (m_assetDb && frame.ui().time() - m_lastAssetScan >= 2.0) {
+        refreshAssets();
+    }
+    if (m_runtimeAssets != m_assetDb.get()) {
+        m_runtimeAssets = m_assetDb.get();
+        frame.setAssets(m_runtimeAssets);
+    }
+    m_retiredAssetDbs.clear(); // the runtime no longer uses them
     // Show the open document's scene (it changes when another scene is opened).
     if (m_shownScene != m_document->sharedScene()) {
         m_shownScene = m_document->sharedScene();
@@ -1029,6 +1210,7 @@ void EditorApp::updateUi(UiFrame& frame)
     m_viewport->update(frame);
     m_hierarchy->update(frame);
     m_assets->update(frame);
+    m_preview->update(frame);
     m_inspector->update(frame);
     if (m_renamePending) {
         m_renamePending = false;
@@ -1059,6 +1241,7 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_viewport = nullptr;
     m_hierarchy = nullptr;
     m_assets = nullptr;
+    m_preview = nullptr;
     m_inspector = nullptr;
     m_consolePanel = nullptr;
     m_sceneChoice = nullptr;

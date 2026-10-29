@@ -58,6 +58,14 @@ public:
     bool isSceneSelected() const override { return m_state.selectedNodeId == EditorState::kSceneSelected; }
     void select(EntityId id) override;
     void selectScene() override;
+    AssetDatabase* assets() override { return m_assetDb.get(); }
+    AssetId selectedAsset() const override { return m_selectedAsset; }
+    void selectAsset(AssetId id) override;
+    std::string importFolder() const override { return m_importFolder; }
+    void setImportFolder(std::string folder) override { m_importFolder = std::move(folder); }
+    void importFiles(const std::vector<std::filesystem::path>& files) override;
+    void placeAsset(AssetId asset, Vec2 worldPosition) override;
+    void dropAsset(AssetId asset, ui::Vec2 windowPoint) override;
     bool execute(std::unique_ptr<Command> command) override;
     void endEdit() override;
     void createEntity(NewEntityKind kind, bool asChildOfSelection) override;
@@ -69,6 +77,7 @@ public:
     void newProject() override;
     void openProject() override;
     void showMessage(const std::string& title, const std::string& text) override;
+    void showImportDialog() override;
 
 private:
     // Called by the runtime (see PresentationSettings).
@@ -101,6 +110,10 @@ private:
     void showNewProjectDialog(bool keepCurrentScene, std::function<void()> then = {});
     void showOpenProjectDialog();
     void reportIssues(const std::filesystem::path& file, const std::vector<FileIssue>& issues);
+    /// Re-reads the project's assets (also every few seconds) and reports problems.
+    void refreshAssets();
+    void checkSceneAssets();
+
 
     void loadSettings();
     void saveSettings();
@@ -118,6 +131,12 @@ private:
     std::filesystem::path m_configDir;   // empty = do not persist anything
 
     std::optional<Project> m_project;
+    std::unique_ptr<AssetDatabase> m_assetDb;                       // the project's assets
+    std::vector<std::unique_ptr<AssetDatabase>> m_retiredAssetDbs;  // kept until the runtime lets go
+    const AssetDatabase* m_runtimeAssets = nullptr;                 // what the runtime draws from
+    double m_lastAssetScan = -100.0;
+    AssetId m_selectedAsset;
+    std::string m_importFolder = "assets";
     std::unique_ptr<SceneDocument> m_document;
     std::uint64_t m_documentGeneration = 1;
     std::shared_ptr<const Scene> m_shownScene;   // what the runtime is drawing
@@ -129,6 +148,7 @@ private:
     ViewportPanel* m_viewport = nullptr;
     HierarchyPanel* m_hierarchy = nullptr;
     AssetsPanel* m_assets = nullptr;
+    AssetsPreviewPanel* m_preview = nullptr;
     InspectorPanel* m_inspector = nullptr;
     ConsolePanel* m_consolePanel = nullptr;
     ui::ChoiceField* m_sceneChoice = nullptr;

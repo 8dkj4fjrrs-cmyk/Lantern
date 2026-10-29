@@ -181,3 +181,62 @@ TEST_CASE("The hand-written test card scene loads cleanly", "[scene][file]")
     CHECK(r.scene->name() == "Test Card");
     CHECK(r.scene->size() == 4);
 }
+
+TEST_CASE("Sprites keep their image ID through save and load", "[scene][file][sprite]")
+{
+    Scene scene("Sprites", EntityIdGenerator(7));
+    Entity* hero = scene.create("Hero");
+    auto sprite = std::make_unique<Sprite>();
+    sprite->image = AssetId(0x8c1f02e94b7d3a60ULL);
+    sprite->size = {24.0f, 32.0f};
+    sprite->flipX = true;
+    REQUIRE(scene.addComponent(hero->id(), std::move(sprite)) != nullptr);
+    Entity* empty = scene.create("No image yet");
+    REQUIRE(scene.addComponent(empty->id(), std::make_unique<Sprite>()) != nullptr);
+
+    const std::string text = serializeScene(scene);
+    CHECK(text.find("\"image\": \"8c1f02e94b7d3a60\"") != std::string::npos);
+    CHECK(text.find("\"image\": null") != std::string::npos); // no image chosen
+
+    const SceneLoadResult loaded = parseScene(text, registry());
+    REQUIRE(loaded.ok());
+    CHECK(loaded.issues.empty());
+    const Sprite* back = loaded.scene->find(hero->id())->get<Sprite>();
+    REQUIRE(back != nullptr);
+    CHECK(back->image == AssetId(0x8c1f02e94b7d3a60ULL));
+    CHECK(back->size == Vec2{24.0f, 32.0f});
+    CHECK(back->flipX);
+    CHECK(loaded.scene->find(empty->id())->get<Sprite>()->image.isNull());
+    CHECK(serializeScene(*loaded.scene) == text);
+}
+
+TEST_CASE("A bad image ID falls back to no image, with a warning", "[scene][file][sprite]")
+{
+    const auto r = parseScene(wrap(R"({"id": "0000000000000001", "name": "A", "components": [
+        {"type": "lantern.Sprite", "image": "not-an-id"}]})"),
+                              registry());
+    REQUIRE(r.ok());
+    CHECK(mentions(r, "asset ID"));
+    CHECK(r.scene->find(EntityId(1))->get<Sprite>()->image.isNull());
+}
+
+TEST_CASE("Sprites can be picked and outlined like shapes", "[scene][sprite]")
+{
+    Scene scene("Pick", EntityIdGenerator(3));
+    Entity* e = scene.create("Hero");
+    scene.setProperty(e->id(), "lantern.Transform", "position", Vec2{100.0f, 100.0f});
+    auto sprite = std::make_unique<Sprite>();
+    sprite->size = {20.0f, 40.0f};
+    scene.addComponent(e->id(), std::move(sprite));
+
+    CHECK(scene.hitTest({105.0f, 115.0f}) == e->id());
+    CHECK(scene.hitTest({115.0f, 100.0f}).isNull()); // outside the 20-point width
+    const auto corners = scene.worldCorners(e->id());
+    REQUIRE(corners.has_value());
+    CHECK((*corners)[0] == Vec2{90.0f, 80.0f});
+    CHECK((*corners)[2] == Vec2{110.0f, 120.0f});
+
+    Entity* camera = scene.create("Camera");
+    scene.addComponent(camera->id(), std::make_unique<Camera>());
+    CHECK_FALSE(scene.worldCorners(camera->id()).has_value()); // a camera draws nothing
+}

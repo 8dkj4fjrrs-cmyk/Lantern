@@ -24,7 +24,7 @@ struct Root {
 TEST_CASE("The renderer mirrors the scene tree as Axmol nodes", "[runtime][renderer]")
 {
     Root root;
-    SceneRenderer renderer(*root.node, /*drawShapes=*/false);
+    SceneRenderer renderer(*root.node, /*textures=*/nullptr, /*drawContent=*/false);
     auto scene = std::make_shared<Scene>("Test");
     const EntityId parent = scene->create("Parent")->id();
     scene->setProperty(parent, "lantern.Transform", "position", Vec2{10, 20});
@@ -51,7 +51,7 @@ TEST_CASE("The renderer mirrors the scene tree as Axmol nodes", "[runtime][rende
 TEST_CASE("The renderer rebuilds only when the scene changes", "[runtime][renderer]")
 {
     Root root;
-    SceneRenderer renderer(*root.node, /*drawShapes=*/false);
+    SceneRenderer renderer(*root.node, /*textures=*/nullptr, /*drawContent=*/false);
     auto scene = std::make_shared<Scene>(makeStartScene());
     renderer.show(scene);
     renderer.update();
@@ -67,4 +67,50 @@ TEST_CASE("The renderer rebuilds only when the scene changes", "[runtime][render
     renderer.show(nullptr);
     renderer.update();
     CHECK(root.node->getChildrenCount() == 0);
+}
+
+TEST_CASE("The first active camera decides the view", "[runtime][renderer][camera]")
+{
+    Root root;
+    SceneRenderer renderer(*root.node, nullptr, false);
+    auto scene = std::make_shared<Scene>("Cameras");
+    renderer.show(scene);
+    CHECK_FALSE(renderer.camera().has_value());
+
+    const EntityId rig = scene->create("Rig")->id();
+    scene->setProperty(rig, "lantern.Transform", "position", Vec2{100, 50});
+    const EntityId off = scene->create("Off camera", rig)->id();
+    scene->addComponent(off, std::make_unique<Camera>());
+    scene->setActive(off, false);
+    const EntityId on = scene->create("Main camera", rig)->id();
+    scene->setProperty(on, "lantern.Transform", "position", Vec2{10, 5});
+    scene->addComponent(on, std::make_unique<Camera>());
+    scene->setProperty(on, "lantern.Camera", "zoom", 2.0f);
+
+    const auto view = renderer.camera();
+    REQUIRE(view.has_value());
+    CHECK(view->center == Vec2{110, 55}); // world position: parent + own
+    CHECK(view->zoom == 2.0f);
+
+    scene->setActive(rig, false); // switching off a parent switches off its cameras
+    CHECK_FALSE(renderer.camera().has_value());
+}
+
+TEST_CASE("Asset changes trigger a rebuild", "[runtime][renderer]")
+{
+    Root root;
+    SceneRenderer renderer(*root.node, nullptr, false);
+    auto scene = std::make_shared<Scene>("S");
+    renderer.show(scene);
+    renderer.update();
+    const std::filesystem::path folder = std::filesystem::temp_directory_path() / "lantern-tests" / "renderer-assets";
+    std::filesystem::create_directories(folder);
+    AssetDatabase assets(folder);
+    renderer.setAssets(&assets);
+    renderer.update();
+    CHECK(renderer.buildCount() == 2);
+    renderer.update();
+    CHECK(renderer.buildCount() == 2);
+    renderer.setAssets(nullptr);
+    std::filesystem::remove_all(folder);
 }

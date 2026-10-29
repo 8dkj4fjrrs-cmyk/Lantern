@@ -174,6 +174,29 @@ private:
     std::string m_label;
 };
 
+/// Changes several properties of one entity at once (e.g. the Rect tool
+/// changes a size and a position together). Consecutive changes to the same
+/// set of properties merge into one undo step, like SetProperty.
+class SetProperties final : public Command {
+public:
+    struct Change {
+        std::string componentType;
+        std::string key;
+        PropertyValue value;
+    };
+    SetProperties(EntityId id, std::vector<Change> changes, std::string label);
+    std::string label() const override { return m_label; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool mergeWith(const Command& next) override;
+
+private:
+    EntityId m_id;
+    std::vector<Change> m_changes;
+    std::vector<std::optional<PropertyValue>> m_previous;   // per change; empty = unchanged
+    std::string m_label;
+};
+
 class AddComponent final : public Command {
 public:
     AddComponent(EntityId id, std::unique_ptr<Component> component);

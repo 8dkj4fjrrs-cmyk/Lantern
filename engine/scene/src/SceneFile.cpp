@@ -147,6 +147,10 @@ Json toJson(const PropertyInfo& info, const PropertyValue& value)
     }
     case PropertyKind::Color: return std::get<Color>(value).toHex();
     case PropertyKind::String: return std::get<std::string>(value);
+    case PropertyKind::Asset: {
+        const AssetId id = std::get<AssetId>(value);
+        return id.isNull() ? Json() : Json(id.toString()); // null = no asset chosen
+    }
     case PropertyKind::Choice: {
         const int index = std::get<int>(value);
         if (index >= 0 && static_cast<std::size_t>(index) < info.options.choices.size()) {
@@ -212,6 +216,17 @@ std::optional<PropertyValue> fromJson(const PropertyInfo& info, const Json& j, s
         expected = "text";
         if (j.is_string()) {
             return j.get<std::string>();
+        }
+        break;
+    case PropertyKind::Asset:
+        expected = "an asset ID (16 hex digits) or null";
+        if (j.is_null()) {
+            return AssetId{};
+        }
+        if (j.is_string()) {
+            if (const auto id = AssetId::parse(j.get<std::string>())) {
+                return *id;
+            }
         }
         break;
     case PropertyKind::Choice: {

@@ -144,11 +144,31 @@ EntityIdGenerator::EntityIdGenerator(std::uint64_t seed)
 
 EntityId EntityIdGenerator::next()
 {
+    return EntityId(nextValue());
+}
+
+std::uint64_t EntityIdGenerator::nextValue()
+{
     std::uint64_t value = 0;
     while (value == 0) {
         value = m_engine();
     }
-    return EntityId(value);
+    return value;
+}
+
+// --- AssetId (same text form as EntityId) -------------------------------------------
+
+std::string AssetId::toString() const
+{
+    return EntityId(m_value).toString();
+}
+
+std::optional<AssetId> AssetId::parse(std::string_view text)
+{
+    if (const auto id = EntityId::parse(text)) {
+        return AssetId(id->value());
+    }
+    return std::nullopt;
 }
 
 } // namespace lantern
