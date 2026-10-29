@@ -213,9 +213,8 @@ void EditorApp::showAbout(ui::Context& ctx)
     ui::Column& body = dialog->body();
     body.emplace<ui::Label>("Lantern Engine " + std::string(versionString()), ui::Label::Style::Strong);
     body.emplace<ui::Label>("A C++-first 2D game engine and editor.", ui::Label::Style::Dim);
-    body.emplace<ui::Separator>();
-    body.emplace<ui::Label>("Runtime backend: " + std::string(runtimeBackendName()));
-    body.emplace<ui::Label>("Editor interface: Lantern UI");
+    // The runtime backend is an implementation detail, so it is not named here.
+    // It is still reported by --version and in the Console, for bug reports.
     body.emplace<ui::Separator>();
     body.emplace<ui::Label>("Copyright (c) 2026 Oscar Hird. MIT License.");
     body.emplace<ui::Label>("Third-party licenses are listed in THIRD_PARTY_NOTICES.md.", ui::Label::Style::Faint)
