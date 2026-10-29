@@ -1,6 +1,6 @@
 # ADR 0001 — Runtime foundation: upstream Cocos2d-x vs. a maintained fork
 
-- **Status:** Proposed — awaiting project owner decision
+- **Status:** Accepted (2026-10-29) — Option A, Axmol v2.11.5
 - **Date:** 2026-10-29
 - **Milestone:** 0
 
@@ -72,10 +72,11 @@ with the brief's "native macOS ARM64" priority. Not recommended.
 
 ## Decision
 
-Pending. Milestone 0 deliberately ships with **no runtime backend linked**
-(`LANTERN_RUNTIME_BACKEND=none`). Everything built so far (core library,
-editor entry point, tests) is backend-independent, so no work is lost either
-way. Milestone 1 starts by wiring in the chosen backend.
+**Option A accepted by the project owner on 2026-10-29:** Axmol v2.11.5,
+pinned to commit `6c0dce6db4660feafe29dabb1ab3506ee76b0931`.
+
+Milestone 0 ships with no runtime backend linked
+(`LANTERN_RUNTIME_BACKEND=none`); Milestone 1 wires Axmol in.
 
 ## Consequences (if Option A is accepted)
 
