@@ -54,40 +54,4 @@ std::filesystem::path userConfigDirectory()
     return userConfigDirectory(currentOs(), realEnvironment);
 }
 
-std::vector<std::filesystem::path> uiFontCandidates(HostOs os, const EnvironmentLookup& env)
-{
-    switch (os) {
-    case HostOs::MacOS:
-        return {
-            "/System/Library/Fonts/SFNS.ttf",
-            "/System/Library/Fonts/Supplemental/Arial.ttf",
-            "/Library/Fonts/Arial.ttf",
-        };
-    case HostOs::Windows: {
-        const std::filesystem::path fonts =
-            std::filesystem::path(env("WINDIR").value_or("C:\\Windows")) / "Fonts";
-        return {fonts / "segoeui.ttf", fonts / "arial.ttf"};
-    }
-    case HostOs::Linux:
-        return {
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/TTF/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-        };
-    }
-    return {};
-}
-
-std::filesystem::path findUiFont()
-{
-    for (const std::filesystem::path& candidate : uiFontCandidates(currentOs(), realEnvironment)) {
-        std::error_code ec;
-        if (std::filesystem::is_regular_file(candidate, ec)) {
-            return candidate;
-        }
-    }
-    return {};
-}
-
 } // namespace lantern::editor

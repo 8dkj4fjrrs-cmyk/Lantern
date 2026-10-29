@@ -3,11 +3,15 @@
 # Targets:
 #   lantern_core     static library: engine lifecycle, logging, version info.
 #                    Depends only on the C++ standard library.
+#   lantern_ui       static library: Lantern's own UI toolkit (widgets, docking,
+#                    text). No backend; produces draw lists. Always built.
+#   lantern_ui       static library: Lantern's own UI toolkit (widgets, docking,
+#                    text). No backend; always built and unit-tested.
 #   lantern_runtime  static library: window, main loop, rendering backend.
 #                    Wraps Axmol privately (only with LANTERN_RUNTIME_BACKEND=axmol).
 #   lantern_player   the game runtime application (opens a window).
 #   lantern_editor_core  editor logic without UI code (always built, unit-tested).
-#   lantern_editor   the standalone editor application (Dear ImGui panels).
+#   lantern_editor   the standalone editor application (built with lantern_ui).
 #   lantern_tests    Catch2 unit tests (registered with CTest).
 #
 # Backend background: docs/adr/0001-runtime-foundation.md
@@ -77,6 +81,7 @@ endif()
 # Our modules
 # ---------------------------------------------------------------------------
 add_subdirectory(engine/core)
+add_subdirectory(engine/ui)
 
 if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")
     add_subdirectory(engine/runtime)

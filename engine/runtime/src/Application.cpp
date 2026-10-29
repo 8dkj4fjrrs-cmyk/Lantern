@@ -6,23 +6,24 @@
 //     └─ creates BackendApp (an ax::Application) and calls its run()
 //          └─ Axmol calls BackendApp::applicationDidFinishLaunching()
 //               └─ Impl::startWindow(): window, diagnostics, the world,
-//                  the optional UI layer, the per-frame callback
+//                  the optional UI layer (UiHost), the per-frame callback
 //          └─ Axmol's main loop, every frame:
-//               update → Impl::onFrame()
-//               draw   → (Offscreen) WorldCaptureNode renders the world
-//                        into a texture, then the UI layer draws on top
+//               update → Impl::onFrame(): game callback, then the UI is
+//                        updated, laid out and painted into a draw list
+//               draw   → (Offscreen) WorldCaptureNode renders the world into
+//                        a texture; then the UI's draw list is drawn on top
 //          └─ loop ends when the window closes or Director::end() is called
 //     └─ report statistics, restore logging, return a Status
 //
-// Axmol and Dear ImGui types never appear outside this folder.
+// Axmol types never appear outside this folder.
 
 #include "lantern/runtime/Application.hpp"
 
 #include "AxmolLogBridge.hpp"
 #include "SceneOutline.hpp"
 #include "StartScene.hpp"
+#include "UiHost.hpp"
 
-#include <ImGui/ImGuiPresenter.h>
 #include <axmol.h>
 #include <renderer/backend/DriverBase.h>
 
@@ -37,7 +38,6 @@ namespace lantern {
 namespace {
 
 constexpr std::string_view kCategory = "runtime";
-constexpr std::string_view kUiLoopId = "#lui";  // Axmol needs a "#xxx" id per UI loop
 
 // Desktop platforms have exactly one main window and graphics context, and
 // Axmol's Application/Director are process-wide singletons. This flag turns
@@ -106,20 +106,22 @@ struct Application::Impl {
     bool quitRequested = false;
     bool finishing = false;        // Director::end() has been requested
     bool screenshotFailed = false;
-    bool uiStarted = false;
     std::string startupError;
 
     ax::Node* world = nullptr;                  // owned by the scene
     ax::RenderTexture* worldTexture = nullptr;  // retained here (Offscreen only)
+    std::unique_ptr<detail::UiHost> ui;
+    float fps = 0.0f;
 
     detail::NodeIdRegistry nodeIds;
     std::vector<SceneNodeInfo> outline;
     std::uint64_t outlineFrame = UINT64_MAX;    // frame the outline was built in
 
     Logger& log() { return engine.logger(); }
+    bool uiEnabled() const { return static_cast<bool>(presentation.uiSetup); }
 
     bool startWindow();
-    void startUi(ax::Scene& scene);
+    void startUi(ax::Scene& scene, ax::RenderView& view);
     void logDiagnostics(ax::RenderView& view);
     void onFrame(float deltaSeconds);
     void finish();
@@ -208,7 +210,7 @@ bool Application::Impl::startWindow()
         worldTexture->retain();
         world->setVisible(false); // drawn only by the capture node
         scene->addChild(WorldCaptureNode::create(world, worldTexture), -100);
-        director->setClearColor(ax::Color4F(0.10f, 0.10f, 0.11f, 1.0f));
+        director->setClearColor(ax::Color4F(0.08f, 0.08f, 0.10f, 1.0f));
     }
 
     director->runWithScene(scene);
@@ -224,8 +226,8 @@ bool Application::Impl::startWindow()
         director->getEventDispatcher()->addEventListenerWithSceneGraphPriority(keyboard, scene);
     }
 
-    if (presentation.ui) {
-        startUi(*scene);
+    if (uiEnabled()) {
+        startUi(*scene, *view);
     }
 
     // Axmol announces EVENT_RESET while shutting down, while the window and
@@ -239,39 +241,16 @@ bool Application::Impl::startWindow()
     return true;
 }
 
-void Application::Impl::startUi(ax::Scene& scene)
+void Application::Impl::startUi(ax::Scene& scene, ax::RenderView& view)
 {
-    auto* presenter = ax::extension::ImGuiPresenter::getInstance();
-
-    ImGuiIO& io = ImGui::GetIO();
-    // Keep every panel inside the main window: consistent on all platforms
-    // (Axmol only supports separate OS windows for panels with OpenGL).
-    io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
-    // Layout files are saved by the caller (e.g. the editor), not by ImGui.
-    io.IniFilename = nullptr;
-
-    if (!presentation.uiFontFile.empty()) {
-        std::error_code ec;
-        if (std::filesystem::is_regular_file(presentation.uiFontFile, ec)) {
-            presenter->addFont(presentation.uiFontFile.string(), presentation.uiFontSize);
-            log().info(kCategory, "UI font: " + presentation.uiFontFile.string());
-        } else {
-            log().warning(kCategory, "UI font not found, using the built-in font: "
-                                         + presentation.uiFontFile.string());
-        }
-    }
-
-    if (presentation.uiSetup) {
-        presentation.uiSetup();
-    }
-
-    presenter->addRenderLoop(kUiLoopId, [this] {
-        UiFrame::Access access{*this};
-        UiFrame frame(access);
-        presentation.ui(frame);
-    }, &scene);
-    uiStarted = true;
-    log().info(kCategory, std::string("UI layer: Dear ImGui ") + ImGui::GetVersion());
+    auto* glfwWindow = static_cast<ax::RenderViewImpl&>(view).getWindow();
+    ax::Texture2D* worldImage = worldTexture != nullptr ? worldTexture->getSprite()->getTexture() : nullptr;
+    ui = std::make_unique<detail::UiHost>(log(), glfwWindow, scene, worldImage);
+    ui->beginFrame(0.0);
+    UiFrame::Access access{*this};
+    UiFrame frame(access);
+    presentation.uiSetup(frame);
+    log().info(kCategory, "UI layer: Lantern UI");
 }
 
 void Application::Impl::logDiagnostics(ax::RenderView& view)
@@ -303,10 +282,26 @@ void Application::Impl::onFrame(float deltaSeconds)
     }
     ++report.framesRendered;
 
+    // Smoothed frames per second (exponential moving average).
+    if (deltaSeconds > 0.0f) {
+        const float instant = 1.0f / deltaSeconds;
+        fps = fps <= 0.0f ? instant : fps + (instant - fps) * 0.05f;
+    }
+
     if (auto* view = ax::Director::getInstance()->getRenderView()) {
         const ax::Vec2 size = view->getFrameSize();
         report.finalWindowWidth = static_cast<int>(size.x);
         report.finalWindowHeight = static_cast<int>(size.y);
+    }
+
+    if (ui) {
+        ui->beginFrame(static_cast<double>(deltaSeconds));
+        if (presentation.uiUpdate) {
+            UiFrame::Access access{*this};
+            UiFrame frame(access);
+            presentation.uiUpdate(frame);
+        }
+        ui->endFrame();
     }
 
     if (finishing) {
@@ -347,13 +342,13 @@ void Application::Impl::finish()
 
 void Application::Impl::releaseBackendObjects()
 {
-    if (uiStarted) {
+    if (ui) {
         if (presentation.uiShutdown) {
-            presentation.uiShutdown();
+            UiFrame::Access access{*this};
+            UiFrame frame(access);
+            presentation.uiShutdown(frame);
         }
-        ax::extension::ImGuiPresenter::getInstance()->removeRenderLoop(kUiLoopId);
-        ax::extension::ImGuiPresenter::destroyInstance();
-        uiStarted = false;
+        ui.reset(); // restores Axmol's input callbacks, frees UI textures
     }
     AX_SAFE_RELEASE_NULL(worldTexture);
     world = nullptr;
@@ -368,6 +363,31 @@ UiFrame::UiFrame(Access& access)
 {
 }
 
+ui::Context& UiFrame::ui()
+{
+    return m_access.impl.ui->context();
+}
+
+WorldImage UiFrame::worldImage() const
+{
+    const Application::Impl& impl = m_access.impl;
+    if (impl.worldTexture == nullptr) {
+        return {};
+    }
+    WorldImage image;
+    image.texture = detail::UiHost::kWorldTexture;
+    image.size = {static_cast<float>(impl.presentation.worldWidth), static_cast<float>(impl.presentation.worldHeight)};
+#if AX_USE_GL
+    // OpenGL stores render textures upside down.
+    image.uv0 = {0.0f, 1.0f};
+    image.uv1 = {1.0f, 0.0f};
+#else
+    image.uv0 = {0.0f, 0.0f};
+    image.uv1 = {1.0f, 1.0f};
+#endif
+    return image;
+}
+
 int UiFrame::worldWidth() const noexcept
 {
     return m_access.impl.presentation.worldWidth;
@@ -380,42 +400,12 @@ int UiFrame::worldHeight() const noexcept
 
 float UiFrame::framesPerSecond() const noexcept
 {
-    return ImGui::GetIO().Framerate;
+    return m_access.impl.fps;
 }
 
 void UiFrame::requestQuit()
 {
     m_access.impl.quitRequested = true;
-}
-
-WorldImageRect UiFrame::worldImage(float availableWidth, float availableHeight)
-{
-    Application::Impl& impl = m_access.impl;
-    if (impl.worldTexture == nullptr || availableWidth <= 1.0f || availableHeight <= 1.0f) {
-        return {};
-    }
-
-    // Fit inside the available area without stretching ("letterbox").
-    const auto worldW = static_cast<float>(impl.presentation.worldWidth);
-    const auto worldH = static_cast<float>(impl.presentation.worldHeight);
-    const float scale = std::min(availableWidth / worldW, availableHeight / worldH);
-    const ImVec2 size(worldW * scale, worldH * scale);
-
-    const ImVec2 start = ImGui::GetCursorPos();
-    ImGui::SetCursorPos(ImVec2(start.x + (availableWidth - size.x) * 0.5f,
-                               start.y + (availableHeight - size.y) * 0.5f));
-    const ImVec2 topLeft = ImGui::GetCursorScreenPos();
-
-    // OpenGL stores render textures upside down; Metal does not.
-#if AX_USE_GL
-    const ImVec2 uv0(0.0f, 1.0f);
-    const ImVec2 uv1(1.0f, 0.0f);
-#else
-    const ImVec2 uv0(0.0f, 0.0f);
-    const ImVec2 uv1(1.0f, 1.0f);
-#endif
-    ax::extension::ImGuiPresenter::getInstance()->image(impl.worldTexture->getSprite()->getTexture(), size, uv0, uv1);
-    return WorldImageRect{topLeft.x, topLeft.y, size.x, size.y, scale};
 }
 
 const std::vector<SceneNodeInfo>& UiFrame::sceneOutline()
@@ -475,8 +465,8 @@ Status Application::run(const RunOptions& options)
     if (impl.presentation.worldWidth <= 0 || impl.presentation.worldHeight <= 0) {
         return Status::failure("World size must be positive.");
     }
-    if (impl.presentation.worldDisplay == WorldDisplay::Offscreen && !impl.presentation.ui) {
-        return Status::failure("An off-screen world needs a UI callback to show it (PresentationSettings::ui).");
+    if (impl.presentation.worldDisplay == WorldDisplay::Offscreen && !impl.uiEnabled()) {
+        return Status::failure("An off-screen world needs a UI layer to show it (PresentationSettings::uiSetup).");
     }
     if (!options.screenshotPath.empty() && options.maxFrames == 0) {
         return Status::failure("A screenshot needs a frame limit (RunOptions::maxFrames > 0).");
@@ -497,11 +487,12 @@ Status Application::run(const RunOptions& options)
         impl.log().info(kCategory, "Opening window...");
         BackendApp backend(impl);
         exitCode = backend.run(); // blocks until the window closes
-        if (impl.uiStarted || impl.worldTexture != nullptr) {
+        if (impl.ui || impl.worldTexture != nullptr) {
             // Normally released on EVENT_RESET (see startWindow). If the backend
             // stopped without announcing it, leaking is safer than touching a
             // destroyed window.
             impl.log().warning(kCategory, "Backend stopped without a reset event; UI resources not released.");
+            static_cast<void>(impl.ui.release());
         }
     }
     const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - start;

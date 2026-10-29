@@ -13,7 +13,10 @@ function(lantern_set_warnings target)
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Wpedantic
             -Wshadow -Wconversion -Wsign-conversion
-            -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual)
+            -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual
+            # C++20 designated initializers ({.title = "x"}) deliberately leave
+            # other fields at their defaults; GCC would flag every such use.
+            -Wno-missing-field-initializers)
         if(LANTERN_WARNINGS_AS_ERRORS)
             target_compile_options(${target} PRIVATE -Werror)
         endif()

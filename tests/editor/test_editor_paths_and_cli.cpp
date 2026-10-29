@@ -54,14 +54,6 @@ TEST_CASE("No home folder gives an empty path instead of guessing", "[editor][pa
     CHECK(userConfigDirectory(HostOs::Windows, env).empty());
 }
 
-TEST_CASE("Every OS has at least one UI font candidate", "[editor][paths]")
-{
-    const auto env = fakeEnvironment({});
-    CHECK_FALSE(uiFontCandidates(HostOs::MacOS, env).empty());
-    CHECK_FALSE(uiFontCandidates(HostOs::Windows, env).empty());
-    CHECK_FALSE(uiFontCandidates(HostOs::Linux, env).empty());
-}
-
 TEST_CASE("Editor command line: defaults and options", "[editor][cli]")
 {
     CHECK(parse({}).ok());

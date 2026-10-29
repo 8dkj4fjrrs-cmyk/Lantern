@@ -1,45 +1,42 @@
 #include "Panels.hpp"
 
-#include <imgui.h>
-
-#include <cstdarg>
+#include <cstdio>
 #include <string>
 
 namespace lantern::editor {
 
 namespace {
 
-void row(const char* label, const char* format, ...) IM_FMTARGS(2);
-
-void row(const char* label, const char* format, ...)
+template <class... Args>
+std::string format(const char* pattern, Args... args)
 {
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
-    ImGui::TextDisabled("%s", label);
-    ImGui::TableSetColumnIndex(1);
-    va_list args;
-    va_start(args, format);
-    ImGui::TextV(format, args);
-    va_end(args);
+    char buffer[96];
+    std::snprintf(buffer, sizeof buffer, pattern, args...);
+    return buffer;
+}
+
+std::string displayName(const SceneNodeInfo& node)
+{
+    return node.name.empty() ? "(unnamed)" : node.name;
 }
 
 } // namespace
 
-void drawInspectorPanel(bool& open, UiFrame& ui, EditorState& state)
+InspectorPanel::InspectorPanel(EditorState& state)
+    : m_state(state)
 {
-    if (!open) {
-        return;
-    }
-    if (!ImGui::Begin(kInspectorPanel, &open)) {
-        ImGui::End();
-        return;
-    }
+    setEmptyText("Select an object in the Hierarchy to see its properties.");
+    setFootnote("Live values from the running scene. Editing, with undo, arrives with Lantern scenes in "
+                "Milestone 3.");
+}
 
+void InspectorPanel::update(UiFrame& frame)
+{
+    const std::vector<SceneNodeInfo>& nodes = frame.sceneOutline();
     const SceneNodeInfo* selected = nullptr;
     const SceneNodeInfo* parent = nullptr;
-    const std::vector<SceneNodeInfo>& nodes = ui.sceneOutline();
     for (const SceneNodeInfo& node : nodes) {
-        if (node.id == state.selectedNodeId) {
+        if (node.id == m_state.selectedNodeId) {
             selected = &node;
         }
     }
@@ -51,42 +48,26 @@ void drawInspectorPanel(bool& open, UiFrame& ui, EditorState& state)
         }
     }
 
+    setEmpty(selected == nullptr);
     if (selected == nullptr) {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-        ImGui::TextWrapped("Select an object in the Hierarchy to see its properties.");
-        ImGui::PopStyleColor();
-        ImGui::End();
         return;
     }
 
-    const std::string name = selected->name.empty() ? "(unnamed)" : selected->name;
-    ImGui::TextUnformatted(name.c_str());
-    ImGui::SameLine();
-    ImGui::TextDisabled("%s", selected->kind.c_str());
-    ImGui::Separator();
-
-    if (ImGui::BeginTable("properties", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_RowBg)) {
-        ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 110.0f);
-        ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
-        row("Position", "%.1f, %.1f", static_cast<double>(selected->x), static_cast<double>(selected->y));
-        row("Rotation", "%.1f deg", static_cast<double>(selected->rotationDegrees));
-        row("Scale", "%.3f, %.3f", static_cast<double>(selected->scaleX), static_cast<double>(selected->scaleY));
-        row("Size", "%.0f x %.0f", static_cast<double>(selected->width), static_cast<double>(selected->height));
-        row("Draw order", "%d", selected->drawOrder);
-        row("Visible", "%s", selected->visible ? "yes" : "no");
-        row("Children", "%zu", selected->childCount);
-        row("Parent", "%s", parent != nullptr ? (parent->name.empty() ? "(unnamed)" : parent->name.c_str()) : "-");
-        row("Session id", "%llu", static_cast<unsigned long long>(selected->id));
-        ImGui::EndTable();
-    }
-
-    ImGui::Spacing();
-    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-    ImGui::TextWrapped("Live values from the running scene. Editing (with undo) arrives with "
-                       "Lantern scenes in Milestone 3.");
-    ImGui::PopStyleColor();
-
-    ImGui::End();
+    const auto d = [](float v) { return static_cast<double>(v); };
+    setTitle(displayName(*selected), selected->kind);
+    setRows({
+        {"Transform", "", true},
+        {"Position", format("%.1f, %.1f", d(selected->x), d(selected->y))},
+        {"Rotation", format("%.1f°", d(selected->rotationDegrees))},
+        {"Scale", format("%.3f, %.3f", d(selected->scaleX), d(selected->scaleY))},
+        {"Size", format("%.0f × %.0f", d(selected->width), d(selected->height))},
+        {"Object", "", true},
+        {"Draw order", std::to_string(selected->drawOrder)},
+        {"Visible", selected->visible ? "Yes" : "No"},
+        {"Children", std::to_string(selected->childCount)},
+        {"Parent", parent != nullptr ? displayName(*parent) : "—"},
+        {"Session id", std::to_string(selected->id)},
+    });
 }
 
 } // namespace lantern::editor

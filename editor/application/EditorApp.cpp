@@ -1,12 +1,14 @@
 #include "EditorApp.hpp"
 
 #include "../model/EditorPaths.hpp"
-#include "Theme.hpp"
 
 #include "lantern/core/Version.hpp"
-
-#include <imgui.h>
-#include <imgui_internal.h> // DockBuilder (layout) and the status bar
+#include "lantern/ui/Context.hpp"
+#include "lantern/ui/widgets/Basic.hpp"
+#include "lantern/ui/widgets/Box.hpp"
+#include "lantern/ui/widgets/Dialog.hpp"
+#include "lantern/ui/widgets/DockSpace.hpp"
+#include "lantern/ui/widgets/Menu.hpp"
 
 #include <string>
 #include <utility>
@@ -16,14 +18,15 @@ namespace lantern::editor {
 namespace {
 
 constexpr std::string_view kCategory = "editor";
-constexpr const char* kDockspaceName = "LanternDockspace";
-constexpr const char* kAboutPopup = "About Lantern Engine";
 
-#if defined(__APPLE__)
-constexpr const char* kQuitShortcutLabel = "Cmd+Q";
-#else
-constexpr const char* kQuitShortcutLabel = "Ctrl+Q";
-#endif
+// A saved layout is written this long after the last change (and on exit),
+// so dragging a splitter does not write the file on every frame.
+constexpr double kLayoutSaveDelaySeconds = 1.0;
+
+bool isEditorPanel(std::string_view id)
+{
+    return id == kViewportPanel || id == kHierarchyPanel || id == kInspectorPanel || id == kConsolePanel;
+}
 
 } // namespace
 
@@ -32,6 +35,15 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
     , m_console(console)
     , m_options(std::move(options))
 {
+}
+
+ui::DockLayout EditorApp::defaultLayout()
+{
+    ui::DockLayout layout = ui::DockLayout::tabs({kViewportPanel});
+    layout.dock(kHierarchyPanel, kViewportPanel, ui::DockSide::Left, 0.18f);
+    layout.dock(kInspectorPanel, kViewportPanel, ui::DockSide::Right, 0.29f);
+    layout.dock(kConsolePanel, kViewportPanel, ui::DockSide::Bottom, 0.3f);
+    return layout;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,176 +81,190 @@ void EditorApp::saveSettings()
 
 void EditorApp::saveLayout()
 {
-    if (m_configDir.empty()) {
+    m_layoutDirty = false;
+    if (m_configDir.empty() || m_dock == nullptr) {
         return;
     }
-    std::size_t size = 0;
-    const char* data = ImGui::SaveIniSettingsToMemory(&size);
-    if (const Status status = writeTextFileAtomically(m_configDir / kLayoutFileName, std::string_view(data, size));
-        !status) {
+    const std::string text = m_dock->layout().serialize() + "\n";
+    if (const Status status = writeTextFileAtomically(m_configDir / kLayoutFileName, text); !status) {
         log().error(kCategory, "Could not save the panel layout: " + status.message);
     }
-    ImGui::GetIO().WantSaveIniSettings = false;
 }
 
-// ---------------------------------------------------------------------------
-// Runtime callbacks
-// ---------------------------------------------------------------------------
-void EditorApp::setupUi()
+void EditorApp::restoreLayout()
 {
-    applyLanternTheme();
-
-    if (m_configDir.empty() || m_options.resetLayout) {
-        m_state.layoutResetRequested = true;
-        return;
+    if (!m_configDir.empty() && !m_options.resetLayout) {
+        if (const auto text = readTextFile(m_configDir / kLayoutFileName)) {
+            if (auto layout = ui::DockLayout::parse(*text, isEditorPanel)) {
+                m_dock->setLayout(std::move(*layout));
+                log().info(kCategory, "Restored the saved panel layout.");
+                return;
+            }
+            log().warning(kCategory, "The saved panel layout could not be read; using the default one.");
+        }
     }
-    if (const auto layout = readTextFile(m_configDir / kLayoutFileName)) {
-        ImGui::LoadIniSettingsFromMemory(layout->data(), layout->size());
-        log().info(kCategory, "Restored the saved panel layout.");
-    }
-}
-
-void EditorApp::shutdownUi()
-{
-    saveLayout();
-}
-
-void EditorApp::drawFrame(UiFrame& ui)
-{
-    // Cmd+Q / Ctrl+Q quits from anywhere in the editor.
-    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Q, ImGuiInputFlags_RouteGlobal)) {
-        ui.requestQuit();
-    }
-
-    drawMenuBar(ui);
-    drawStatusBar(ui);   // before the dockspace, so the dockspace fits above it
-    drawDockspace();
-
-    drawViewportPanel(m_state.panels.viewport, ui);
-    drawHierarchyPanel(m_state.panels.hierarchy, ui, m_state);
-    drawInspectorPanel(m_state.panels.inspector, ui, m_state);
-    m_consolePanel.draw(m_state.panels.console, m_console);
-    drawAboutPopup();
-
-    // ImGui asks to save a few seconds after the layout changes.
-    if (ImGui::GetIO().WantSaveIniSettings) {
-        saveLayout();
-    }
+    m_dock->resetLayout();
+    log().info(kCategory, "Using the default panel layout.");
 }
 
 // ---------------------------------------------------------------------------
 // Workspace
 // ---------------------------------------------------------------------------
-void EditorApp::drawMenuBar(UiFrame& ui)
+void EditorApp::buildWorkspace(UiFrame& frame)
 {
-    if (!ImGui::BeginMainMenuBar()) {
-        return;
+    ui::Context& ctx = frame.ui();
+    const ui::Theme& theme = ctx.theme();
+
+    auto root = std::make_unique<ui::Column>(0.0f);
+    root->setBackground(theme.window);
+
+    // --- Menu bar --------------------------------------------------------------
+    auto& menuBar = root->emplace<ui::MenuBar>();
+    {
+        ui::MenuItem quit;
+        quit.label = "Quit Lantern Editor";
+        quit.shortcut = ui::primaryShortcutLabel(ctx.platform(), "Q");
+        quit.action = [this] { m_quitRequested = true; };
+        menuBar.addMenu({"File", {std::move(quit)}});
     }
-    if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("Quit", kQuitShortcutLabel)) {
-            ui.requestQuit();
+    {
+        std::vector<ui::MenuItem> items;
+        for (const char* id : {kViewportPanel, kHierarchyPanel, kInspectorPanel, kConsolePanel}) {
+            ui::MenuItem item;
+            item.label = std::string(1, static_cast<char>(id[0] - ('a' - 'A'))) + (id + 1);
+            item.isChecked = [this, id] { return m_dock->isOpen(id); };
+            item.action = [this, id] { m_dock->setOpen(id, !m_dock->isOpen(id)); };
+            items.push_back(std::move(item));
         }
-        ImGui::EndMenu();
+        items.push_back(ui::MenuItem::divider());
+        ui::MenuItem reset;
+        reset.label = "Reset Layout";
+        reset.action = [this] {
+            m_dock->resetLayout();
+            log().info(kCategory, "Panel layout reset.");
+        };
+        items.push_back(std::move(reset));
+        menuBar.addMenu({"View", std::move(items)});
     }
-    if (ImGui::BeginMenu("View")) {
-        ImGui::MenuItem(kViewportPanel, nullptr, &m_state.panels.viewport);
-        ImGui::MenuItem(kHierarchyPanel, nullptr, &m_state.panels.hierarchy);
-        ImGui::MenuItem(kInspectorPanel, nullptr, &m_state.panels.inspector);
-        ImGui::MenuItem(kConsolePanel, nullptr, &m_state.panels.console);
-        ImGui::Separator();
-        if (ImGui::MenuItem("Reset Layout")) {
-            m_state.panels = PanelVisibility{};
-            m_state.layoutResetRequested = true;
-        }
-        ImGui::EndMenu();
+    {
+        ui::MenuItem about;
+        about.label = "About Lantern Engine…";
+        about.action = [this, &ctx] { showAbout(ctx); };
+        menuBar.addMenu({"Help", {std::move(about)}});
     }
-    if (ImGui::BeginMenu("Help")) {
-        if (ImGui::MenuItem("About Lantern Engine...")) {
-            m_openAbout = true;
-        }
-        ImGui::EndMenu();
-    }
-    ImGui::EndMainMenuBar();
+
+    // --- Panels ------------------------------------------------------------------
+    auto& dock = root->emplace<ui::DockSpace>();
+    dock.setStretch(1.0f);
+    m_viewport = &dock.addPanel(kViewportPanel, "Viewport", std::make_unique<ViewportPanel>());
+    m_hierarchy = &dock.addPanel(kHierarchyPanel, "Hierarchy", std::make_unique<HierarchyPanel>(m_state));
+    m_inspector = &dock.addPanel(kInspectorPanel, "Inspector", std::make_unique<InspectorPanel>(m_state));
+    m_consolePanel = &dock.addPanel(kConsolePanel, "Console", std::make_unique<ConsolePanel>(m_console));
+    dock.setDefaultLayout(defaultLayout());
+    dock.setOnLayoutChanged([this, &ctx] {
+        m_layoutDirty = true;
+        m_layoutChangedAt = ctx.time();
+    });
+    m_dock = &dock;
+
+    // --- Status bar ----------------------------------------------------------------
+    auto& status = root->emplace<ui::Row>(theme.spacing * 2.0f, ui::Insets::symmetric(theme.padding, 0.0f));
+    status.setBackground(theme.panelHeader);
+    status.setCrossAlign(ui::CrossAlign::Center);
+    status.setFixedSize({0.0f, theme.statusBarHeight});
+    m_statusText = &status.emplace<ui::Label>("", ui::Label::Style::Small);
+    m_statusText->setColor(theme.textDim);
+    status.emplace<ui::Spacer>();
+    m_statusProblems = &status.emplace<ui::Label>("", ui::Label::Style::Small);
+
+    ctx.setRoot(std::move(root));
+
+    // Cmd+Q (macOS) / Ctrl+Q quits from anywhere in the editor.
+    ui::Modifiers primary;
+    (ctx.platform().macConventions ? primary.super : primary.ctrl) = true;
+    ctx.addShortcut(ui::Key::Q, primary, [this] { m_quitRequested = true; });
 }
 
-void EditorApp::drawStatusBar(UiFrame& ui)
+void EditorApp::updateStatusBar(UiFrame& frame)
 {
-    const ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-    const float height = ImGui::GetFrameHeight();
-    if (ImGui::BeginViewportSideBar("##StatusBar", ImGui::GetMainViewport(), ImGuiDir_Down, height, flags)) {
-        if (ImGui::BeginMenuBar()) {
-            ImGui::TextDisabled("Lantern Engine %s  |  %s  |  %.0f fps", versionString().data(),
-                                runtimeBackendName().data(), static_cast<double>(ui.framesPerSecond()));
-            const std::size_t errors = m_console.count(LogLevel::Error);
-            const std::size_t warnings = m_console.count(LogLevel::Warning);
-            if (errors + warnings > 0) {
-                ImGui::TextDisabled("|");
-                ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.35f, 1.0f), "%zu error(s), %zu warning(s)", errors,
-                                   warnings);
-            }
-            ImGui::EndMenuBar();
-        }
+    m_statusText->setText("Lantern Engine " + std::string(versionString()) + "   ·   "
+                          + std::string(runtimeBackendName()) + "   ·   "
+                          + std::to_string(static_cast<int>(frame.framesPerSecond() + 0.5f)) + " fps");
+
+    const std::size_t errors = m_console.count(LogLevel::Error);
+    const std::size_t warnings = m_console.count(LogLevel::Warning);
+    std::string problems;
+    if (errors > 0) {
+        problems = std::to_string(errors) + (errors == 1 ? " error" : " errors");
     }
-    ImGui::End();
+    if (warnings > 0) {
+        problems += (problems.empty() ? "" : ", ") + std::to_string(warnings)
+                    + (warnings == 1 ? " warning" : " warnings");
+    }
+    const ui::Theme& theme = frame.ui().theme();
+    m_statusProblems->setText(problems);
+    m_statusProblems->setColor(errors > 0 ? theme.error : theme.warning);
+    m_statusProblems->setVisible(!problems.empty());
 }
 
-void EditorApp::drawDockspace()
+void EditorApp::showAbout(ui::Context& ctx)
 {
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImGuiID dockspaceId = ImGui::GetID(kDockspaceName);
-
-    // Build the default layout on first run (no saved layout) or on request:
-    //   +-----------+---------------------+-----------+
-    //   | Hierarchy |      Viewport       | Inspector |
-    //   |           +---------------------+           |
-    //   |           |      Console        |           |
-    //   +-----------+---------------------+-----------+
-    if (m_state.layoutResetRequested || ImGui::DockBuilderGetNode(dockspaceId) == nullptr) {
-        m_state.layoutResetRequested = false;
-        ImGui::DockBuilderRemoveNode(dockspaceId);
-        ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->WorkSize);
-
-        ImGuiID center = dockspaceId;
-        const ImGuiID left = ImGui::DockBuilderSplitNode(center, ImGuiDir_Left, 0.18f, nullptr, &center);
-        const ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.24f, nullptr, &center);
-        const ImGuiID bottom = ImGui::DockBuilderSplitNode(center, ImGuiDir_Down, 0.30f, nullptr, &center);
-
-        ImGui::DockBuilderDockWindow(kHierarchyPanel, left);
-        ImGui::DockBuilderDockWindow(kInspectorPanel, right);
-        ImGui::DockBuilderDockWindow(kConsolePanel, bottom);
-        ImGui::DockBuilderDockWindow(kViewportPanel, center);
-        ImGui::DockBuilderFinish(dockspaceId);
-        log().info(kCategory, "Using the default panel layout.");
-    }
-
-    ImGui::DockSpaceOverViewport(dockspaceId, viewport);
+    auto dialog = std::make_unique<ui::Dialog>("About Lantern Engine", 400.0f);
+    ui::Column& body = dialog->body();
+    body.emplace<ui::Label>("Lantern Engine " + std::string(versionString()), ui::Label::Style::Strong);
+    body.emplace<ui::Label>("A C++-first 2D game engine and editor.", ui::Label::Style::Dim);
+    body.emplace<ui::Separator>();
+    body.emplace<ui::Label>("Runtime backend: " + std::string(runtimeBackendName()));
+    body.emplace<ui::Label>("Editor interface: Lantern UI");
+    body.emplace<ui::Separator>();
+    body.emplace<ui::Label>("Copyright (c) 2026 Oscar Hird. MIT License.");
+    body.emplace<ui::Label>("Third-party licenses are listed in THIRD_PARTY_NOTICES.md.", ui::Label::Style::Faint)
+        .setWrap(true);
+    dialog->addButton("Close", ui::Button::Style::Primary);
+    ui::showDialog(ctx, std::move(dialog));
 }
 
-void EditorApp::drawAboutPopup()
+// ---------------------------------------------------------------------------
+// Runtime callbacks
+// ---------------------------------------------------------------------------
+void EditorApp::setupUi(UiFrame& frame)
 {
-    if (m_openAbout) {
-        ImGui::OpenPopup(kAboutPopup);
-        m_openAbout = false;
+    buildWorkspace(frame);
+    restoreLayout();
+    m_layoutDirty = false;
+}
+
+void EditorApp::updateUi(UiFrame& frame)
+{
+    if (m_quitRequested) {
+        frame.requestQuit();
     }
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(kAboutPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Lantern Engine %s", versionString().data());
-        ImGui::TextDisabled("A C++-first 2D game engine and editor.");
-        ImGui::Separator();
-        ImGui::Text("Runtime backend: %s", runtimeBackendName().data());
-        ImGui::Text("Editor UI: Dear ImGui %s", ImGui::GetVersion());
-        ImGui::Separator();
-        ImGui::Text("Copyright (c) 2026 Oscar Hird. MIT License.");
-        ImGui::TextDisabled("Third-party licenses: THIRD_PARTY_NOTICES.md");
-        ImGui::Spacing();
-        if (ImGui::Button("Close", ImVec2(120.0f, 0.0f)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
+    m_viewport->update(frame);
+    m_hierarchy->update(frame);
+    m_inspector->update(frame);
+    m_consolePanel->update(frame);
+    updateStatusBar(frame);
+
+    if (m_layoutDirty && frame.ui().time() - m_layoutChangedAt >= kLayoutSaveDelaySeconds) {
+        saveLayout();
     }
+}
+
+void EditorApp::shutdownUi(UiFrame& /*frame*/)
+{
+    saveLayout();
+    m_state.panels.viewport = m_dock->isOpen(kViewportPanel);
+    m_state.panels.hierarchy = m_dock->isOpen(kHierarchyPanel);
+    m_state.panels.inspector = m_dock->isOpen(kInspectorPanel);
+    m_state.panels.console = m_dock->isOpen(kConsolePanel);
+    // The widgets are destroyed with the UI; forget them.
+    m_dock = nullptr;
+    m_viewport = nullptr;
+    m_hierarchy = nullptr;
+    m_inspector = nullptr;
+    m_consolePanel = nullptr;
+    m_statusText = nullptr;
+    m_statusProblems = nullptr;
 }
 
 // ---------------------------------------------------------------------------
@@ -250,11 +276,9 @@ Status EditorApp::run()
 
     PresentationSettings presentation;
     presentation.worldDisplay = WorldDisplay::Offscreen;
-    presentation.ui = [this](UiFrame& ui) { drawFrame(ui); };
-    presentation.uiSetup = [this] { setupUi(); };
-    presentation.uiShutdown = [this] { shutdownUi(); };
-    presentation.uiFontFile = findUiFont();
-    presentation.uiFontSize = 15.0f;
+    presentation.uiSetup = [this](UiFrame& frame) { setupUi(frame); };
+    presentation.uiUpdate = [this](UiFrame& frame) { updateUi(frame); };
+    presentation.uiShutdown = [this](UiFrame& frame) { shutdownUi(frame); };
 
     Application app(m_engine,
                     WindowSettings{.title = "Lantern Editor",

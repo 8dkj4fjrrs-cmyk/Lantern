@@ -4,8 +4,10 @@ Lantern Engine's own code is MIT-licensed (see `LICENSE`). This file lists
 third-party software it uses, what for, and whether it ends up inside games
 built with Lantern ("shipped").
 
-Third-party source is never copied into this repository: Axmol is downloaded
+Large dependencies are not copied into this repository: Axmol is downloaded
 by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
+Two small ones are kept in the repository, unmodified and with their license
+files: `third_party/stb/stb_truetype.h` and the Inter fonts in `assets/fonts/`.
 
 ## Runtime backend
 
@@ -13,7 +15,6 @@ by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
 |---|---|---|---|
 | [Axmol Engine](https://github.com/axmolengine/axmol) | 2.11.5 (`6c0dce6`) | MIT | Yes |
 | [axslcc](https://github.com/axmolengine/axslcc) shader compiler | 1.14.0 | see upstream | No — build tool only |
-| [Dear ImGui](https://github.com/ocornut/imgui) (docking branch, bundled as Axmol's ImGui extension, incl. `imgui_freetype` and `imgui_stdlib`) | 1.92.1 | MIT | Yes — editor UI; also linked into the player (unused there) |
 
 ### Libraries bundled by Axmol and linked into `lantern_player`
 
@@ -46,7 +47,9 @@ of Glad/GLFW-on-X11; it will be re-checked from a macOS build.
 | yasio | 4.3.2 | MIT WITH Anti-996 — **review before public release** |
 | zlib | 1.3.1 | zlib |
 
-**Not included** in Milestone 1 builds: OpenAL Soft (LGPL-2.1), because
+**Not included** in Lantern builds: Axmol's optional extensions (its Dear ImGui
+integration, inspector, SDF generator, and so on) are switched off.
+**Not included** either: OpenAL Soft (LGPL-2.1), because
 Axmol audio is switched off. It must be dynamically linked or replaced when
 audio is enabled.
 
@@ -59,13 +62,19 @@ audio is enabled.
 - Shipped games must include these notices; the packaging step (Milestone 8)
   will generate them automatically.
 
-## Fonts
+## Lantern UI (the editor's interface toolkit, `engine/ui`)
 
-The editor loads a font already installed on the user's computer (San
-Francisco / Arial on macOS, Segoe UI / Arial on Windows, DejaVu Sans /
-Liberation Sans on Linux) at run time. No font files are bundled or
-redistributed; otherwise Dear ImGui's built-in font (ProggyClean, MIT-style,
-part of Dear ImGui) is used.
+Lantern's UI toolkit is Lantern's own code. It uses:
+
+| Component | Version | License | Shipped? |
+|---|---|---|---|
+| [stb_truetype](https://github.com/nothings/stb) (`third_party/stb/stb_truetype.h`) | 1.26 (`003501f6`) | MIT or public domain (Unlicense), at our choice: MIT | Yes — in the editor; in games only once they use Lantern UI |
+| [Inter](https://rsms.me/inter/) Regular and SemiBold (`assets/fonts/`) | 4.0 (font version 4.001) | SIL Open Font License 1.1 (`assets/fonts/Inter-LICENSE.txt`) | Yes — embedded in the program file |
+
+The fonts are embedded unmodified. The OFL allows bundling and embedding them
+in software, including commercial software, as long as the license text goes
+with them and the fonts are not sold on their own. "Inter" is a Reserved Font
+Name only if the font itself is modified — we do not modify it.
 
 ## Development and test tools (not shipped)
 

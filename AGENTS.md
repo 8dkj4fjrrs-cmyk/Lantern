@@ -17,9 +17,11 @@ and AI assistants.
 ## Architecture rules
 
 - Dependency direction: `editor` → `engine`; never the reverse. Tests may use anything.
-- Public engine headers (`engine/*/include/lantern/...`) must not include backend (Cocos/Axmol) or ImGui headers.
-- `editor/model/` must not include ImGui or any runtime/backend header: it is the editor logic that survives a UI-library change, and it is unit-tested without a window.
-- Editor UI code (`editor/application`, `editor/panels`) may use Dear ImGui and `lantern/runtime/*.hpp`, never Axmol headers.
+- Public engine headers (`engine/*/include/lantern/...`) must not include backend (Axmol) headers.
+- The editor interface is built with Lantern UI (`engine/ui`, `lantern::ui`). Do not add Dear ImGui or any other third-party UI library (ADR 0004).
+- `engine/ui` must not depend on Axmol, GLFW or any graphics API: it turns widgets into a list of triangles, and `engine/runtime/src/UiHost.*` draws them. Keep it unit-testable without a window.
+- `editor/model/` must not include UI or runtime/backend headers: it is the editor logic, unit-tested without a window.
+- Editor UI code (`editor/application`, `editor/panels`) may use `lantern/ui/*` and `lantern/runtime/*.hpp`, never Axmol headers.
 - Editor operations that change project data must go through the undo/redo command system (from Milestone 3).
 - No global mutable state. Pass `Engine&` / `Logger&` explicitly.
 - Ownership: RAII and `std::unique_ptr` by default; raw pointers only as non-owning observers.

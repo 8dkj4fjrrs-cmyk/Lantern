@@ -23,10 +23,11 @@ Using the editor: [docs/editor.md](docs/editor.md).
 
 ```
 engine/core/     Engine lifecycle, logging, version (no third-party deps)
+engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
 editor/model/    Editor logic without UI code (console, preferences, state)
-editor/panels/   Editor panels (Dear ImGui)
+editor/panels/   Editor panels (built with Lantern UI)
 editor/application/  Editor window, menus, docking layout
 tests/           Catch2 unit tests + window smoke tests
 cmake/           Shared CMake helpers, incl. the pinned Axmol download

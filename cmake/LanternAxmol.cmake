@@ -141,13 +141,14 @@ set(ENV{AX_ROOT} "${LANTERN_AXMOL_DIR}")
 # ---------------------------------------------------------------------------
 # 4. Axmol feature switches
 #
-# Only what Milestone 1 needs: 2D rendering, windowing, images, text.
+# Only what Lantern needs: 2D rendering, windowing, images, text.
 # Later milestones switch features back on deliberately (and update
-# THIRD_PARTY_NOTICES.md), e.g. ImGui for the editor, audio, physics.
+# THIRD_PARTY_NOTICES.md), e.g. audio, physics. The editor's interface is
+# Lantern's own (engine/ui), so none of Axmol's UI extensions are used.
 # ---------------------------------------------------------------------------
 set(AX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(AX_EXT_HINT OFF CACHE BOOL "" FORCE)            # no optional extensions...
-set(AX_ENABLE_EXT_IMGUI ON CACHE BOOL "" FORCE)     # ...except Dear ImGui (editor UI)
+set(AX_EXT_HINT OFF CACHE BOOL "" FORCE)            # no optional extensions
+set(AX_ENABLE_EXT_IMGUI OFF CACHE BOOL "" FORCE)    # Lantern has its own UI (lantern_ui)
 set(AX_ENABLE_EXT_INSPECTOR OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_EXT_SDFGEN OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_3D OFF CACHE BOOL "" FORCE)
@@ -178,12 +179,4 @@ add_subdirectory("${_AX_ROOT}/core" "${ENGINE_BINARY_PATH}/axmol/core" SYSTEM)
 if(NOT TARGET ${_AX_CORE_LIB})
     message(FATAL_ERROR "Axmol did not create its core library target.")
 endif()
-if(NOT TARGET ImGui)
-    message(FATAL_ERROR "Axmol did not create its ImGui extension target.")
-endif()
 
-# Dear ImGui headers only (no Axmol include paths), for the editor's UI code.
-# The ImGui library itself is linked through lantern_runtime.
-add_library(lantern_imgui_headers INTERFACE)
-target_include_directories(lantern_imgui_headers SYSTEM INTERFACE
-    "${LANTERN_AXMOL_DIR}/extensions/ImGui/src/ImGui")

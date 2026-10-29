@@ -1,6 +1,6 @@
 #pragma once
 
-// Where the editor keeps per-user files, and which system font it uses.
+// Where the editor keeps per-user files.
 // Operating-system differences live here and nowhere else in the editor.
 
 #include <filesystem>
@@ -34,13 +34,6 @@ std::filesystem::path userConfigDirectory();
 
 /// File names inside the config directory.
 inline constexpr const char* kPreferencesFileName = "editor.prefs";
-inline constexpr const char* kLayoutFileName = "layout.ini";
-
-/// Readable system fonts to try for the editor UI, best first.
-std::vector<std::filesystem::path> uiFontCandidates(HostOs os, const EnvironmentLookup& env);
-
-/// The first candidate that exists on this computer, or an empty path
-/// (the UI then falls back to its built-in font).
-std::filesystem::path findUiFont();
+inline constexpr const char* kLayoutFileName = "layout.dock";
 
 } // namespace lantern::editor

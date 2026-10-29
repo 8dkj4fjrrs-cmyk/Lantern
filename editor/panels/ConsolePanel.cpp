@@ -1,133 +1,243 @@
 #include "Panels.hpp"
 
-#include <imgui.h>
-#include <misc/cpp/imgui_stdlib.h>
+#include "lantern/ui/Context.hpp"
+#include "lantern/ui/Icons.hpp"
 
+#include <cmath>
+#include <cstdio>
 #include <string>
 
 namespace lantern::editor {
 
 namespace {
 
-ImVec4 levelColour(LogLevel level)
+// Column widths (points); the message column takes the rest. In a narrow
+// panel the Time, then the Source column are hidden to leave the message room.
+struct Columns {
+    float time = 72.0f;
+    float level = 64.0f;
+    float source = 96.0f;
+};
+
+Columns columnsFor(float width)
 {
-    switch (level) {
-    case LogLevel::Trace: return ImVec4(0.55f, 0.55f, 0.58f, 1.0f);
-    case LogLevel::Debug: return ImVec4(0.62f, 0.70f, 0.78f, 1.0f);
-    case LogLevel::Info: return ImVec4(0.88f, 0.88f, 0.88f, 1.0f);
-    case LogLevel::Warning: return ImVec4(1.00f, 0.78f, 0.35f, 1.0f);
-    case LogLevel::Error: return ImVec4(1.00f, 0.42f, 0.40f, 1.0f);
+    Columns c;
+    if (width < 560.0f) {
+        c.time = 0.0f;
     }
-    return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    if (width < 420.0f) {
+        c.source = 0.0f;
+    }
+    return c;
 }
 
-void levelToggle(const char* name, LogLevel level, bool& shown, const ConsoleLog& log)
+ui::Color levelColour(const ui::Theme& t, LogLevel level)
 {
-    const std::string label = std::string(name) + " (" + std::to_string(log.count(level)) + ")";
-    ImGui::PushStyleColor(ImGuiCol_Text, levelColour(level));
-    ImGui::Checkbox(label.c_str(), &shown);
-    ImGui::PopStyleColor();
-    ImGui::SameLine();
+    switch (level) {
+    case LogLevel::Trace: return t.textFaint;
+    case LogLevel::Debug: return t.debug;
+    case LogLevel::Info: return t.info;
+    case LogLevel::Warning: return t.warning;
+    case LogLevel::Error: return t.error;
+    }
+    return t.text;
+}
+
+std::string_view levelName(LogLevel level)
+{
+    switch (level) {
+    case LogLevel::Trace: return "Trace";
+    case LogLevel::Debug: return "Debug";
+    case LogLevel::Info: return "Info";
+    case LogLevel::Warning: return "Warning";
+    case LogLevel::Error: return "Error";
+    }
+    return "";
+}
+
+// Top of a line of text centred vertically in `rect`.
+float textTop(ui::Context& ctx, float size, const ui::Rect& rect)
+{
+    const ui::FontMetrics fm = ctx.atlas().metrics(ctx.theme().font, size);
+    return std::round(rect.y + (rect.height - fm.lineHeight) * 0.5f);
 }
 
 } // namespace
 
-void ConsolePanel::draw(bool& open, ConsoleLog& log)
+ConsolePanel::ConsolePanel(ConsoleLog& log)
+    : ui::Column(0.0f)
+    , m_log(log)
+    , m_toggles{{
+          {LogLevel::Error, "Errors", &ConsoleFilter::showError},
+          {LogLevel::Warning, "Warnings", &ConsoleFilter::showWarning},
+          {LogLevel::Info, "Info", &ConsoleFilter::showInfo},
+          {LogLevel::Debug, "Debug", &ConsoleFilter::showDebug},
+      }}
 {
-    if (!open) {
+    const ui::Theme defaults;
+
+    // --- Toolbar -------------------------------------------------------------
+    // A Flow, so the toolbar wraps onto a second line in a narrow panel.
+    auto& toolbar = emplace<ui::Flow>(defaults.spacing, 6.0f, ui::Insets::symmetric(defaults.padding, 6.0f));
+
+    auto& clear = toolbar.emplace<ui::Button>("Clear", [this] {
+        m_log.clear();
+        m_dirty = true;
+    });
+    clear.setStyle(ui::Button::Style::Subtle);
+    clear.setTooltip("Remove all messages");
+
+    auto& copy = toolbar.emplace<ui::Button>("Copy", [this] {
+        if (ui::Context* ctx = context(); ctx != nullptr && ctx->platform().setClipboard) {
+            ctx->platform().setClipboard(m_log.toText(m_filter));
+        }
+    });
+    copy.setStyle(ui::Button::Style::Subtle);
+    copy.setTooltip("Copy the shown messages as text");
+
+    toolbar.emplace<ui::Separator>(ui::Axis::Vertical).setFixedSize({1.0f, 16.0f});
+
+    for (LevelToggle& toggle : m_toggles) {
+        auto& box = toolbar.emplace<ui::Checkbox>(toggle.name, m_filter.*toggle.shown);
+        box.setTextColor(levelColour(defaults, toggle.level));
+        box.setOnChange([this, &toggle](bool shown) {
+            m_filter.*toggle.shown = shown;
+            m_dirty = true;
+        });
+        toggle.checkbox = &box;
+    }
+
+    toolbar.emplace<ui::Spacer>();
+
+    auto& search = toolbar.emplace<ui::TextField>("Filter messages");
+    search.setLeadingIcon(ui::Icon::Search);
+    search.setClearButton(true);
+    search.setFixedSize({200.0f, 0.0f});
+    search.setOnChange([this](const std::string& text) {
+        m_filter.search = text;
+        m_dirty = true;
+    });
+
+    m_autoScroll = &toolbar.emplace<ui::Checkbox>("Auto-scroll", true, [this](bool on) {
+        m_list->setStickToEnd(on);
+        if (on) {
+            m_list->scroll().scrollToEnd();
+        }
+    });
+    m_autoScroll->setTooltip("Keep the newest message in view");
+
+    emplace<ui::Separator>();
+
+    // --- Messages ------------------------------------------------------------
+    auto& list = emplace<ui::ListView>();
+    list.setStretch(1.0f);
+    list.setStickToEnd(true);
+    list.setSelectable(true);
+    list.setRowHeight(22.0f);
+    list.setEmptyText("No messages.");
+    list.setHeader(24.0f, [this](ui::Context& ctx, ui::DrawList& draw, ui::Rect rect) { paintHeader(ctx, draw, rect); });
+    list.setRowPainter([this](ui::Context& ctx, ui::DrawList& draw, const ui::RowInfo& row) { paintRow(ctx, draw, row); });
+    m_list = &list;
+}
+
+void ConsolePanel::update(UiFrame& /*frame*/)
+{
+    // Level counts in the toggles ("Warnings 2").
+    for (LevelToggle& toggle : m_toggles) {
+        toggle.checkbox->setText(std::string(toggle.name) + "  " + std::to_string(m_log.count(toggle.level)));
+    }
+    refresh();
+}
+
+void ConsolePanel::refresh()
+{
+    // Rebuild the shown list only when something changed.
+    const std::uint64_t total = m_log.totalAdded();
+    const std::size_t size = m_log.size();
+    if (!m_dirty && total == m_shownTotal && size == m_shownSize) {
         return;
     }
-    if (!ImGui::Begin(kConsolePanel, &open)) {
-        ImGui::End();
+    m_entries = m_log.snapshot(m_filter);
+    m_shownTotal = total;
+    m_shownSize = size;
+    m_dirty = false;
+    m_list->setRowCount(m_entries.size());
+}
+
+void ConsolePanel::paintHeader(ui::Context& ctx, ui::DrawList& draw, ui::Rect rect) const
+{
+    const ui::Theme& t = ctx.theme();
+    draw.fillRect(rect, t.panelHeader);
+    draw.fillRect({rect.x, rect.bottom() - 1.0f, rect.width, 1.0f}, t.divider);
+
+    const float size = t.smallFontSize;
+    const float y = textTop(ctx, size, rect);
+    const Columns columns = columnsFor(rect.width);
+    float x = rect.x + t.padding;
+    const auto column = [&](std::string_view title, float width) {
+        if (width > 0.0f) {
+            draw.text(t.fontStrong, size, {x, y}, t.textDim, title);
+            x += width;
+        }
+    };
+    column("Time", columns.time);
+    column("Level", columns.level);
+    column("Source", columns.source);
+    column("Message", 1.0f);
+}
+
+void ConsolePanel::paintRow(ui::Context& ctx, ui::DrawList& draw, const ui::RowInfo& row) const
+{
+    if (row.index >= m_entries.size()) {
         return;
     }
+    const ConsoleEntry& entry = m_entries[row.index];
+    const ui::Theme& t = ctx.theme();
+    const ui::Color colour = levelColour(t, entry.level);
+    const float size = t.fontSize;
+    const float y = textTop(ctx, size, row.rect);
+    const Columns columns = columnsFor(row.rect.width);
+    float x = row.rect.x + t.padding;
 
-    // --- Toolbar -----------------------------------------------------------
-    if (ImGui::Button("Clear")) {
-        log.clear();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Copy")) {
-        ImGui::SetClipboardText(log.toText(m_filter).c_str());
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("|");
-    ImGui::SameLine();
-    levelToggle("Errors", LogLevel::Error, m_filter.showError, log);
-    levelToggle("Warnings", LogLevel::Warning, m_filter.showWarning, log);
-    levelToggle("Info", LogLevel::Info, m_filter.showInfo, log);
-    levelToggle("Debug", LogLevel::Debug, m_filter.showDebug, log);
-    ImGui::TextDisabled("|");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
-    ImGui::InputTextWithHint("##search", "Filter text", &m_filter.search);
-    ImGui::SameLine();
-    ImGui::Checkbox("Auto-scroll", &m_autoScroll);
-
-    // --- Messages ----------------------------------------------------------
-    const std::vector<ConsoleEntry> entries = log.snapshot(m_filter);
-    const ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV
-                                  | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedFit;
-    if (ImGui::BeginTable("messages", 4, flags)) {
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Source", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Message", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableHeadersRow();
-
-        // Only lay out the rows that are actually visible.
-        ImGuiListClipper clipper;
-        clipper.Begin(static_cast<int>(entries.size()));
-        while (clipper.Step()) {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
-                const ConsoleEntry& entry = entries[static_cast<std::size_t>(i)];
-                const ImVec4 colour = levelColour(entry.level);
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::TextDisabled("%8.2fs", entry.secondsSinceStart);
-                ImGui::TableSetColumnIndex(1);
-                ImGui::TextColored(colour, "%s", toString(entry.level).data());
-                ImGui::TableSetColumnIndex(2);
-                ImGui::TextDisabled("%s", entry.category.c_str());
-                ImGui::TableSetColumnIndex(3);
-                // One line per row keeps every row the same height (needed by
-                // the clipper); long multi-line messages show in full on hover.
-                std::string_view text = entry.text;
-                while (!text.empty() && (text.front() == '\n' || text.front() == '\r')) {
-                    text.remove_prefix(1); // skip blank leading lines
-                }
-                const std::size_t newline = text.find('\n');
-                ImGui::PushStyleColor(ImGuiCol_Text, colour);
-                if (newline == std::string_view::npos) {
-                    ImGui::TextUnformatted(text.data(), text.data() + text.size());
-                } else {
-                    const std::string_view firstLine = text.substr(0, newline);
-                    ImGui::TextUnformatted(firstLine.data(), firstLine.data() + firstLine.size());
-                    ImGui::SameLine();
-                    ImGui::TextDisabled("(more...)");
-                }
-                ImGui::PopStyleColor();
-                if (newline != std::string_view::npos && ImGui::IsItemHovered()) {
-                    ImGui::SetTooltip("%s", entry.text.c_str());
-                }
-            }
-        }
-
-        // Keep following new messages (unless the user turned it off).
-        const std::uint64_t latest = log.totalAdded();
-        if (m_autoScroll && latest != m_lastSeen) {
-            m_scrollFrames = 2; // the new row's height is known one frame later
-        }
-        if (m_scrollFrames > 0) {
-            ImGui::SetScrollY(ImGui::GetScrollMaxY());
-            --m_scrollFrames;
-        }
-        m_lastSeen = latest;
-        ImGui::EndTable();
+    if (columns.time > 0.0f) {
+        char time[32];
+        std::snprintf(time, sizeof time, "%.2fs", entry.secondsSinceStart);
+        draw.textEllipsized(t.font, t.smallFontSize, {x, textTop(ctx, t.smallFontSize, row.rect)}, t.textFaint, time,
+                            columns.time - 8.0f);
+        x += columns.time;
     }
 
-    ImGui::End();
+    draw.textEllipsized(t.fontStrong, size, {x, y}, colour, levelName(entry.level), columns.level - 8.0f);
+    x += columns.level;
+
+    if (columns.source > 0.0f) {
+        draw.textEllipsized(t.font, size, {x, y}, t.textDim, entry.category, columns.source - 8.0f);
+        x += columns.source;
+    }
+
+    // One line per row; a multi-line message shows its first line and how
+    // many more there are (Copy gives the full text).
+    std::string_view text = entry.text;
+    while (!text.empty() && (text.front() == '\n' || text.front() == '\r')) {
+        text.remove_prefix(1);
+    }
+    const std::size_t newline = text.find('\n');
+    std::string_view first = text.substr(0, newline);
+    if (!first.empty() && first.back() == '\r') {
+        first.remove_suffix(1);
+    }
+    const float available = row.rect.right() - x - t.padding;
+    const ui::Color messageColour = entry.level == LogLevel::Info ? t.text : colour;
+    const float drawn = draw.textEllipsized(t.font, size, {x, y}, messageColour, first, available);
+    if (newline != std::string_view::npos) {
+        std::size_t extra = 0;
+        for (std::size_t i = newline; i < text.size(); ++i) {
+            extra += text[i] == '\n' ? 1u : 0u;
+        }
+        const std::string more = "  +" + std::to_string(extra) + (extra == 1 ? " line" : " lines");
+        draw.textEllipsized(t.font, t.smallFontSize, {x + drawn, textTop(ctx, t.smallFontSize, row.rect)}, t.textFaint,
+                            more, std::max(0.0f, available - drawn));
+    }
 }
 
 } // namespace lantern::editor

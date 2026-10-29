@@ -3,8 +3,9 @@
 #   lantern_editor_core  editor logic with no UI toolkit and no backend:
 #                        console log, preferences, settings paths, command line.
 #                        Always built and unit-tested (also in the `core` preset).
-#   lantern_editor       the editor application: Dear ImGui panels on top of
-#                        lantern_runtime. Needs the Axmol backend.
+#   lantern_editor       the editor application: panels built with Lantern UI
+#                        (engine/ui) on top of lantern_runtime. Needs the
+#                        Axmol backend.
 #
 # Dependency rule: the editor may depend on the engine; the engine must
 # never depend on the editor.
@@ -27,15 +28,14 @@ endif()
 add_executable(lantern_editor
     application/main.cpp
     application/EditorApp.cpp
-    application/Theme.cpp
     panels/ConsolePanel.cpp
     panels/HierarchyPanel.cpp
     panels/InspectorPanel.cpp
     panels/ViewportPanel.cpp)
 
-# lantern_imgui_headers gives the editor Dear ImGui's headers only — not
-# Axmol's — so editor code cannot reach into the backend by accident.
-target_link_libraries(lantern_editor PRIVATE lantern_editor_core lantern::runtime lantern_imgui_headers)
+# The runtime gives the editor Lantern's own headers only — never Axmol's —
+# so editor code cannot reach into the backend by accident.
+target_link_libraries(lantern_editor PRIVATE lantern_editor_core lantern::runtime)
 lantern_set_warnings(lantern_editor)
 
 # Before Milestone 2 the editor was a single file at bin/lantern_editor; it is

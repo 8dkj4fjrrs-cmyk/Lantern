@@ -2,11 +2,11 @@
 
 // Lantern runtime application: opens the game window and runs the main loop.
 //
-// This header deliberately contains no Axmol (or other backend) types, and no
-// Dear ImGui types either. Game code and tools talk to Lantern; Lantern talks
-// to the backend in src/.
+// This header deliberately contains no Axmol (or other backend) types. Game
+// code and tools talk to Lantern; Lantern talks to the backend in src/.
 
 #include "lantern/core/Engine.hpp"
+#include "lantern/ui/Context.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -29,12 +29,12 @@ struct WindowSettings {
 enum class WorldDisplay {
     /// The world fills the window (letterboxed to keep its shape). Used by games.
     FullWindow,
-    /// The world is drawn into an off-screen image that the immediate-mode UI
-    /// shows with UiFrame::worldImage(). Used by the editor's viewport.
+    /// The world is drawn into an off-screen image that the UI layer shows
+    /// (see UiFrame::worldImage()). Used by the editor's viewport.
     Offscreen,
 };
 
-/// How the runtime presents the world and the optional immediate-mode UI.
+/// How the runtime presents the world and the optional UI layer.
 struct PresentationSettings {
     WorldDisplay worldDisplay = WorldDisplay::FullWindow;
 
@@ -43,22 +43,13 @@ struct PresentationSettings {
     int worldWidth = 1280;
     int worldHeight = 720;
 
-    /// Turn on the immediate-mode UI layer (Dear ImGui) and call this every
-    /// frame to build it. Empty = no UI layer.
-    std::function<void(class UiFrame&)> ui;
-
-    /// Called once when the UI layer has started, before its first frame
-    /// (e.g. to load a saved layout or set colours). Optional.
-    std::function<void()> uiSetup;
-
-    /// Called once just before the UI layer shuts down, while it still exists
-    /// (e.g. to save the layout). Optional.
-    std::function<void()> uiShutdown;
-
-    /// Optional TrueType font file for the UI, and its size in points.
-    /// Empty or missing file = Dear ImGui's built-in font.
-    std::filesystem::path uiFontFile;
-    float uiFontSize = 15.0f;
+    /// Turns on the Lantern UI layer (lantern_ui) drawn over the window.
+    /// Called once when the window is ready: build your widgets here.
+    std::function<void(class UiFrame&)> uiSetup;
+    /// Called every frame before the UI is laid out and drawn: refresh data here.
+    std::function<void(class UiFrame&)> uiUpdate;
+    /// Called once before the UI shuts down (e.g. to save the layout).
+    std::function<void(class UiFrame&)> uiShutdown;
 };
 
 /// Optional behaviour for a single run, mostly useful for automated tests.
@@ -114,32 +105,28 @@ struct SceneNodeInfo {
     std::size_t childCount = 0;
 };
 
-/// Where the world image was placed by UiFrame::worldImage(), in UI points.
-struct WorldImageRect {
-    float x = 0.0f;       // top-left corner, screen coordinates
-    float y = 0.0f;
-    float width = 0.0f;
-    float height = 0.0f;
-    float scale = 0.0f;   // displayed size / world size
+/// The off-screen world image, ready for a ui::ImageView.
+struct WorldImage {
+    ui::TextureId texture = 0;  // 0 when the world is not drawn off-screen
+    ui::Size size;              // the world's resolution, in points
+    ui::Vec2 uv0;               // texture corners (the image may be stored upside down)
+    ui::Vec2 uv1;
 };
 
-/// Runtime services available while building the UI for one frame.
-/// Only valid inside the PresentationSettings::ui callback.
+/// Runtime services for the UI layer. Valid inside the ui* callbacks only.
 class UiFrame {
 public:
-    /// Draws the off-screen world image at the current UI cursor, scaled to fit
-    /// inside (availableWidth x availableHeight) without changing its shape,
-    /// centred. Only works with WorldDisplay::Offscreen; otherwise draws nothing.
-    WorldImageRect worldImage(float availableWidth, float availableHeight);
+    /// The UI: set its root widget, theme, shortcuts...
+    ui::Context& ui();
 
-    /// The world's resolution in points.
+    WorldImage worldImage() const;
     int worldWidth() const noexcept;
     int worldHeight() const noexcept;
 
     /// A snapshot of every object in the game world, parents before children.
     const std::vector<SceneNodeInfo>& sceneOutline();
 
-    /// UI frames per second, averaged over the last second.
+    /// Frames per second, smoothed.
     float framesPerSecond() const noexcept;
 
     /// Asks the main loop to finish (same as Application::requestQuit()).

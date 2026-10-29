@@ -1,0 +1,11 @@
+#include "lantern/ui/Input.hpp"
+
+namespace lantern::ui {
+
+std::string primaryShortcutLabel(const Platform& platform, std::string_view key)
+{
+    // macOS menus show the Command symbol directly before the key (⌘Q).
+    return platform.macConventions ? "⌘" + std::string(key) : "Ctrl+" + std::string(key);
+}
+
+} // namespace lantern::ui

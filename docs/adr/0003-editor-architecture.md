@@ -1,6 +1,6 @@
 # ADR 0003 — Editor architecture (Milestone 2)
 
-- **Status:** Accepted
+- **Status:** Accepted. The parts about Dear ImGui are superseded by [ADR 0004](0004-lantern-ui-toolkit.md); the layering, settings and runtime boundary still stand.
 - **Date:** 2026-10-29
 - **Milestone:** 2
 
