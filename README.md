@@ -3,12 +3,13 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 3 (scenes and serialization).** `lantern_editor`
-> creates and opens projects, and edits scenes: create, delete, duplicate,
-> rename and reorder objects, edit their components in the Inspector, with
-> undo and redo, and save them as versioned JSON files. `lantern_player`
-> plays a project or a scene file. Sprites, tilemaps and the camera arrive
-> in Milestone 4.
+> **Status: Milestone 4 (sprites and tilemaps).** `lantern_editor` creates
+> and opens projects; imports images, sounds and fonts with permanent asset
+> IDs; and edits scenes with sprites, shapes, cameras and tilemaps (layers,
+> brush, eraser, fill, collision), a free Scene view camera, and move,
+> rotate, scale and resize tools, all with undo, saved as versioned JSON.
+> `lantern_player` plays a project or a scene file. Gameplay code and Play
+> mode arrive in Milestone 5.
 
 ## Quick start
 
@@ -25,10 +26,12 @@ Using the editor: [docs/editor.md](docs/editor.md).
 
 ```
 engine/core/     Engine lifecycle, logging, version (no third-party deps)
+engine/scene/    Scenes, entities, components, scene and project files (no backend)
+engine/assets/   Asset IDs (.meta files), import, image checks, tilesets (no backend)
 engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
-editor/model/    Editor logic without UI code (console, preferences, state)
+editor/model/    Editor logic without UI code (console, preferences, state, undo commands)
 editor/panels/   Editor panels (built with Lantern UI)
 editor/application/  Editor window, menus, docking layout
 tests/           Catch2 unit tests + window smoke tests

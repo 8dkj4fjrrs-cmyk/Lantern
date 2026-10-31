@@ -1,8 +1,8 @@
 # Lantern Editor guide
 
-> Milestone 3: projects and scenes you can create, edit (with undo) and
-> save. Sprites, tilemaps, the camera and dragging objects in the Scene view
-> arrive in Milestone 4.
+> Milestone 4: projects and scenes with sprites and tilemaps, imported
+> assets, a free Scene view camera and transform tools. Gameplay code and
+> Play mode arrive in Milestone 5.
 
 ## Starting the editor
 
@@ -29,7 +29,7 @@ The editor uses the classic game-editor arrangement:
 |           |                                     |                |
 +-----------+                                     |                |
 | Assets    +-------------------------------------+                |
-|           |  Assets Preview | Console          |                |
+|           | Assets Preview | Console | Tile Palette |              |
 +-----------+-------------------------------------+----------------+
 | fps                              (i) 12  (!) 0  (x) 0  Version   |  status bar
 +------------------------------------------------------------------+
@@ -37,12 +37,13 @@ The editor uses the classic game-editor arrangement:
 
 | Panel | What it does |
 |---|---|
-| **Hierarchy** | The scene's objects as a tree; the top row is the scene itself. Click to select. **+** creates an object (Empty, Rectangle, Ellipse, or one inside the selected object). Type in **Search name** to show only matching objects. Delete or Backspace deletes the selected object. |
-| **Assets** | The project's files. Double-click a scene to open it; **+** creates a new scene. Changes made outside the editor show up within a few seconds. |
-| **Scene** | The game as players will see it, scaled to fit. Click an object to select it; the selected object gets an outline. The strip above shows the game's resolution and zoom. The move, rotate, scale and rect tools arrive in Milestone 4. |
-| **Assets Preview** | Thumbnails of images and other assets (Milestone 4, with asset import). |
+| **Hierarchy** | The scene's objects as a tree; the top row is the scene itself. Click to select. **+** creates an object (Empty, Rectangle, Ellipse, Sprite, Camera, Tilemap, or one inside the selected object). Type in **Search name** to show only matching objects. Delete or Backspace deletes the selected object. |
+| **Assets** | The project's files, with each image's size and any problem. Click an asset to see it in the Inspector; double-click a scene to open it; **+** creates a scene or imports files. Files added, changed or deleted outside the editor show up within a few seconds. |
+| **Scene** | The scene as you edit it, with a free camera: zoom, pan, and move, rotate, scale or resize objects (see [The Scene view](#the-scene-view)). The white frame shows what the player will see. |
+| **Assets Preview** | The folder chosen in Assets, as thumbnails. Click to inspect, double-click to open, and drag an image or tileset into the Scene view to place it. |
+| **Tile Palette** | The selected tilemap's tileset: click a tile to paint with it. With **Edit solid tiles** on, click tiles to make them block movement. |
 | **Console** | Messages from the engine, the runtime and the editor, including any problems found when opening a scene. Filter by level or text, copy, clear. |
-| **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component; a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file. |
+| **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component; a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file; with an asset selected, its preview and settings (see [Assets](#assets)). |
 
 The toolbar's **Play** and **Build** buttons are greyed out: hover over one to
 see which milestone brings it.
@@ -52,8 +53,8 @@ the Console holds, and the Lantern version.
 
 ## Projects and scenes
 
-A project is a folder holding your game: a `project.lantern` settings file
-and a `scenes` folder (see [file formats](formats/scene.md)).
+A project is a folder holding your game: a `project.lantern` settings file,
+a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
 
 - **File > New Project…** asks for a name and a location (by default
   `Documents/Lantern Projects`) and creates the folder with a first scene.
@@ -68,6 +69,82 @@ and a `scenes` folder (see [file formats](formats/scene.md)).
 A "•" after the scene's name (in the toolbar and the window title) means it
 has unsaved changes. If you quit, close the window or open another scene
 with unsaved changes, the editor asks whether to save them first.
+
+## Assets
+
+Images (PNG, JPEG), sounds (WAV, OGG, MP3) and fonts (TTF, OTF) are
+*imported* into the project: copied into its `assets` folder (or the folder
+chosen in Assets) and given a permanent ID, kept in a small `.meta` file
+next to the file. Scenes refer to assets by ID, so renaming or moving an
+asset in the editor never breaks anything.
+
+- **Import:** drag files from Finder (or Explorer) onto the editor window,
+  or use **File > Import Assets…**. You can also copy files into the
+  project's folder yourself; they appear within a few seconds.
+- **Select an asset** to see its preview, size, where it is used and its
+  settings in the Inspector. An image's **Filtering** is *Pixel art* (crisp
+  square pixels; the default for images up to 256 pixels) or *Smooth*.
+- **Rename** an asset by editing its name in the Inspector; **Delete…**
+  removes it (scenes that used it show a pink placeholder).
+- **Place an image** in the scene: drag it from Assets Preview into the
+  Scene view, or click **Place in Scene**. It becomes a Sprite at the image's
+  own size (1 pixel = 1 point).
+- A damaged or unsupported file is listed with a warning, and the problem is
+  shown in the Inspector and the Console.
+
+## The Scene view
+
+| To | Do |
+|---|---|
+| Zoom | Scroll (wheel or two fingers), around the mouse; or the zoom menu at the top right |
+| Pan | Drag with the right or middle mouse button, or hold ⌥ (Alt) and drag |
+| See the whole game view | The picture button in the Scene toolbar, or *Show the Game View* in the zoom menu |
+| Frame the selection | F |
+| Select | Click an object |
+
+The tools (top left of the Scene view):
+
+| Tool | Key | Use |
+|---|---|---|
+| Move | W | Drag the object, the red (x) or green (y) arrow, or the blue square. Shift snaps to the grid. Arrow keys nudge by 1 point (Shift: 10). |
+| Rotate | E | Drag the circle. Shift turns in 15° steps. |
+| Scale | R | Drag the red or green square along the object's own axes, or the middle one for both. |
+| Rect | T | Drag a corner or edge of a shape or sprite to resize it. Shift keeps the proportions. |
+
+Every drag is one undo step.
+
+## Tilemaps
+
+1. Make a **tileset**: select an image of tiles in Assets and click **Create
+   Tileset…** in the Inspector. Set the tile size (and margin and spacing if
+   the image has gaps); the Inspector shows how many tiles that gives.
+2. Make a **tilemap**: Hierarchy **+ > Tilemap** (it uses the project's first
+   tileset), or drag the tileset into the Scene view.
+3. With the tilemap selected, pick a tile in the **Tile Palette** and paint
+   in the Scene view:
+
+| Tool | Key | Use |
+|---|---|---|
+| Brush | B | Paint the chosen tile (click or drag). |
+| Eraser | X | Remove tiles. |
+| Fill | G | Fill the connected area of the same tile, up to the edges of the view. |
+| Picker | I | Click a tile in the map to paint with it. |
+
+**Layers** are listed in the tilemap's Inspector section, top layer first:
+click a layer's brush button to paint on it, untick it to hide it, edit its
+name, move it down, delete it, or **Add Layer**.
+
+**Collision** (cells that block movement, used by gameplay in Milestone 5)
+comes from two places, both shown in red in the Scene view while the
+tilemap is selected:
+
+- tiles marked solid in the tileset: in the Tile Palette, tick **Edit solid
+  tiles** and click tiles. This is saved in the tileset, so every tilemap
+  using it agrees;
+- cells painted on the **Collision** layer: click its brush button in the
+  Inspector and paint with the Brush (Eraser removes).
+
+Each stroke, fill, and layer change is one undo step.
 
 ## Editing
 
@@ -110,6 +187,9 @@ The layout and which panels are open are remembered between sessions.
 | ⌘N | New scene |
 | ⌘Z / ⇧⌘Z (Ctrl+Z / Ctrl+Y) | Undo / Redo |
 | ⌘D | Duplicate the selected object |
+| W, E, R, T | Move, Rotate, Scale, Rect tool |
+| B, X, G, I | Brush, Eraser, Fill, Picker (with a tilemap selected) |
+| F | Frame the selected object in the Scene view |
 | F2 | Rename the selected object |
 | Delete or Backspace (in the Hierarchy) | Delete the selected object |
 | ⌘Q (macOS) / Ctrl+Q | Quit |

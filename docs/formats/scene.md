@@ -1,8 +1,8 @@
-# Lantern file formats: projects and scenes
+# Lantern file formats: projects, scenes and assets
 
 Lantern saves projects and scenes as UTF-8 JSON text. The files are meant to
 be readable, to diff cleanly in version control, and to keep working when
-Lantern changes. This page describes format **version 1** of both.
+Lantern changes. This page describes format **version 1** of each.
 
 Code: `engine/scene` (`SceneFile.hpp`, `Project.hpp`). Design reasons:
 [ADR 0005](../adr/0005-scenes-and-serialization.md).
@@ -16,6 +16,7 @@ My Game/
   project.lantern      project settings
   scenes/
     main.lscene        one file per scene
+  assets/              images, tilesets, sounds, fonts (each with a .meta file)
 ```
 
 `project.lantern`:
@@ -113,8 +114,96 @@ normal size.
 | `filled` | `true` / `false` | `true` |
 | `lineWidth` | outline thickness when not filled | `2` |
 
-Sprites, cameras and tilemaps arrive in Milestone 4, and gameplay components
-in Milestone 5.
+**`lantern.Sprite`**: an image centred on the entity, stretched to `size`.
+
+| Key | Type | Default |
+|---|---|---|
+| `image` | an image asset's ID, or `null` for none | `null` |
+| `size` | `[width, height]` in points | `[100, 100]` (the editor sets the image's size when one is chosen) |
+| `color` | tint, `"#rrggbbaa"` (white = the image's own colours) | `"#ffffffff"` |
+| `flipX`, `flipY` | mirror the image | `false` |
+
+**`lantern.Camera`**: what the player sees. The first active Camera (in
+hierarchy order) centres the game view on its entity's position.
+
+| Key | Type | Default |
+|---|---|---|
+| `zoom` | 0.05 to 20; 2 shows everything twice as large | `1` |
+
+**`lantern.Tilemap`**: tiles from a tileset in layers, plus painted collision.
+Cell (0, 0) has its bottom-left corner at the entity's position; x counts to
+the right, y upwards.
+
+| Key | Type | Default |
+|---|---|---|
+| `tileset` | a tileset asset's ID, or `null` | `null` |
+| `cellSize` | `[width, height]` of one cell in points | `[16, 16]` |
+| `data` | the layers and collision (below) | one empty layer "Ground" |
+
+```json
+"data": {
+  "layers": [
+    { "name": "Ground", "visible": true,
+      "rows": [
+        [0, -2, 3, 3, 3, -1, 5],
+        [1, 0, 7, 7]
+      ] }
+  ],
+  "solid": [[0, 4, 1, 1, 0, 1]]
+}
+```
+
+Each row is `[y, first x, then one tile number per cell]`, so one row of
+the map is one line of the file and a small change gives a small diff.
+`-1` is an empty cell inside a row. `solid` uses the same layout with 1
+(blocks movement) and 0 (gap). A cell blocks movement if it is painted
+solid, or if a visible layer has a tile there that the tileset marks solid.
+
+Gameplay components arrive in Milestone 5.
+
+## Asset IDs (`.meta` files)
+
+Every image, tileset, sound and font in a project has a small file beside
+it holding its permanent ID:
+
+```
+assets/hero.png
+assets/hero.png.meta    {"format": "lantern.asset", "version": 1,
+                         "id": "8c1f02e94b7d3a60", "type": "image",
+                         "filter": "pixel"}
+```
+
+| Key | Meaning |
+|---|---|
+| `id` | The asset's permanent ID: 16 hex digits. Scenes refer to assets by this ID. |
+| `type` | `"image"`, `"tileset"`, `"audio"` or `"font"` (from the file extension). |
+| `filter` | Images: `"pixel"` (hard pixel edges, for pixel art) or `"smooth"`. |
+
+Keep each `.meta` file next to its asset when moving files outside the
+editor; renaming or moving inside the editor does this for you. A file
+without one gets a new ID automatically (references to an old ID then show
+as missing). A copied file *and* `.meta` is noticed and the copy gets a new
+ID. Supported files: PNG and JPEG images, `.ltileset` tilesets, WAV, OGG and
+MP3 sounds, TTF and OTF fonts.
+
+## Tilesets (`.ltileset`)
+
+```json
+{
+  "format": "lantern.tileset",
+  "version": 1,
+  "image": "8c1f02e94b7d3a60",
+  "tileSize": [16, 16],
+  "margin": 0,
+  "spacing": 0,
+  "solid": [3, 4, 17]
+}
+```
+
+`image` is the image asset (by ID) cut into tiles of `tileSize` pixels,
+with `margin` pixels around the edge and `spacing` between tiles. Tiles are
+numbered from 0, left to right, then top to bottom. `solid` lists the tiles
+that block movement wherever they are painted.
 
 ## How Lantern reads files
 

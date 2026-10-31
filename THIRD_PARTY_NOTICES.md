@@ -7,7 +7,8 @@ built with Lantern ("shipped").
 Large dependencies are not copied into this repository: Axmol is downloaded
 by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
 Two small ones are kept in the repository, unmodified and with their license
-files: `third_party/stb/stb_truetype.h` and the Inter fonts in `assets/fonts/`.
+files: `third_party/stb/stb_truetype.h`, `third_party/stb/stb_image.h` and the
+Inter fonts in `assets/fonts/`.
 
 ## Runtime backend
 
@@ -40,6 +41,7 @@ of Glad/GLFW-on-X11; it will be re-checked from a macOS build.
 | poly2tri | git 81612cb | BSD-3-Clause |
 | pugixml | 1.13 | MIT |
 | simdjson | 3.10.1 | Apache-2.0 |
+| stb_image (Axmol's copy) | 2.30 | MIT or public domain |
 | minizip (unzip) | 1.2 (modified) | zlib |
 | libwebp | 1.6.0 | BSD-3-Clause (Google) |
 | websocket-parser | (bundled) | MIT upstream — no license file in Axmol's copy; to verify |
@@ -92,3 +94,14 @@ Name only if the font itself is modified — we do not modify it.
 Downloaded by CMake at configure time (`engine/scene/CMakeLists.txt`), not
 copied into this repository. It is a header-only library; its MIT notice
 must accompany shipped games (handled by the packaging step, Milestone 8).
+
+## Assets (`engine/assets`)
+
+| Component | Version | License | Shipped? |
+|---|---|---|---|
+| [stb_image](https://github.com/nothings/stb) (`third_party/stb/stb_image.h`) | 2.30 (`003501f6`, the same stb commit as stb_truetype) | MIT or public domain (Unlicense), at our choice: MIT | Yes: checks image files (size, validity) in the editor and in games |
+
+Compiled into `AssetDatabase.cpp` only, with every function `static` and
+only the PNG and JPEG decoders, because Axmol carries its own copy of
+stb_image for loading textures (listed with Axmol's libraries). The two
+copies never meet at link time.
