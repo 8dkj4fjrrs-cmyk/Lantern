@@ -242,3 +242,14 @@ TEST_CASE("Small images copied in by hand also default to pixel-art filtering", 
     CHECK(db.findByPath("assets/hero.png")->filter == TextureFilter::Pixel);
     CHECK(db.findByPath("assets/photo.jpg")->filter == TextureFilter::Smooth);
 }
+
+TEST_CASE("A read-only database (games) never writes .meta files", "[assets]")
+{
+    TempProject project("assets-readonly");
+    fs::create_directories(project.path / "assets");
+    fs::copy_file(kData / "hero.png", project.path / "assets/hero.png");
+    AssetDatabase db(project.path, AssetDatabase::Access::ReadOnly);
+    CHECK(db.refresh().empty());
+    REQUIRE(db.findByPath("assets/hero.png") != nullptr); // usable for this run
+    CHECK_FALSE(fs::exists(project.path / "assets/hero.png.meta"));
+}

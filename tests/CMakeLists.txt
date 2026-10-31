@@ -33,6 +33,7 @@ add_executable(lantern_tests
     scene/test_scene.cpp
     scene/test_scene_file.cpp
     scene/test_project.cpp
+    scene/test_tilemap.cpp
     assets/test_assets.cpp)
 target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")

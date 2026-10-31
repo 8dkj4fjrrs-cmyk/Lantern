@@ -140,6 +140,59 @@ ax::Node* SceneRenderer::makeSpriteNode(const Sprite& sprite)
     return node;
 }
 
+ax::Node* SceneRenderer::makeTilemapNode(const Tilemap& map)
+{
+    auto* root = ax::Node::create();
+    root->setName("Tiles");
+    // The tileset, its image and the image's texture, if all are usable.
+    const AssetRecord* tilesetAsset = m_assets != nullptr && !map.tileset.isNull() ? m_assets->find(map.tileset) : nullptr;
+    const Tileset* tileset = tilesetAsset != nullptr && tilesetAsset->tileset ? &*tilesetAsset->tileset : nullptr;
+    const AssetRecord* image = tileset != nullptr && m_assets != nullptr ? m_assets->find(tileset->image) : nullptr;
+    ax::Texture2D* texture = nullptr;
+    if (image != nullptr && image->isUsable() && image->image && m_textures != nullptr) {
+        texture = m_textures->get(m_assets->absolutePath(*image), image->filter == TextureFilter::Pixel);
+    }
+    const float cw = map.cellSize.x;
+    const float ch = map.cellSize.y;
+    for (std::size_t i = 0; i < map.layers.size(); ++i) {
+        const TileLayer& layer = map.layers[i];
+        auto* layerNode = ax::Node::create();
+        layerNode->setName(layer.name);
+        layerNode->setVisible(layer.visible);
+        root->addChild(layerNode, static_cast<int>(i));
+        if (texture == nullptr) {
+            if (layer.tiles.empty() || map.tileset.isNull()) {
+                continue;
+            }
+            // Tiles whose tileset or image is missing: pink cells, impossible to miss.
+            auto* draw = ax::DrawNode::create();
+            for (const auto& [cell, tile] : layer.tiles) {
+                const ax::Vec2 lo(static_cast<float>(cell.x) * cw, static_cast<float>(cell.y) * ch);
+                draw->drawSolidRect(lo, lo + ax::Vec2(cw, ch), ax::Color4F(1.0f, 0.2f, 0.75f, 0.35f));
+                draw->drawRect(lo, lo + ax::Vec2(cw, ch), ax::Color4F(1.0f, 0.2f, 0.75f, 1.0f), 1.0f);
+            }
+            layerNode->addChild(draw);
+            continue;
+        }
+        const int imageWidth = image->image->width;
+        const int count = tileset->columns(imageWidth) * tileset->rows(image->image->height);
+        for (const auto& [cell, tile] : layer.tiles) {
+            if (tile < 0 || tile >= count) {
+                continue; // a tile number the tileset does not have (e.g. after changing the tile size)
+            }
+            const TileRect r = tileset->tileRect(tile, imageWidth);
+            auto* sprite = ax::Sprite::createWithTexture(
+                texture, ax::Rect(static_cast<float>(r.x), static_cast<float>(r.y), static_cast<float>(r.width),
+                                  static_cast<float>(r.height)));
+            sprite->setAnchorPoint(ax::Vec2::ZERO);
+            sprite->setPosition(static_cast<float>(cell.x) * cw, static_cast<float>(cell.y) * ch);
+            sprite->setScale(cw / static_cast<float>(r.width), ch / static_cast<float>(r.height));
+            layerNode->addChild(sprite);
+        }
+    }
+    return root;
+}
+
 void SceneRenderer::rebuild()
 {
     if (m_container != nullptr) {
@@ -179,6 +232,9 @@ void SceneRenderer::rebuild()
             }
             if (const Sprite* sprite = entity.get<Sprite>()) {
                 node->addChild(makeSpriteNode(*sprite), -1);
+            }
+            if (const Tilemap* map = entity.get<Tilemap>()) {
+                node->addChild(makeTilemapNode(*map), -1);
             }
         }
 

@@ -314,6 +314,17 @@ void readComponent(Scene& scene, EntityId id, const std::string& where, const Js
         if (key == "type") {
             continue;
         }
+        if (key == "data") {
+            std::string problem;
+            scene.modifyComponent(id, typeId, [&](Component& c) {
+                problem = c.loadData(value.dump());
+                return true;
+            });
+            if (!problem.empty()) {
+                issues.warning(here, problem);
+            }
+            continue;
+        }
         const PropertyInfo* info = type->findProperty(key);
         if (info == nullptr) {
             issues.warning(here, "Unknown property \"" + key + "\" was ignored.");
@@ -529,6 +540,9 @@ std::string serializeScene(const Scene& scene)
             component["type"] = c->type().id;
             for (const PropertyInfo& p : c->type().properties) {
                 component[p.key] = toJson(p, p.get(*c));
+            }
+            if (const std::string data = c->saveData(); !data.empty()) {
+                component["data"] = Json::parse(data);
             }
             components.push_back(std::move(component));
         }

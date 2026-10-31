@@ -4,7 +4,13 @@
 
 #include "lantern/scene/Component.hpp"
 
+#include <cstdint>
+#include <functional>
 #include <optional>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace lantern {
 
@@ -58,10 +64,68 @@ struct Camera : ComponentBase<Camera> {
     static const ComponentType& componentType();
 };
 
-/// The area an entity's visible content covers, centred on the entity, in
-/// its own (unrotated, unscaled) coordinates. Nothing for entities that draw
-/// nothing (e.g. an empty object). Used for picking, outlines and tools.
+/// A cell of a tilemap: column x (to the right) and row y (upwards), from
+/// the cell whose bottom-left corner is at the entity's position.
+struct TileCell {
+    int x = 0;
+    int y = 0;
+    friend bool operator==(const TileCell&, const TileCell&) = default;
+    friend auto operator<=>(const TileCell&, const TileCell&) = default;
+};
+
+struct TileCellHash {
+    std::size_t operator()(TileCell c) const noexcept
+    {
+        return std::hash<std::uint64_t>{}((static_cast<std::uint64_t>(static_cast<std::uint32_t>(c.x)) << 32)
+                                          | static_cast<std::uint32_t>(c.y));
+    }
+};
+
+/// One layer of tiles. Layers are drawn in order (the last on top).
+struct TileLayer {
+    std::string name = "Layer";
+    bool visible = true;
+    std::unordered_map<TileCell, int, TileCellHash> tiles;   // cell -> tile number in the tileset
+
+    friend bool operator==(const TileLayer&, const TileLayer&) = default;
+};
+
+/// A grid of tiles from a tileset, in layers, plus painted collision.
+/// Tiles are drawn `cellSize` points large; cell (0, 0) has its bottom-left
+/// corner at the entity's position. Whether a cell blocks movement: it is
+/// painted solid on the collision layer, or a visible layer has a tile the
+/// tileset marks solid (see lantern::isTileSolid in lantern_assets).
+struct Tilemap : ComponentBase<Tilemap> {
+    AssetId tileset;
+    Vec2 cellSize{16.0f, 16.0f};
+    std::vector<TileLayer> layers{TileLayer{"Ground", true, {}}};
+    std::unordered_set<TileCell, TileCellHash> solid;   // painted collision
+
+    /// The tile at a cell of a layer, or -1 for none.
+    int tileAt(std::size_t layer, TileCell cell) const;
+    /// Puts (or with -1 removes) a tile. False if nothing changed.
+    bool setTile(std::size_t layer, TileCell cell, int tile);
+    bool setSolid(TileCell cell, bool solid);
+    /// The smallest rectangle of cells holding every tile and solid cell.
+    struct CellRange {
+        TileCell min;
+        TileCell max;
+    };
+    std::optional<CellRange> usedCells() const;
+    /// The cell containing a point in the entity's own coordinates.
+    TileCell cellAt(Vec2 local) const;
+
+    std::string saveData() const override;
+    std::string loadData(std::string_view json) override;
+
+    static const ComponentType& componentType();
+};
+
+/// The area an entity's visible content covers, in its own (unrotated,
+/// unscaled) coordinates. Nothing for entities that draw nothing (e.g. an
+/// empty object). Used for picking, outlines and tools.
 struct LocalBounds {
+    Vec2 center;   // (0, 0) for shapes and sprites, which are centred on the entity
     Vec2 size;
     bool ellipse = false;
 };

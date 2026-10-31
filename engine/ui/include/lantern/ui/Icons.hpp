@@ -37,6 +37,10 @@ enum class Icon {
     Scale,         // corner arrow out of a box: scale tool
     RectTool,      // rectangle with handles: rect tool
     Grid,          // 2x2 squares: layout / preview options
+    Brush,         // paint brush: paint tiles
+    Eraser,        // eraser: remove tiles
+    Fill,          // paint bucket: fill an area
+    Eyedropper,    // pick a tile from the map
     Save,          // a disk: save
     Undo,          // arrow curving back to the left
     Redo,          // arrow curving on to the right

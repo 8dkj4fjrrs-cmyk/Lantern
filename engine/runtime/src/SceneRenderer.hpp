@@ -65,6 +65,7 @@ public:
 private:
     void rebuild();
     ax::Node* makeSpriteNode(const Sprite& sprite);
+    ax::Node* makeTilemapNode(const Tilemap& map);
 
     ax::Node& m_root;
     TextureStore* m_textures;

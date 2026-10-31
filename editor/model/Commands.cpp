@@ -341,6 +341,134 @@ bool SetProperties::mergeWith(const Command& next)
     return true;
 }
 
+// --- PaintTiles ------------------------------------------------------------------------------------
+
+namespace {
+int readCell(const Tilemap& map, int layer, TileCell cell)
+{
+    if (layer == PaintTiles::kCollisionLayer) {
+        return map.solid.count(cell) > 0 ? 1 : 0;
+    }
+    return map.tileAt(static_cast<std::size_t>(layer), cell);
+}
+
+bool writeCell(Tilemap& map, int layer, TileCell cell, int value)
+{
+    if (layer == PaintTiles::kCollisionLayer) {
+        return map.setSolid(cell, value > 0);
+    }
+    return map.setTile(static_cast<std::size_t>(layer), cell, value);
+}
+} // namespace
+
+PaintTiles::PaintTiles(EntityId id, int layer, std::vector<Cell> cells, std::string label)
+    : m_id(id)
+    , m_layer(layer)
+    , m_cells(std::move(cells))
+    , m_label(std::move(label))
+{
+}
+
+bool PaintTiles::apply(Scene& scene)
+{
+    if (!m_changes.empty()) {
+        // Redo: put back exactly what changed the first time.
+        return scene.modifyComponent(m_id, Tilemap::componentType().id, [this](Component& c) {
+            auto& map = static_cast<Tilemap&>(c);
+            for (const Change& ch : m_changes) {
+                writeCell(map, m_layer, ch.cell, ch.after);
+            }
+            return true;
+        });
+    }
+    return scene.modifyComponent(m_id, Tilemap::componentType().id, [this](Component& c) {
+        auto& map = static_cast<Tilemap&>(c);
+        if (m_layer != kCollisionLayer && (m_layer < 0 || static_cast<std::size_t>(m_layer) >= map.layers.size())) {
+            return false;
+        }
+        for (const Cell& cell : m_cells) {
+            const int before = readCell(map, m_layer, cell.cell);
+            if (writeCell(map, m_layer, cell.cell, cell.value)) {
+                m_changes.push_back({cell.cell, before, readCell(map, m_layer, cell.cell)});
+            }
+        }
+        return !m_changes.empty();
+    });
+}
+
+void PaintTiles::revert(Scene& scene)
+{
+    scene.modifyComponent(m_id, Tilemap::componentType().id, [this](Component& c) {
+        auto& map = static_cast<Tilemap&>(c);
+        for (auto it = m_changes.rbegin(); it != m_changes.rend(); ++it) {
+            writeCell(map, m_layer, it->cell, it->before);
+        }
+        return true;
+    });
+}
+
+bool PaintTiles::mergeWith(const Command& next)
+{
+    const auto* other = dynamic_cast<const PaintTiles*>(&next);
+    if (other == nullptr || other->m_id != m_id || other->m_layer != m_layer || other->m_label != m_label) {
+        return false;
+    }
+    for (const Change& ch : other->m_changes) {
+        // A cell painted twice in one stroke: keep the first "before".
+        const auto it = std::find_if(m_changes.begin(), m_changes.end(), [&](const Change& c) { return c.cell == ch.cell; });
+        if (it != m_changes.end()) {
+            it->after = ch.after;
+        } else {
+            m_changes.push_back(ch);
+        }
+    }
+    return true;
+}
+
+// --- ReplaceComponent ------------------------------------------------------------------------------
+
+ReplaceComponent::ReplaceComponent(EntityId id, std::unique_ptr<Component> replacement, std::string label)
+    : m_id(id)
+    , m_after(std::move(replacement))
+    , m_label(std::move(label))
+{
+}
+
+bool ReplaceComponent::swapIn(Scene& scene, const Component& version)
+{
+    const std::string typeId = version.type().id;
+    const Entity* e = scene.find(m_id);
+    const auto index = scene.componentIndex(m_id, typeId);
+    if (e == nullptr || !index) {
+        return false;
+    }
+    const bool required = version.type().required;
+    if (required) {
+        return false; // a Transform is never replaced wholesale
+    }
+    auto old = scene.removeComponent(m_id, typeId);
+    if (old == nullptr) {
+        return false;
+    }
+    if (m_before == nullptr) {
+        m_before = std::move(old);
+    }
+    return scene.addComponent(m_id, version.clone(), *index) != nullptr;
+}
+
+bool ReplaceComponent::apply(Scene& scene)
+{
+    return m_after != nullptr && swapIn(scene, *m_after);
+}
+
+void ReplaceComponent::revert(Scene& scene)
+{
+    if (m_before != nullptr) {
+        const auto before = m_before->clone();
+        swapIn(scene, *before);
+    }
+}
+
 // --- AddComponent / RemoveComponent ---------------------------------------------------------------------
 
 AddComponent::AddComponent(EntityId id, std::unique_ptr<Component> component)

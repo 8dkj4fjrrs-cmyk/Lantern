@@ -42,13 +42,14 @@ inline constexpr const char* kAssetsPanel = "assets";
 inline constexpr const char* kInspectorPanel = "inspector";
 inline constexpr const char* kPreviewPanel = "preview";
 inline constexpr const char* kConsolePanel = "console";
+inline constexpr const char* kTilePalettePanel = "tilepalette";
 
 // Tooltips for controls that are visible but not working yet.
 inline constexpr const char* kComingWithAssets = "Coming in Milestone 4, with importing images and other assets";
 inline constexpr const char* kComingWithPlayMode = "Coming in Milestone 5, with gameplay code and play mode";
 inline constexpr const char* kComingWithBuilds = "Coming in Milestone 8: building your game for players";
 
-enum class NewEntityKind { Empty, Rectangle, Ellipse, Sprite, Camera };
+enum class NewEntityKind { Empty, Rectangle, Ellipse, Sprite, Camera, Tilemap };
 
 /// What panels can ask the editor to do. Implemented by EditorApp.
 class EditorServices {
@@ -102,6 +103,18 @@ public:
     virtual void showMessage(const std::string& title, const std::string& text) = 0;
     /// Asks for files to import (the dialog explains drag and drop too).
     virtual void showImportDialog() = 0;
+
+    // Tilemap painting.
+    /// The tile the Brush paints (a number in the tileset).
+    virtual int tileBrush() const = 0;
+    virtual void setTileBrush(int tile) = 0;
+    /// The layer painted on: an index, or PaintTiles::kCollisionLayer.
+    virtual int tileLayer() const = 0;
+    virtual void setTileLayer(int layer) = 0;
+    /// Opens a panel (if closed) and brings it to the front.
+    virtual void showPanel(const std::string& id) = 0;
+    /// Chooses a Scene view tool (e.g. the Brush after picking a tile).
+    virtual void setSceneTool(int tool) = 0;
 };
 
 /// A toolbar strip along the top of a panel.
@@ -113,8 +126,13 @@ ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string toolti
 void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items);
 
 /// The game world, scaled to fit. Click an object to select it.
-/// The tools of the Scene view (W, E, R, T as in most editors).
-enum class SceneTool { Move, Rotate, Scale, Rect };
+/// The tools of the Scene view (W, E, R, T as in most editors), and the
+/// tile tools shown while a tilemap is selected (B, X, G, I).
+enum class SceneTool { Move, Rotate, Scale, Rect, Brush, Eraser, Fill, Picker };
+inline bool isTileTool(SceneTool t)
+{
+    return t == SceneTool::Brush || t == SceneTool::Eraser || t == SceneTool::Fill || t == SceneTool::Picker;
+}
 
 /// The scene as you edit it: pan and zoom freely, click to select, and move,
 /// rotate, scale or resize the selected object with the tools.
@@ -139,7 +157,8 @@ private:
     EditorServices& m_editor;
     SceneView* m_view = nullptr;
     ui::Button* m_zoom = nullptr;
-    std::array<ui::Button*, 4> m_toolButtons{};
+    std::array<ui::Button*, 8> m_toolButtons{};
+    ui::Widget* m_tileToolsDivider = nullptr;
     SceneTool m_tool = SceneTool::Move;
 };
 
@@ -200,6 +219,23 @@ private:
     Grid* m_grid = nullptr;
 };
 
+/// The selected tilemap's tileset: click a tile to paint with it; with
+/// "Edit solid tiles" on, click tiles to make them block movement.
+class TilePalettePanel final : public ui::Column {
+public:
+    explicit TilePalettePanel(EditorServices& editor);
+    void update(UiFrame& frame);
+
+private:
+    class Palette;
+    EditorServices& m_editor;
+    ui::Widget* m_empty = nullptr;
+    ui::Widget* m_body = nullptr;
+    ui::Label* m_info = nullptr;
+    ui::Checkbox* m_solidMode = nullptr;
+    Palette* m_palette = nullptr;
+};
+
 /// The selected object's (or the scene's) properties, editable.
 class InspectorPanel final : public ui::Column {
 public:
@@ -216,6 +252,7 @@ private:
     void showCreateTilesetDialog(AssetId image);
     void confirmDeleteAsset(AssetId id);
     void buildComponent(ui::Column& content, const Entity& entity, const Component& component);
+    void buildTilemapLayers(ui::Section& section, EntityId id);
     void addPropertyEditor(ui::Section& section, EntityId id, const std::string& typeId, const PropertyInfo& info);
     void openComponentMenu(ui::Section& section, EntityId id, const std::string& typeId);
     void openAddComponentMenu(ui::Button& button, EntityId id);

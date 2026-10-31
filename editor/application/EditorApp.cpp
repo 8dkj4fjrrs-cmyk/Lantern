@@ -38,6 +38,7 @@ constexpr PanelInfo kPanels[] = {
     {kViewportPanel, "Scene", ui::Icon::Scene},
     {kPreviewPanel, "Assets Preview", ui::Icon::Eye},
     {kConsolePanel, "Console", ui::Icon::Terminal},
+    {kTilePalettePanel, "Tile Palette", ui::Icon::Grid},
     {kInspectorPanel, "Inspector", ui::Icon::Sliders},
 };
 
@@ -104,6 +105,7 @@ ui::DockLayout EditorApp::defaultLayout()
     layout.dock(kInspectorPanel, kViewportPanel, ui::DockSide::Right, 0.29f);
     layout.dock(kPreviewPanel, kViewportPanel, ui::DockSide::Bottom, 0.32f);
     layout.dock(kConsolePanel, kPreviewPanel, ui::DockSide::Center);
+    layout.dock(kTilePalettePanel, kPreviewPanel, ui::DockSide::Center);
     layout.activate(kConsolePanel);
     return layout;
 }
@@ -279,9 +281,15 @@ void EditorApp::placeAsset(AssetId id, Vec2 worldPosition)
             sprite->size = {static_cast<float>(asset->image->width), static_cast<float>(asset->image->height)};
         }
         components.push_back(std::move(sprite));
+    } else if (asset->type == AssetType::Tileset && asset->tileset) {
+        auto map = std::make_unique<Tilemap>();
+        map->tileset = id;
+        map->cellSize = {static_cast<float>(asset->tileset->tileWidth), static_cast<float>(asset->tileset->tileHeight)};
+        components.push_back(std::move(map));
+        m_tileLayer = 0;
     } else {
         showMessage("Cannot Place This Asset", asset->fileName() + " cannot be placed in a scene. Drag an image "
-                                                                   "into the Scene view to make a sprite.");
+                                                                   "or a tileset into the Scene view.");
         return;
     }
     auto command = std::make_unique<CreateEntity>(name, EntityId{}, std::nullopt, std::move(components));
@@ -289,6 +297,20 @@ void EditorApp::placeAsset(AssetId id, Vec2 worldPosition)
     if (execute(std::move(command))) {
         endEdit();
         select(raw->id());
+    }
+}
+
+void EditorApp::showPanel(const std::string& id)
+{
+    if (m_dock != nullptr) {
+        m_dock->setOpen(id, true);
+    }
+}
+
+void EditorApp::setSceneTool(int tool)
+{
+    if (m_viewport != nullptr) {
+        m_viewport->setTool(static_cast<SceneTool>(tool));
     }
 }
 
@@ -370,6 +392,25 @@ void EditorApp::createEntity(NewEntityKind kind, bool asChildOfSelection)
     } else if (kind == NewEntityKind::Camera) {
         name = "Camera";
         components.push_back(std::make_unique<Camera>());
+    } else if (kind == NewEntityKind::Tilemap) {
+        name = "Tilemap";
+        auto map = std::make_unique<Tilemap>();
+        // Use the project's first tileset, if it has one, at its tile size.
+        if (m_assetDb) {
+            for (const AssetRecord* a : m_assetDb->all(AssetType::Tileset)) {
+                if (a->tileset) {
+                    map->tileset = a->id;
+                    map->cellSize = {static_cast<float>(a->tileset->tileWidth), static_cast<float>(a->tileset->tileHeight)};
+                    break;
+                }
+            }
+        }
+        // A tilemap's cell (0, 0) is at its position: start at the world's corner.
+        if (parent.isNull()) {
+            static_cast<Transform&>(*components.front()).position = Vec2{0.0f, 0.0f};
+        }
+        components.push_back(std::move(map));
+        m_tileLayer = 0;
     } else if (kind != NewEntityKind::Empty) {
         auto shape = std::make_unique<Shape>();
         shape->kind = kind == NewEntityKind::Rectangle ? ShapeKind::Rectangle : ShapeKind::Ellipse;
@@ -915,6 +956,7 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("New Ellipse", "", [this] { createEntity(NewEntityKind::Ellipse, false); }),
                       menuItem("New Sprite", "", [this] { createEntity(NewEntityKind::Sprite, false); }),
                       menuItem("New Camera", "", [this] { createEntity(NewEntityKind::Camera, false); }),
+                      menuItem("New Tilemap", "", [this] { createEntity(NewEntityKind::Tilemap, false); }),
                       ui::MenuItem::divider(),
                       menuItem("Rename", "F2", [this] { renameSelection(); }, hasSelection),
                       menuItem("Duplicate", key("D"), [this] { duplicateSelection(); }, hasSelection),
@@ -1001,6 +1043,33 @@ void EditorApp::addShortcuts()
     m_ui->addShortcut(ui::Key::Y, primary, [this] { m_document->redo(); });
     m_ui->addShortcut(ui::Key::D, primary, [this] { duplicateSelection(); });
     m_ui->addShortcut(ui::Key::F2, {}, [this] { renameSelection(); });
+
+    // Scene view tools, from anywhere (a focused text field still gets its letters first).
+    const auto tool = [this](SceneTool t) {
+        return [this, t] {
+            if (m_viewport == nullptr) {
+                return;
+            }
+            const Entity* e = m_document->scene().find(selection());
+            if (isTileTool(t) && (e == nullptr || e->get<Tilemap>() == nullptr)) {
+                return; // tile tools need a tilemap
+            }
+            m_viewport->setTool(t);
+        };
+    };
+    m_ui->addShortcut(ui::Key::W, {}, tool(SceneTool::Move));
+    m_ui->addShortcut(ui::Key::E, {}, tool(SceneTool::Rotate));
+    m_ui->addShortcut(ui::Key::R, {}, tool(SceneTool::Scale));
+    m_ui->addShortcut(ui::Key::T, {}, tool(SceneTool::Rect));
+    m_ui->addShortcut(ui::Key::B, {}, tool(SceneTool::Brush));
+    m_ui->addShortcut(ui::Key::X, {}, tool(SceneTool::Eraser));
+    m_ui->addShortcut(ui::Key::G, {}, tool(SceneTool::Fill));
+    m_ui->addShortcut(ui::Key::I, {}, tool(SceneTool::Picker));
+    m_ui->addShortcut(ui::Key::F, {}, [this] {
+        if (m_viewport != nullptr) {
+            m_viewport->frameSelection();
+        }
+    });
 }
 
 void EditorApp::buildWorkspace(UiFrame& frame)
@@ -1036,6 +1105,10 @@ void EditorApp::buildWorkspace(UiFrame& frame)
         } else if (id == kConsolePanel) {
             auto p = std::make_unique<ConsolePanel>(m_console);
             m_consolePanel = p.get();
+            content = std::move(p);
+        } else if (id == kTilePalettePanel) {
+            auto p = std::make_unique<TilePalettePanel>(*this);
+            m_tilePalette = p.get();
             content = std::move(p);
         } else if (id == kAssetsPanel) {
             auto p = std::make_unique<AssetsPanel>(*this);
@@ -1211,6 +1284,7 @@ void EditorApp::updateUi(UiFrame& frame)
     m_hierarchy->update(frame);
     m_assets->update(frame);
     m_preview->update(frame);
+    m_tilePalette->update(frame);
     m_inspector->update(frame);
     if (m_renamePending) {
         m_renamePending = false;
@@ -1242,6 +1316,7 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_hierarchy = nullptr;
     m_assets = nullptr;
     m_preview = nullptr;
+    m_tilePalette = nullptr;
     m_inspector = nullptr;
     m_consolePanel = nullptr;
     m_sceneChoice = nullptr;

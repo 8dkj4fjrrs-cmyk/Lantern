@@ -197,6 +197,52 @@ private:
     std::string m_label;
 };
 
+/// Paints tiles (or collision) on a tilemap. The cells of one brush stroke
+/// merge into a single undo step while merging is allowed.
+class PaintTiles final : public Command {
+public:
+    /// The collision layer, as a layer index.
+    static constexpr int kCollisionLayer = -1;
+    struct Cell {
+        TileCell cell;
+        int value = -1;   // a tile number, or -1 to erase; collision: 1 solid, 0 clear
+    };
+    PaintTiles(EntityId id, int layer, std::vector<Cell> cells, std::string label);
+    std::string label() const override { return m_label; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool mergeWith(const Command& next) override;
+
+private:
+    struct Change {
+        TileCell cell;
+        int before = -1;
+        int after = -1;
+    };
+    EntityId m_id;
+    int m_layer;
+    std::vector<Cell> m_cells;      // what to paint (apply)
+    std::vector<Change> m_changes;  // what actually changed, for undo and redo
+    std::string m_label;
+};
+
+/// Replaces a whole component with a new version (e.g. a tilemap after a
+/// layer was added, renamed or reordered). Undo puts the old version back.
+class ReplaceComponent final : public Command {
+public:
+    ReplaceComponent(EntityId id, std::unique_ptr<Component> replacement, std::string label);
+    std::string label() const override { return m_label; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+
+private:
+    bool swapIn(Scene& scene, const Component& version);
+    EntityId m_id;
+    std::unique_ptr<Component> m_after;
+    std::unique_ptr<Component> m_before;
+    std::string m_label;
+};
+
 class AddComponent final : public Command {
 public:
     AddComponent(EntityId id, std::unique_ptr<Component> component);

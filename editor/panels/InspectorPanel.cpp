@@ -94,6 +94,13 @@ std::string InspectorPanel::signature() const
     for (const auto& c : e->components()) {
         sig += "|" + componentTypeId(*c);
     }
+    // A tilemap's layer list is rebuilt when its layers change.
+    if (const Tilemap* map = e->get<Tilemap>()) {
+        for (const TileLayer& layer : map->layers) {
+            sig += "|L" + std::string(layer.visible ? "1" : "0") + layer.name;
+        }
+        sig += "|S" + std::to_string(map->solid.size());
+    }
     return sig;
 }
 
@@ -259,6 +266,108 @@ void InspectorPanel::buildComponent(ui::Column& content, const Entity& entity, c
     for (const PropertyInfo& info : type.properties) {
         addPropertyEditor(section, id, typeId, info);
     }
+    if (dynamic_cast<const Tilemap*>(&component) != nullptr) {
+        buildTilemapLayers(section, id);
+    }
+}
+
+// The layers of a tilemap: which one the tools paint on, visibility, names,
+// order; plus the collision layer.
+void InspectorPanel::buildTilemapLayers(ui::Section& section, EntityId id)
+{
+    ui::Column& body = section.body();
+    body.emplace<ui::Label>("Layers", ui::Label::Style::Small).setColor(ui::Color::hex(0xA0A0A0));
+    auto& list = body.emplace<ui::Column>(2.0f, ui::Insets{0.0f, 2.0f, 0.0f, 4.0f});
+
+    // Applies a change to a copy of the tilemap, as one undoable step.
+    auto change = [this, id](std::string label, std::function<void(Tilemap&)> edit) {
+        const Entity* e = m_editor.document().scene().find(id);
+        const Tilemap* map = e != nullptr ? e->get<Tilemap>() : nullptr;
+        if (map == nullptr) {
+            return;
+        }
+        auto copy = std::make_unique<Tilemap>(*map);
+        edit(*copy);
+        m_editor.execute(std::make_unique<ReplaceComponent>(id, std::move(copy), std::move(label)));
+        m_editor.endEdit();
+    };
+
+    const Entity* entity = m_editor.document().scene().find(id);
+    const Tilemap* map = entity != nullptr ? entity->get<Tilemap>() : nullptr;
+    if (map == nullptr) {
+        return;
+    }
+    const auto layerCount = static_cast<int>(map->layers.size());
+    if (m_editor.tileLayer() >= layerCount) {
+        m_editor.setTileLayer(layerCount - 1);
+    }
+    for (int i = layerCount - 1; i >= 0; --i) { // top layer first, as drawn
+        auto& row = list.emplace<ui::Row>(4.0f);
+        row.setCrossAlign(ui::CrossAlign::Center);
+        auto& paintHere = row.emplace<ui::Button>("");
+        paintHere.setIcon(ui::Icon::Brush);
+        paintHere.setStyle(ui::Button::Style::Subtle);
+        paintHere.setFixedSize({24.0f, 22.0f});
+        paintHere.setTooltip("Paint on this layer");
+        paintHere.setOnClick([this, i] { m_editor.setTileLayer(i); });
+        auto& visible = row.emplace<ui::Checkbox>("", map->layers[static_cast<std::size_t>(i)].visible);
+        visible.setTooltip("Show this layer");
+        visible.setOnChange([change, i](bool on) {
+            change(on ? "Show Layer" : "Hide Layer", [i, on](Tilemap& m) { m.layers[static_cast<std::size_t>(i)].visible = on; });
+        });
+        auto& name = row.emplace<ui::TextField>("Layer name");
+        name.setStretch(1.0f);
+        name.setFixedSize({0.0f, 22.0f});
+        name.setText(map->layers[static_cast<std::size_t>(i)].name);
+        name.setOnCommit([change, i](const std::string& text) {
+            change("Rename Layer", [i, text](Tilemap& m) { m.layers[static_cast<std::size_t>(i)].name = text; });
+        });
+        auto& up = row.emplace<ui::Button>("");
+        up.setIcon(ui::Icon::ChevronDown);
+        up.setStyle(ui::Button::Style::Subtle);
+        up.setFixedSize({22.0f, 22.0f});
+        up.setTooltip("Move down (drawn earlier, underneath)");
+        up.setEnabled(i > 0);
+        up.setOnClick([this, change, i] {
+            change("Reorder Layers", [i](Tilemap& m) { std::swap(m.layers[static_cast<std::size_t>(i)], m.layers[static_cast<std::size_t>(i - 1)]); });
+            m_editor.setTileLayer(i - 1);
+        });
+        auto& remove = row.emplace<ui::Button>("");
+        remove.setIcon(ui::Icon::Close);
+        remove.setStyle(ui::Button::Style::Subtle);
+        remove.setFixedSize({22.0f, 22.0f});
+        remove.setTooltip("Delete this layer");
+        remove.setEnabled(layerCount > 1);
+        remove.setOnClick([change, i] {
+            change("Delete Layer", [i](Tilemap& m) { m.layers.erase(m.layers.begin() + i); });
+        });
+        m_refresh.push_back([this, i, &paintHere] { paintHere.setToggled(m_editor.tileLayer() == i); });
+    }
+    // Collision: a layer of its own, painted with the same tools.
+    auto& collision = list.emplace<ui::Row>(4.0f);
+    collision.setCrossAlign(ui::CrossAlign::Center);
+    auto& paintCollision = collision.emplace<ui::Button>("");
+    paintCollision.setIcon(ui::Icon::Brush);
+    paintCollision.setStyle(ui::Button::Style::Subtle);
+    paintCollision.setFixedSize({24.0f, 22.0f});
+    paintCollision.setTooltip("Paint collision: cells that block movement (shown red in the Scene view)");
+    paintCollision.setOnClick([this] { m_editor.setTileLayer(PaintTiles::kCollisionLayer); });
+    auto& collisionLabel = collision.emplace<ui::Label>("Collision  ·  " + std::to_string(map->solid.size()) + " cells",
+                                                        ui::Label::Style::Dim);
+    collisionLabel.setStretch(1.0f);
+    m_refresh.push_back([this, &paintCollision] {
+        paintCollision.setToggled(m_editor.tileLayer() == PaintTiles::kCollisionLayer);
+    });
+
+    auto& buttons = body.emplace<ui::Row>(6.0f, ui::Insets{0.0f, 2.0f, 0.0f, 2.0f});
+    buttons.emplace<ui::Button>("Add Layer", [this, change, layerCount] {
+        change("Add Layer", [layerCount](Tilemap& m) {
+            m.layers.push_back(TileLayer{"Layer " + std::to_string(layerCount + 1), true, {}});
+        });
+        m_editor.setTileLayer(layerCount);
+    });
+    buttons.emplace<ui::Button>("Tile Palette", [this] { m_editor.showPanel(kTilePalettePanel); })
+        .setTooltip("Choose the tile to paint with");
 }
 
 void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const std::string& typeId,
@@ -379,7 +488,8 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
         auto shownRevision = std::make_shared<std::uint64_t>(0);
         const std::string assetType = info.options.assetType;
         const bool isSpriteImage = typeId == Sprite::componentType().id && key == "image";
-        field.setOnChoose([this, ids, id, typeId, key, label, isSpriteImage, end](int index) {
+        const bool isTileset = typeId == Tilemap::componentType().id && key == "tileset";
+        field.setOnChoose([this, ids, id, typeId, key, label, isSpriteImage, isTileset, end](int index) {
             const AssetId chosen = index > 0 && static_cast<std::size_t>(index) < ids->size()
                                        ? (*ids)[static_cast<std::size_t>(index)]
                                        : AssetId{};
@@ -389,6 +499,13 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
                 if (const AssetRecord* a = m_editor.assets()->find(chosen); a != nullptr && a->image) {
                     changes.push_back({typeId, "size", Vec2{static_cast<float>(a->image->width),
                                                             static_cast<float>(a->image->height)}});
+                }
+            }
+            // Choosing a tilemap's tileset sizes the cells like its tiles.
+            if (isTileset && m_editor.assets() != nullptr) {
+                if (const AssetRecord* a = m_editor.assets()->find(chosen); a != nullptr && a->tileset) {
+                    changes.push_back({typeId, "cellSize", Vec2{static_cast<float>(a->tileset->tileWidth),
+                                                                static_cast<float>(a->tileset->tileHeight)}});
                 }
             }
             m_editor.execute(std::make_unique<SetProperties>(id, std::move(changes), "Change " + label));
@@ -421,6 +538,9 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
             field.setSelected(static_cast<int>(it - ids->begin()));
             // Thumbnail.
             const AssetRecord* a = db != nullptr ? db->find(current) : nullptr;
+            if (a != nullptr && a->type == AssetType::Tileset && a->tileset) {
+                a = db->find(a->tileset->image); // a tileset shows its image
+            }
             if (a != nullptr && a->type == AssetType::Image && a->isUsable() && m_frame != nullptr) {
                 if (const auto image = m_frame->loadImage(db->absolutePath(*a), a->filter == TextureFilter::Pixel)) {
                     thumb.setTexture(image->texture, image->size);

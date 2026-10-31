@@ -262,3 +262,63 @@ TEST_CASE("A tool drag changing several properties is one undo step", "[editor][
     CHECK_FALSE(f.doc.execute(std::make_unique<SetProperties>(
         box, std::vector<SetProperties::Change>{{"lantern.Shape", "size", Vec2{150.0f, 100.0f}}}, "Resize Box")));
 }
+
+TEST_CASE("A brush stroke is one undo step; erasing and collision too", "[editor][commands][tilemap]")
+{
+    Fixture f;
+    const EntityId id = f.make("Map");
+    f.scene().addComponent(id, std::make_unique<Tilemap>());
+    f.doc.history().breakMerge();
+    const auto tile = [&](int x) { return f.scene().find(id)->get<Tilemap>()->tileAt(0, {x, 0}); };
+
+    // One stroke over three cells (the middle one twice).
+    for (int x : {0, 1, 1, 2}) {
+        f.doc.execute(std::make_unique<PaintTiles>(id, 0, std::vector<PaintTiles::Cell>{{{x, 0}, 4}}, "Paint Tiles"));
+    }
+    f.doc.history().breakMerge();
+    CHECK(tile(0) == 4);
+    CHECK(tile(2) == 4);
+    const std::size_t steps = f.doc.history().size();
+
+    // Erase one in a second stroke, paint collision in a third.
+    f.doc.execute(std::make_unique<PaintTiles>(id, 0, std::vector<PaintTiles::Cell>{{{1, 0}, -1}}, "Erase Tiles"));
+    f.doc.history().breakMerge();
+    f.doc.execute(std::make_unique<PaintTiles>(id, PaintTiles::kCollisionLayer,
+                                               std::vector<PaintTiles::Cell>{{{5, 5}, 1}}, "Paint Collision"));
+    CHECK(f.doc.history().size() == steps + 2);
+    CHECK(tile(1) == -1);
+    CHECK(f.scene().find(id)->get<Tilemap>()->solid.count({5, 5}) == 1);
+
+    f.doc.undo(); // collision
+    CHECK(f.scene().find(id)->get<Tilemap>()->solid.empty());
+    f.doc.undo(); // erase
+    CHECK(tile(1) == 4);
+    f.doc.undo(); // the whole first stroke
+    CHECK(tile(0) == -1);
+    CHECK(tile(1) == -1);
+    f.doc.redo();
+    CHECK(tile(1) == 4);
+    CHECK(tile(2) == 4);
+
+    // Painting the same tile again changes nothing and adds no step.
+    f.doc.history().breakMerge();
+    CHECK_FALSE(f.doc.execute(std::make_unique<PaintTiles>(id, 0, std::vector<PaintTiles::Cell>{{{0, 0}, 4}}, "Paint Tiles")));
+}
+
+TEST_CASE("Replacing a component (e.g. adding a layer) undoes in place", "[editor][commands][tilemap]")
+{
+    Fixture f;
+    const EntityId id = f.make("Map");
+    f.scene().addComponent(id, std::make_unique<Shape>());
+    f.scene().addComponent(id, std::make_unique<Tilemap>());
+    auto changed = std::make_unique<Tilemap>(*f.scene().find(id)->get<Tilemap>());
+    changed->layers.push_back(TileLayer{"Decor", true, {}});
+    REQUIRE(f.doc.execute(std::make_unique<ReplaceComponent>(id, std::move(changed), "Add Layer")));
+    CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 2);
+    CHECK(f.scene().componentIndex(id, "lantern.Tilemap") == 2u); // same place in the list
+    f.doc.undo();
+    CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 1);
+    CHECK(f.scene().componentIndex(id, "lantern.Tilemap") == 2u);
+    f.doc.redo();
+    CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 2);
+}

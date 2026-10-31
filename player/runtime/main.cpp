@@ -10,6 +10,8 @@
 #include "lantern/core/Version.hpp"
 #include "lantern/runtime/Application.hpp"
 #include "lantern/scene/Project.hpp"
+
+#include <memory>
 #include "lantern/scene/SceneFile.hpp"
 
 #include <filesystem>
@@ -83,8 +85,38 @@ int main(int argc, char** argv)
         presentation.scene = std::make_shared<const lantern::Scene>(std::move(*loaded.scene));
     }
 
+    // The project's images and tilesets: from --project, or the project
+    // folder the scene file is in (searching upwards for project.lantern).
+    std::filesystem::path projectFolder = opt.projectPath;
+    if (projectFolder.empty() && !scenePath.empty()) {
+        std::error_code ec;
+        for (std::filesystem::path dir = std::filesystem::absolute(scenePath, ec).parent_path(); !dir.empty();
+             dir = dir.parent_path()) {
+            if (std::filesystem::exists(dir / lantern::ProjectFormat::kFileName, ec)) {
+                projectFolder = dir;
+                break;
+            }
+            if (dir == dir.parent_path()) {
+                break;
+            }
+        }
+    }
+    std::unique_ptr<lantern::AssetDatabase> assets;
+    if (!projectFolder.empty()) {
+        assets = std::make_unique<lantern::AssetDatabase>(projectFolder, lantern::AssetDatabase::Access::ReadOnly);
+        for (const lantern::FileIssue& issue : assets->refresh()) {
+            engine.logger().warning("assets", issue.where + ": " + issue.message);
+        }
+        if (presentation.scene != nullptr) {
+            for (const lantern::FileIssue& issue : lantern::checkAssetReferences(*presentation.scene, *assets)) {
+                engine.logger().warning("assets", issue.where + ": " + issue.message);
+            }
+        }
+    }
+
     lantern::Application app(engine, {.title = title, .width = opt.width, .height = opt.height},
                              std::move(presentation));
+    app.setAssets(assets.get());
     const lantern::Status runStatus = app.run({
         .maxFrames = opt.maxFrames,
         .screenshotPath = opt.screenshotPath,

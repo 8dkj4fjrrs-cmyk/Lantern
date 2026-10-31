@@ -271,6 +271,18 @@ bool Scene::setProperty(EntityId id, std::string_view componentType, std::string
     return true;
 }
 
+bool Scene::modifyComponent(EntityId id, std::string_view componentType,
+                            const std::function<bool(Component&)>& change)
+{
+    Entity* e = findMutable(id);
+    Component* c = e != nullptr ? e->component(componentType) : nullptr;
+    if (c == nullptr || !change(*c)) {
+        return false;
+    }
+    ++m_revision;
+    return true;
+}
+
 Component* Scene::addComponent(EntityId id, std::unique_ptr<Component> component, std::optional<std::size_t> index)
 {
     Entity* e = findMutable(id);
@@ -440,10 +452,18 @@ Affine2 Scene::worldTransform(EntityId id) const
 std::optional<LocalBounds> localBounds(const Entity& entity)
 {
     if (const Shape* shape = entity.get<Shape>()) {
-        return LocalBounds{shape->size, shape->kind == ShapeKind::Ellipse};
+        return LocalBounds{{}, shape->size, shape->kind == ShapeKind::Ellipse};
     }
     if (const Sprite* sprite = entity.get<Sprite>()) {
-        return LocalBounds{sprite->size, false};
+        return LocalBounds{{}, sprite->size, false};
+    }
+    if (const Tilemap* map = entity.get<Tilemap>()) {
+        if (const auto used = map->usedCells()) {
+            const Vec2 lo{static_cast<float>(used->min.x) * map->cellSize.x, static_cast<float>(used->min.y) * map->cellSize.y};
+            const Vec2 hi{static_cast<float>(used->max.x + 1) * map->cellSize.x,
+                          static_cast<float>(used->max.y + 1) * map->cellSize.y};
+            return LocalBounds{{(lo.x + hi.x) * 0.5f, (lo.y + hi.y) * 0.5f}, hi - lo, false};
+        }
     }
     return std::nullopt;
 }
@@ -456,10 +476,11 @@ std::optional<std::array<Vec2, 4>> Scene::worldCorners(EntityId id) const
         return std::nullopt;
     }
     const Affine2 world = worldTransform(id);
+    const Vec2 c = bounds->center;
     const float hw = bounds->size.x * 0.5f;
     const float hh = bounds->size.y * 0.5f;
-    return std::array<Vec2, 4>{world.apply({-hw, -hh}), world.apply({hw, -hh}), world.apply({hw, hh}),
-                               world.apply({-hw, hh})};
+    return std::array<Vec2, 4>{world.apply({c.x - hw, c.y - hh}), world.apply({c.x + hw, c.y - hh}),
+                               world.apply({c.x + hw, c.y + hh}), world.apply({c.x - hw, c.y + hh})};
 }
 
 bool Scene::isEffectivelyActive(const Entity& entity) const
@@ -485,7 +506,7 @@ EntityId Scene::hitTest(Vec2 worldPoint) const
         if (!inverse) {
             return;
         }
-        const Vec2 p = inverse->apply(worldPoint);
+        const Vec2 p = inverse->apply(worldPoint) - bounds->center;
         const float hw = bounds->size.x * 0.5f;
         const float hh = bounds->size.y * 0.5f;
         bool inside = false;

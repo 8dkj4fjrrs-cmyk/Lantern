@@ -58,22 +58,23 @@ HierarchyPanel::HierarchyPanel(EditorServices& editor)
     auto& toolbar = makePanelToolbar(*this);
     m_create = &addToolButton(toolbar, ui::Icon::Plus, "Create an object", [this] {
         const bool hasSelection = !m_editor.selection().isNull();
-        const auto item = [this](const char* label, NewEntityKind kind, bool child) {
+        const auto item = [this, hasSelection](const char* label, NewEntityKind kind, bool child) {
             ui::MenuItem m;
             m.label = label;
             m.action = [this, kind, child] { m_editor.createEntity(kind, child); };
+            if (child) {
+                m.isEnabled = [hasSelection] { return hasSelection; }; // needs something to go inside
+            }
             return m;
         };
         std::vector<ui::MenuItem> items{item("Empty Object", NewEntityKind::Empty, false),
                                         item("Rectangle", NewEntityKind::Rectangle, false),
                                         item("Ellipse", NewEntityKind::Ellipse, false),
                                         item("Sprite", NewEntityKind::Sprite, false),
-                                        item("Camera", NewEntityKind::Camera, false), ui::MenuItem::divider(),
+                                        item("Camera", NewEntityKind::Camera, false),
+                                        item("Tilemap", NewEntityKind::Tilemap, false), ui::MenuItem::divider(),
                                         item("Empty Child of Selection", NewEntityKind::Empty, true),
                                         item("Rectangle Child of Selection", NewEntityKind::Rectangle, true)};
-        for (std::size_t i = 4; i < items.size(); ++i) {
-            items[i].isEnabled = [hasSelection] { return hasSelection; };
-        }
         openMenuAt(m_editor.ui(), m_create->bounds(), std::move(items));
     });
     auto& search = toolbar.emplace<ui::TextField>("Search name");

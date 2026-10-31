@@ -175,8 +175,9 @@ std::string AssetRecord::fileName() const
 // ---------------------------------------------------------------------------
 // AssetDatabase
 // ---------------------------------------------------------------------------
-AssetDatabase::AssetDatabase(fs::path projectFolder)
+AssetDatabase::AssetDatabase(fs::path projectFolder, Access access)
     : m_folder(std::move(projectFolder))
+    , m_access(access)
 {
 }
 
@@ -203,6 +204,9 @@ void AssetDatabase::index()
 
 Status AssetDatabase::writeMeta(const AssetRecord& record) const
 {
+    if (m_access == Access::ReadOnly) {
+        return Status::success(); // games never change the project
+    }
     Json j;
     j["format"] = AssetFormat::kName;
     j["version"] = AssetFormat::kVersion;

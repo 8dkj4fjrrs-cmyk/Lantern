@@ -278,6 +278,38 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
         draw.line(undo ? g(3.5f, cy - r) : g(12.5f, cy - r), tip, color, w * 0.9f);
         break;
     }
+    case Icon::Brush: {
+        // A handle going down-left into a rounded tip.
+        draw.line(g(13.5f, 2.5f), g(7.2f, 8.8f), color, w * 1.2f);
+        const std::array<Vec2, 4> ferrule{g(6.0f, 8.0f), g(8.0f, 10.0f), g(6.5f, 11.5f), g(4.5f, 9.5f)};
+        draw.fillConvexPolygon(ferrule, color);
+        const std::array<Vec2, 4> tip{g(4.5f, 9.5f), g(6.5f, 11.5f), g(3.0f, 14.0f), g(2.0f, 13.0f)};
+        draw.fillConvexPolygon(tip, color);
+        break;
+    }
+    case Icon::Eraser: {
+        const std::array<Vec2, 4> body{g(9.5f, 2.5f), g(14.0f, 7.0f), g(8.0f, 13.0f), g(3.5f, 8.5f)};
+        draw.polyline(body, color, w * 0.9f, true);
+        const std::array<Vec2, 4> rubber{g(6.0f, 6.0f), g(10.5f, 10.5f), g(8.0f, 13.0f), g(3.5f, 8.5f)};
+        draw.fillConvexPolygon(rubber, color);
+        draw.line(g(8.0f, 13.5f), g(14.0f, 13.5f), color, w * 0.8f);
+        break;
+    }
+    case Icon::Fill: {
+        // A tipped bucket with a drop.
+        const std::array<Vec2, 4> bucket{g(7.0f, 2.5f), g(12.5f, 8.0f), g(8.0f, 12.5f), g(2.5f, 7.0f)};
+        draw.polyline(bucket, color, w * 0.9f, true);
+        draw.line(g(2.5f, 7.0f), g(12.5f, 8.0f), color, w * 0.8f);
+        draw.fillCircle(g(13.5f, 12.0f), 1.8f * u, color);
+        break;
+    }
+    case Icon::Eyedropper: {
+        draw.line(g(3.0f, 13.0f), g(9.5f, 6.5f), color, w * 1.1f);
+        const std::array<Vec2, 4> bulb{g(9.0f, 4.0f), g(12.0f, 1.8f), g(14.2f, 4.0f), g(12.0f, 7.0f)};
+        draw.fillConvexPolygon(bulb, color);
+        draw.line(g(8.0f, 4.5f), g(11.5f, 8.0f), color, w * 1.1f);
+        break;
+    }
     case Icon::Grid:
         for (float x : {2.0f, 9.0f}) {
             for (float y : {2.0f, 9.0f}) {

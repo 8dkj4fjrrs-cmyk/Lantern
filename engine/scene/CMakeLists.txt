@@ -19,6 +19,7 @@ add_library(lantern_scene STATIC
     src/Component.cpp
     src/Project.cpp
     src/Scene.cpp
+    src/Tilemap.cpp
     src/SceneFile.cpp
     src/Types.cpp)
 add_library(lantern::scene ALIAS lantern_scene)

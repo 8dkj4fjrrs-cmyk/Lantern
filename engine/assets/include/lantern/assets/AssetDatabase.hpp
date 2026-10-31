@@ -77,8 +77,12 @@ inline constexpr std::string_view kDefaultFolder = "assets";
 
 class AssetDatabase {
 public:
+    enum class Access {
+        ReadWrite,   // the editor: writes .meta files for new assets
+        ReadOnly,    // games: never writes; new files get IDs for this run only
+    };
     /// `projectFolder` is the folder containing project.lantern.
-    explicit AssetDatabase(std::filesystem::path projectFolder);
+    explicit AssetDatabase(std::filesystem::path projectFolder, Access access = Access::ReadWrite);
 
     const std::filesystem::path& projectFolder() const noexcept { return m_folder; }
 
@@ -127,6 +131,7 @@ private:
     AssetId newId();
 
     std::filesystem::path m_folder;
+    Access m_access = Access::ReadWrite;
     std::vector<AssetRecord> m_assets;
     std::unordered_map<AssetId, std::size_t> m_byId;
     std::unordered_map<std::string, std::size_t> m_byPath;

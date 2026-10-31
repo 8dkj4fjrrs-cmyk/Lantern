@@ -95,6 +95,14 @@ public:
     /// no such property or the value cannot be used.
     bool set(std::string_view key, const PropertyValue& value);
 
+    /// Data a component keeps besides its described properties (e.g. a
+    /// tilemap's tiles), as JSON text; empty if there is none. Scene files
+    /// store it under the component's "data" key.
+    virtual std::string saveData() const { return {}; }
+    /// Reads what saveData() wrote. Returns a description of anything that
+    /// could not be read (empty = all fine); readable parts are kept.
+    virtual std::string loadData(std::string_view /*json*/) { return {}; }
+
 protected:
     Component() = default;
     Component(const Component&) = default;

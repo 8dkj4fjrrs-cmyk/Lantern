@@ -5,6 +5,9 @@
 #include "lantern/ui/Context.hpp"
 
 #include <algorithm>
+#include <climits>
+#include <cstdint>
+#include <unordered_set>
 #include <array>
 #include <cmath>
 #include <string>
@@ -198,6 +201,7 @@ public:
         }
         paintGrid(draw);
         paintGameFrame(ctx, draw);
+        paintTilemap(ctx, draw);
         paintSelection(ctx, draw);
         draw.popClip();
         if (isFocused()) {
@@ -228,6 +232,11 @@ public:
         if (event.button != ui::MouseButton::Left) {
             return false;
         }
+        // Tile tools paint on the selected tilemap instead of selecting.
+        if (isTileTool(m_panel.tool()) && selectedMap()) {
+            beginPaint(event.position);
+            return true;
+        }
         const Scene& scene = m_editor.document().scene();
         // A handle of the selected object's tool?
         const Handle handle = handleAt(event.position);
@@ -249,6 +258,8 @@ public:
         if (m_drag == Drag::Pan) {
             m_center = {m_panStartCenter.x - (event.position.x - m_pressScreen.x) / m_zoom,
                         m_panStartCenter.y + (event.position.y - m_pressScreen.y) / m_zoom};
+        } else if (m_drag == Drag::Paint) {
+            paintTo(event.position);
         } else if (m_drag == Drag::Transform) {
             // A click on an object should select it, not nudge it: wait for a real drag.
             if (!m_moved && length({event.position.x - m_pressScreen.x, event.position.y - m_pressScreen.y}) < 3.0f) {
@@ -261,7 +272,7 @@ public:
 
     bool onPointerUp(ui::Context&, const ui::PointerEvent&) override
     {
-        if (m_drag == Drag::Transform && m_moved) {
+        if ((m_drag == Drag::Transform && m_moved) || m_drag == Drag::Paint) {
             m_editor.endEdit();
         }
         m_drag = Drag::None;
@@ -280,6 +291,18 @@ public:
         case ui::Key::E: m_panel.setTool(SceneTool::Rotate); return true;
         case ui::Key::R: m_panel.setTool(SceneTool::Scale); return true;
         case ui::Key::T: m_panel.setTool(SceneTool::Rect); return true;
+        case ui::Key::B:
+        case ui::Key::X:
+        case ui::Key::G:
+        case ui::Key::I:
+            if (selectedMap()) {
+                m_panel.setTool(event.key == ui::Key::B   ? SceneTool::Brush
+                                : event.key == ui::Key::X ? SceneTool::Eraser
+                                : event.key == ui::Key::G ? SceneTool::Fill
+                                                          : SceneTool::Picker);
+                return true;
+            }
+            return false;
         case ui::Key::F: frameSelection(); return true;
         case ui::Key::Delete:
         case ui::Key::Backspace: m_editor.deleteSelection(); return true;
@@ -306,8 +329,285 @@ public:
         return {}; // the tools explain themselves in the toolbar
     }
 
+    /// The selected tilemap's tileset and image, for overlays and the brush preview.
+    void setTileImage(ui::TextureId texture, ui::Size imagePixels, std::optional<Tileset> tileset)
+    {
+        m_tileTexture = texture;
+        m_tileImageSize = imagePixels;
+        m_tileset = std::move(tileset);
+    }
+
+    struct MapRef {
+        EntityId id;
+        const Tilemap* map = nullptr;
+        Affine2 world;
+    };
+    std::optional<MapRef> selectedMap() const
+    {
+        const Scene& scene = m_editor.document().scene();
+        const Entity* e = scene.find(m_editor.selection());
+        const Tilemap* map = e != nullptr ? e->get<Tilemap>() : nullptr;
+        if (map == nullptr) {
+            return std::nullopt;
+        }
+        return MapRef{e->id(), map, scene.worldTransform(e->id())};
+    }
+
 private:
-    enum class Drag { None, Pan, Transform };
+    enum class Drag { None, Pan, Transform, Paint };
+
+    // --- Tile painting -------------------------------------------------------------------------
+    std::optional<TileCell> cellAtScreen(const MapRef& m, ui::Vec2 screen) const
+    {
+        const auto inverse = m.world.inverse();
+        if (!inverse) {
+            return std::nullopt;
+        }
+        return m.map->cellAt(inverse->apply(toWorld(screen)));
+    }
+
+    int paintLayer(const Tilemap& map) const
+    {
+        const int layer = m_editor.tileLayer();
+        if (layer == PaintTiles::kCollisionLayer) {
+            return layer;
+        }
+        return std::clamp(layer, 0, static_cast<int>(map.layers.size()) - 1);
+    }
+
+    static int readValue(const Tilemap& map, int layer, TileCell cell)
+    {
+        return layer == PaintTiles::kCollisionLayer ? (map.solid.count(cell) > 0 ? 1 : 0)
+                                                    : map.tileAt(static_cast<std::size_t>(layer), cell);
+    }
+
+    void applyCells(const std::vector<TileCell>& cells, bool erase, const char* verb = nullptr)
+    {
+        const auto m = selectedMap();
+        if (!m || cells.empty()) {
+            return;
+        }
+        const int layer = paintLayer(*m->map);
+        const bool collision = layer == PaintTiles::kCollisionLayer;
+        const int value = erase ? (collision ? 0 : -1) : (collision ? 1 : m_editor.tileBrush());
+        std::vector<PaintTiles::Cell> paint;
+        paint.reserve(cells.size());
+        for (const TileCell& c : cells) {
+            paint.push_back({c, value});
+        }
+        const std::string label = std::string(verb != nullptr ? verb : (erase ? "Erase" : "Paint"))
+                                  + (collision ? " Collision" : " Tiles");
+        m_editor.execute(std::make_unique<PaintTiles>(m->id, layer, std::move(paint), label));
+    }
+
+    void beginPaint(ui::Vec2 screen)
+    {
+        const auto m = selectedMap();
+        const auto cell = m ? cellAtScreen(*m, screen) : std::nullopt;
+        if (!cell) {
+            return;
+        }
+        m_editor.endEdit(); // a new stroke is a new undo step
+        switch (m_panel.tool()) {
+        case SceneTool::Picker: {
+            int layer = paintLayer(*m->map);
+            int tile = layer >= 0 ? m->map->tileAt(static_cast<std::size_t>(layer), *cell) : -1;
+            // On the collision layer (or an empty cell), take the top visible tile.
+            for (int i = static_cast<int>(m->map->layers.size()) - 1; tile < 0 && i >= 0; --i) {
+                if (m->map->layers[static_cast<std::size_t>(i)].visible) {
+                    tile = m->map->tileAt(static_cast<std::size_t>(i), *cell);
+                }
+            }
+            if (tile >= 0) {
+                m_editor.setTileBrush(tile);
+                m_panel.setTool(SceneTool::Brush);
+            }
+            return;
+        }
+        case SceneTool::Fill:
+            fill(*m, *cell);
+            m_editor.endEdit();
+            return;
+        default:
+            m_drag = Drag::Paint;
+            m_lastCell = *cell;
+            applyCells({*cell}, m_panel.tool() == SceneTool::Eraser);
+            return;
+        }
+    }
+
+    void paintTo(ui::Vec2 screen)
+    {
+        const auto m = selectedMap();
+        const auto cell = m ? cellAtScreen(*m, screen) : std::nullopt;
+        if (!cell || *cell == m_lastCell) {
+            return;
+        }
+        // Every cell on the line from the last one, so fast strokes leave no gaps.
+        std::vector<TileCell> cells;
+        int x = m_lastCell.x;
+        int y = m_lastCell.y;
+        const int dx = std::abs(cell->x - x);
+        const int dy = -std::abs(cell->y - y);
+        const int sx = x < cell->x ? 1 : -1;
+        const int sy = y < cell->y ? 1 : -1;
+        int err = dx + dy;
+        while (!(x == cell->x && y == cell->y) && cells.size() < 4096) {
+            const int e2 = 2 * err;
+            if (e2 >= dy) {
+                err += dy;
+                x += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                y += sy;
+            }
+            cells.push_back({x, y});
+        }
+        m_lastCell = *cell;
+        applyCells(cells, m_panel.tool() == SceneTool::Eraser);
+    }
+
+    // Cells whose centres are inside the view (at most 256 x 256 around `around`).
+    std::pair<TileCell, TileCell> visibleCells(const MapRef& m, TileCell around) const
+    {
+        const ui::Rect b = bounds();
+        TileCell lo{INT32_MAX, INT32_MAX};
+        TileCell hi{INT32_MIN, INT32_MIN};
+        for (const ui::Vec2 corner : {ui::Vec2{b.x, b.y}, ui::Vec2{b.right(), b.y}, ui::Vec2{b.x, b.bottom()},
+                                      ui::Vec2{b.right(), b.bottom()}}) {
+            if (const auto c = cellAtScreen(m, corner)) {
+                lo = {std::min(lo.x, c->x), std::min(lo.y, c->y)};
+                hi = {std::max(hi.x, c->x), std::max(hi.y, c->y)};
+            }
+        }
+        lo = {std::max(lo.x, around.x - 128), std::max(lo.y, around.y - 128)};
+        hi = {std::min(hi.x, around.x + 128), std::min(hi.y, around.y + 128)};
+        return {lo, hi};
+    }
+
+    // Fill: the connected cells holding the same value as the clicked one,
+    // up to the edges of the view.
+    void fill(const MapRef& m, TileCell start)
+    {
+        const int layer = paintLayer(*m.map);
+        const int target = readValue(*m.map, layer, start);
+        const bool collision = layer == PaintTiles::kCollisionLayer;
+        const int replacement = collision ? 1 : m_editor.tileBrush();
+        if (target == replacement) {
+            return;
+        }
+        const auto [lo, hi] = visibleCells(m, start);
+        std::vector<TileCell> found;
+        std::vector<TileCell> todo{start};
+        std::unordered_set<TileCell, TileCellHash> seen{start};
+        while (!todo.empty() && found.size() < 65536) {
+            const TileCell c = todo.back();
+            todo.pop_back();
+            found.push_back(c);
+            for (const TileCell n : {TileCell{c.x + 1, c.y}, TileCell{c.x - 1, c.y}, TileCell{c.x, c.y + 1},
+                                     TileCell{c.x, c.y - 1}}) {
+                if (n.x < lo.x || n.y < lo.y || n.x > hi.x || n.y > hi.y || seen.count(n) > 0) {
+                    continue;
+                }
+                seen.insert(n);
+                if (readValue(*m.map, layer, n) == target) {
+                    todo.push_back(n);
+                }
+            }
+        }
+        applyCells(found, false, "Fill");
+    }
+
+    // --- Tile overlays ------------------------------------------------------------------------
+    std::array<ui::Vec2, 4> cellQuad(const MapRef& m, TileCell c) const
+    {
+        const float x0 = static_cast<float>(c.x) * m.map->cellSize.x;
+        const float y0 = static_cast<float>(c.y) * m.map->cellSize.y;
+        const float x1 = x0 + m.map->cellSize.x;
+        const float y1 = y0 + m.map->cellSize.y;
+        // Bottom-left, top-left, top-right, bottom-right in the world: clockwise on screen.
+        return {toScreen(m.world.apply({x0, y0})), toScreen(m.world.apply({x0, y1})), toScreen(m.world.apply({x1, y1})),
+                toScreen(m.world.apply({x1, y0}))};
+    }
+
+    static void fillQuad(ui::DrawList& draw, std::array<ui::Vec2, 4> q, ui::Color color)
+    {
+        const float cross = (q[1].x - q[0].x) * (q[2].y - q[0].y) - (q[1].y - q[0].y) * (q[2].x - q[0].x);
+        if (cross < 0.0f) {
+            std::swap(q[1], q[3]); // mirrored (negative scale): reverse the order
+        }
+        draw.fillConvexPolygon(q, color);
+    }
+
+    void paintTilemap(ui::Context& ctx, ui::DrawList& draw) const
+    {
+        const auto m = selectedMap();
+        if (!m) {
+            return;
+        }
+        const ui::Theme& t = ctx.theme();
+        const float cellPixels = std::min(m->map->cellSize.x, m->map->cellSize.y) * m_zoom;
+        const auto centre = cellAtScreen(*m, bounds().center()).value_or(TileCell{});
+        const auto [lo, hi] = visibleCells(*m, centre);
+        const bool painting = isTileTool(m_panel.tool());
+
+        // The tile grid, when cells are big enough to see.
+        if (cellPixels >= 6.0f && hi.x >= lo.x && hi.y >= lo.y) {
+            const ui::Color line{255, 255, 255, static_cast<std::uint8_t>(painting ? 34 : 18)};
+            const float cw = m->map->cellSize.x;
+            const float ch = m->map->cellSize.y;
+            for (int x = lo.x; x <= hi.x + 1; ++x) {
+                draw.line(toScreen(m->world.apply({static_cast<float>(x) * cw, static_cast<float>(lo.y) * ch})),
+                          toScreen(m->world.apply({static_cast<float>(x) * cw, static_cast<float>(hi.y + 1) * ch})), line);
+            }
+            for (int y = lo.y; y <= hi.y + 1; ++y) {
+                draw.line(toScreen(m->world.apply({static_cast<float>(lo.x) * cw, static_cast<float>(y) * ch})),
+                          toScreen(m->world.apply({static_cast<float>(hi.x + 1) * cw, static_cast<float>(y) * ch})), line);
+            }
+        }
+
+        // Collision: painted cells strong red, cells blocked by solid tiles lighter.
+        const bool collisionActive = m_editor.tileLayer() == PaintTiles::kCollisionLayer;
+        const std::uint8_t strong = collisionActive ? 120 : 70;
+        const std::uint8_t light = collisionActive ? 70 : 40;
+        const long area = static_cast<long>(hi.x - lo.x + 1) * static_cast<long>(hi.y - lo.y + 1);
+        if (area > 0 && area <= 65536) {
+            const Tileset* tileset = m_tileset ? &*m_tileset : nullptr;
+            for (int y = lo.y; y <= hi.y; ++y) {
+                for (int x = lo.x; x <= hi.x; ++x) {
+                    const TileCell c{x, y};
+                    if (m->map->solid.count(c) > 0) {
+                        fillQuad(draw, cellQuad(*m, c), ui::Color{235, 64, 64, strong});
+                    } else if (isTileSolid(*m->map, tileset, c)) {
+                        fillQuad(draw, cellQuad(*m, c), ui::Color{235, 64, 64, light});
+                    }
+                }
+            }
+        }
+
+        // The cell under the mouse, with a preview of the brush tile.
+        if (painting && isHovered() && m_drag != Drag::Pan) {
+            if (const auto cell = cellAtScreen(*m, ctx.pointerPosition())) {
+                const auto q = cellQuad(*m, *cell);
+                const bool upright = std::abs(q[0].x - q[1].x) < 0.5f && std::abs(q[1].y - q[2].y) < 0.5f;
+                const bool brush = m_panel.tool() == SceneTool::Brush || m_panel.tool() == SceneTool::Fill;
+                if (brush && !collisionActive && upright && m_tileTexture != 0 && m_tileset
+                    && m_tileImageSize.width > 0.0f) {
+                    const TileRect r = m_tileset->tileRect(m_editor.tileBrush(), static_cast<int>(m_tileImageSize.width));
+                    const ui::Rect rect{std::min(q[0].x, q[2].x), std::min(q[0].y, q[2].y), std::abs(q[2].x - q[0].x),
+                                        std::abs(q[0].y - q[2].y)};
+                    draw.image(m_tileTexture, rect,
+                               {static_cast<float>(r.x) / m_tileImageSize.width, static_cast<float>(r.y) / m_tileImageSize.height},
+                               {static_cast<float>(r.x + r.width) / m_tileImageSize.width,
+                                static_cast<float>(r.y + r.height) / m_tileImageSize.height},
+                               ui::Color{255, 255, 255, 170});
+                }
+                const ui::Color outline = m_panel.tool() == SceneTool::Eraser ? ui::Color::hex(0xF26B65) : t.accent;
+                draw.polyline(q, outline, 1.5f, true);
+            }
+        }
+    }
     enum class Handle {
         None,
         Body,            // the object itself: move freely
@@ -343,6 +643,9 @@ private:
 
     std::optional<Gizmo> gizmo() const
     {
+        if (isTileTool(m_panel.tool())) {
+            return std::nullopt; // painting, not transforming
+        }
         const Scene& scene = m_editor.document().scene();
         const EntityId id = m_editor.selection();
         if (id.isNull() || !scene.contains(id)) {
@@ -366,9 +669,10 @@ private:
     std::vector<std::pair<Handle, ui::Vec2>> rectHandles() const
     {
         const Scene& scene = m_editor.document().scene();
+        const Entity* e = scene.find(m_editor.selection());
         const auto corners = scene.worldCorners(m_editor.selection());
-        if (!corners) {
-            return {};
+        if (!corners || e == nullptr || sizeComponentOf(*e) == nullptr) {
+            return {}; // only shapes and sprites have a size to drag
         }
         std::array<ui::Vec2, 4> s{};
         for (std::size_t i = 0; i < 4; ++i) {
@@ -425,6 +729,8 @@ private:
                     return h;
                 }
             }
+            break;
+        default:
             break;
         }
         return Handle::None;
@@ -726,6 +1032,8 @@ private:
                 square(pos, tint(t.accent, hot == h));
             }
             break;
+        default:
+            break;
         }
         if (m_panel.tool() != SceneTool::Scale) {
             draw.fillCircle(o, 3.5f, ui::Color{0, 0, 0, 160});
@@ -749,6 +1057,10 @@ private:
     ui::Vec2 m_pressScreen;
     Vec2 m_panStartCenter;
     DragStart m_start;
+    TileCell m_lastCell;
+    ui::TextureId m_tileTexture = 0;
+    ui::Size m_tileImageSize;
+    std::optional<Tileset> m_tileset;
 };
 
 // ---------------------------------------------------------------------------
@@ -769,6 +1081,24 @@ ViewportPanel::ViewportPanel(EditorServices& editor)
     for (std::size_t i = 0; i < tools.size(); ++i) {
         const auto tool = static_cast<SceneTool>(i);
         m_toolButtons[i] = &addToolButton(toolbar, tools[i].first, tools[i].second, [this, tool] { setTool(tool); });
+    }
+    // Tile tools: shown while a tilemap is selected.
+    auto& divider = toolbar.emplace<ui::Separator>(ui::Axis::Vertical);
+    divider.setFixedSize({1.0f, 16.0f});
+    m_tileToolsDivider = &divider;
+    const std::array<std::pair<ui::Icon, const char*>, 4> tileTools{{
+        {ui::Icon::Brush, "Brush (B): paint the tile chosen in the Tile Palette. On the Collision layer, paints "
+                          "cells that block movement."},
+        {ui::Icon::Eraser, "Eraser (X): remove tiles (or collision)"},
+        {ui::Icon::Fill, "Fill (G): fill the connected area of the same tile, up to the edges of the view"},
+        {ui::Icon::Eyedropper, "Picker (I): click a tile in the map to paint with it"},
+    }};
+    for (std::size_t i = 0; i < tileTools.size(); ++i) {
+        const auto tool = static_cast<SceneTool>(4 + i);
+        m_toolButtons[4 + i] = &addToolButton(toolbar, tileTools[i].first, tileTools[i].second, [this, tool] {
+            setTool(tool);
+            m_editor.showPanel(kTilePalettePanel);
+        });
     }
     toolbar.emplace<ui::Separator>(ui::Axis::Vertical).setFixedSize({1.0f, 16.0f});
     addToolButton(toolbar, ui::Icon::Scene, "Show the whole game view", [this] { fitGameView(); });
@@ -832,6 +1162,33 @@ std::optional<Vec2> ViewportPanel::worldAt(ui::Vec2 windowPoint) const
 
 void ViewportPanel::update(UiFrame& frame)
 {
+    // Tile tools only make sense with a tilemap selected.
+    const auto map = m_view->selectedMap();
+    for (std::size_t i = 4; i < m_toolButtons.size(); ++i) {
+        m_toolButtons[i]->setVisible(map.has_value());
+    }
+    m_tileToolsDivider->setVisible(map.has_value());
+    if (!map && isTileTool(m_tool)) {
+        setTool(SceneTool::Move);
+    }
+    // The tileset's image, for the brush preview and collision display.
+    ui::TextureId texture = 0;
+    ui::Size imageSize;
+    std::optional<Tileset> tileset;
+    if (const AssetDatabase* db = m_editor.assets(); db != nullptr && map) {
+        const AssetRecord* ts = db->find(map->map->tileset);
+        if (ts != nullptr && ts->tileset) {
+            tileset = *ts->tileset;
+            if (const AssetRecord* img = db->find(ts->tileset->image); img != nullptr && img->isUsable()) {
+                if (const auto loaded = frame.loadImage(db->absolutePath(*img), img->filter == TextureFilter::Pixel)) {
+                    texture = loaded->texture;
+                    imageSize = loaded->size;
+                }
+            }
+        }
+    }
+    m_view->setTileImage(texture, imageSize, std::move(tileset));
+
     m_view->setFrameData(frame.worldImage(), static_cast<float>(frame.worldWidth()),
                          static_cast<float>(frame.worldHeight()), frame.gameCamera());
 

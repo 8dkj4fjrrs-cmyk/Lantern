@@ -139,6 +139,7 @@ ComponentRegistry ComponentRegistry::withBuiltins()
     static_cast<void>(registry.add(Shape::componentType()));
     static_cast<void>(registry.add(Sprite::componentType()));
     static_cast<void>(registry.add(Camera::componentType()));
+    static_cast<void>(registry.add(Tilemap::componentType()));
     return registry;
 }
 

@@ -129,6 +129,9 @@ public:
 
     /// Sets a component property (the value is coerced, see PropertyInfo::coerce).
     bool setProperty(EntityId id, std::string_view componentType, std::string_view key, const PropertyValue& value);
+    /// Changes a component in ways properties cannot express (e.g. painting
+    /// tiles). `change` returns true if it changed anything.
+    bool modifyComponent(EntityId id, std::string_view componentType, const std::function<bool(Component&)>& change);
     /// Adds a component; refuses a second component of the same type.
     /// `index` = position in the entity's component list (default: last).
     Component* addComponent(EntityId id, std::unique_ptr<Component> component,

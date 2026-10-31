@@ -78,6 +78,12 @@ public:
     void openProject() override;
     void showMessage(const std::string& title, const std::string& text) override;
     void showImportDialog() override;
+    int tileBrush() const override { return m_tileBrush; }
+    void setTileBrush(int tile) override { m_tileBrush = std::max(0, tile); }
+    int tileLayer() const override { return m_tileLayer; }
+    void setTileLayer(int layer) override { m_tileLayer = layer; }
+    void showPanel(const std::string& id) override;
+    void setSceneTool(int tool) override;
 
 private:
     // Called by the runtime (see PresentationSettings).
@@ -137,6 +143,8 @@ private:
     double m_lastAssetScan = -100.0;
     AssetId m_selectedAsset;
     std::string m_importFolder = "assets";
+    int m_tileBrush = 0;
+    int m_tileLayer = 0;
     std::unique_ptr<SceneDocument> m_document;
     std::uint64_t m_documentGeneration = 1;
     std::shared_ptr<const Scene> m_shownScene;   // what the runtime is drawing
@@ -149,6 +157,7 @@ private:
     HierarchyPanel* m_hierarchy = nullptr;
     AssetsPanel* m_assets = nullptr;
     AssetsPreviewPanel* m_preview = nullptr;
+    TilePalettePanel* m_tilePalette = nullptr;
     InspectorPanel* m_inspector = nullptr;
     ConsolePanel* m_consolePanel = nullptr;
     ui::ChoiceField* m_sceneChoice = nullptr;

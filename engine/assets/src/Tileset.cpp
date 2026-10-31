@@ -54,6 +54,26 @@ TileRect Tileset::tileRect(int index, int imageWidth) const
     return {margin + col * (tileWidth + spacing), margin + row * (tileHeight + spacing), tileWidth, tileHeight};
 }
 
+bool isTileSolid(const Tilemap& map, const Tileset* tileset, TileCell cell)
+{
+    if (map.solid.count(cell) > 0) {
+        return true;
+    }
+    if (tileset == nullptr || tileset->solid.empty()) {
+        return false;
+    }
+    for (const TileLayer& layer : map.layers) {
+        if (!layer.visible) {
+            continue;
+        }
+        const auto it = layer.tiles.find(cell);
+        if (it != layer.tiles.end() && tileset->isSolid(it->second)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::optional<Tileset> parseTileset(std::string_view text, std::string* error)
 {
     Json j;
