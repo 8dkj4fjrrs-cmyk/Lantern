@@ -4,9 +4,10 @@
 #   lantern_core     static library: engine lifecycle, logging, version info.
 #                    Depends only on the C++ standard library.
 #   lantern_ui       static library: Lantern's own UI toolkit (widgets, docking,
-#                    text). No backend; produces draw lists. Always built.
-#   lantern_ui       static library: Lantern's own UI toolkit (widgets, docking,
 #                    text). No backend; always built and unit-tested.
+#   lantern_gameplay static library: behaviours, input, collision queries,
+#                    scene changes (no backend; always built and tested).
+#   sample_game      the sample game module (examples/sample_game).
 #   lantern_runtime  static library: window, main loop, rendering backend.
 #                    Wraps Axmol privately (only with LANTERN_RUNTIME_BACKEND=axmol).
 #   lantern_player   the game runtime application (opens a window).
@@ -19,7 +20,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.4.0
+    VERSION 0.5.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
 
@@ -40,6 +41,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(LanternCompilerWarnings)
+include(LanternGameModules)
 
 # ---------------------------------------------------------------------------
 # Options
@@ -49,6 +51,10 @@ option(LANTERN_BUILD_TESTS "Build unit tests" ON)
 option(LANTERN_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(LANTERN_ENABLE_SANITIZERS "Build with AddressSanitizer + UBSan (Clang/GCC)" OFF)
 option(LANTERN_WINDOW_TESTS "Register tests that open a real window (needs a display)" ON)
+option(LANTERN_BUILD_SAMPLE_GAME "Build the sample game module and link it into the editor and player" ON)
+# Folders with your own game modules (each has a CMakeLists.txt calling
+# lantern_add_game_module); they are linked into the editor and the player.
+set(LANTERN_GAME_MODULE_DIRS "" CACHE STRING "Folders containing game modules to build in (separated by ;)")
 
 # Which rendering/runtime backend to link:
 #   axmol  the real engine runtime (default)
@@ -83,7 +89,17 @@ endif()
 add_subdirectory(engine/core)
 add_subdirectory(engine/scene)
 add_subdirectory(engine/assets)
+add_subdirectory(engine/gameplay)
 add_subdirectory(engine/ui)
+
+# Game modules come before the programs that link them.
+if(LANTERN_BUILD_SAMPLE_GAME)
+    add_subdirectory(examples/sample_game)
+endif()
+foreach(dir IN LISTS LANTERN_GAME_MODULE_DIRS)
+    get_filename_component(_name "${dir}" NAME)
+    add_subdirectory("${dir}" "${CMAKE_BINARY_DIR}/game_modules/${_name}")
+endforeach()
 
 if(LANTERN_RUNTIME_BACKEND STREQUAL "axmol")
     add_subdirectory(engine/runtime)

@@ -69,6 +69,34 @@ TEST_CASE("The renderer rebuilds only when the scene changes", "[runtime][render
     CHECK(root.node->getChildrenCount() == 0);
 }
 
+TEST_CASE("Moving things moves the nodes without rebuilding", "[runtime][renderer]")
+{
+    Root root;
+    SceneRenderer renderer(*root.node, /*textures=*/nullptr, /*drawContent=*/false);
+    auto scene = std::make_shared<Scene>("Test");
+    const EntityId hero = scene->create("Hero")->id();
+    renderer.show(scene);
+    renderer.update();
+    REQUIRE(renderer.buildCount() == 1);
+
+    // Through a property, and directly (as gameplay code does).
+    scene->setProperty(hero, "lantern.Transform", "position", Vec2{5, 6});
+    renderer.update();
+    CHECK(renderer.nodeFor(hero)->getPositionX() == 5.0f);
+    scene->edit<Transform>(hero)->rotation = 90.0f;
+    renderer.update();
+    CHECK(renderer.nodeFor(hero)->getRotation() == 90.0f);
+    CHECK(renderer.buildCount() == 1);
+
+    // Anything else still rebuilds.
+    scene->addComponent(hero, std::make_unique<Shape>());
+    renderer.update();
+    CHECK(renderer.buildCount() == 2);
+    scene->edit<Shape>(hero)->color = Color{1, 2, 3, 255};
+    renderer.update();
+    CHECK(renderer.buildCount() == 3);
+}
+
 TEST_CASE("The first active camera decides the view", "[runtime][renderer][camera]")
 {
     Root root;

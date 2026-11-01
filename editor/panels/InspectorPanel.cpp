@@ -621,30 +621,48 @@ void InspectorPanel::openAddComponentMenu(ui::Button& button, EntityId id)
     if (entity == nullptr) {
         return;
     }
-    std::vector<ui::MenuItem> items;
+    // Lantern's own components first, then each category of the game's
+    // (e.g. "Gameplay": behaviours from the linked game modules).
+    std::vector<std::string> categories{""};
     for (const ComponentType* type : m_editor.registry().types()) {
-        if (type->required || entity->component(type->id) != nullptr || !type->create) {
-            continue;
+        if (std::find(categories.begin(), categories.end(), type->category) == categories.end()) {
+            categories.push_back(type->category);
         }
-        ui::MenuItem item;
-        item.label = type->displayName;
-        item.action = [this, id, type] {
-            m_editor.execute(std::make_unique<AddComponent>(id, type->create()));
-            m_editor.endEdit();
-        };
-        items.push_back(std::move(item));
+    }
+    std::vector<ui::MenuItem> items;
+    const auto header = [&items](const std::string& text) {
+        ui::MenuItem label;
+        label.label = text;
+        label.isEnabled = [] { return false; };
+        items.push_back(std::move(label));
+    };
+    for (const std::string& category : categories) {
+        bool first = true;
+        for (const ComponentType* type : m_editor.registry().types()) {
+            if (type->category != category || type->required || entity->component(type->id) != nullptr || !type->create) {
+                continue;
+            }
+            if (first && !category.empty()) {
+                items.push_back(ui::MenuItem::divider());
+                header(category);
+            }
+            first = false;
+            ui::MenuItem item;
+            item.label = type->displayName;
+            item.action = [this, id, type] {
+                m_editor.execute(std::make_unique<AddComponent>(id, type->create()));
+                m_editor.endEdit();
+            };
+            items.push_back(std::move(item));
+        }
     }
     if (items.empty()) {
-        ui::MenuItem none;
-        none.label = "Every component is already added";
-        none.isEnabled = [] { return false; };
-        items.push_back(std::move(none));
+        header("Every component is already added");
     }
-    items.push_back(ui::MenuItem::divider());
-    ui::MenuItem more;
-    more.label = "Your own gameplay components: coming in Milestone 5";
-    more.isEnabled = [] { return false; };
-    items.push_back(std::move(more));
+    if (categories.size() == 1) {
+        items.push_back(ui::MenuItem::divider());
+        header("No game module is linked: your C++ behaviours appear here (see docs/gameplay.md)");
+    }
     openMenuAt(m_editor.ui(), button.bounds(), std::move(items));
 }
 
@@ -665,6 +683,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     header.setCrossAlign(ui::CrossAlign::Center);
     header.emplace<ui::IconView>(asset.type == AssetType::Tileset ? ui::Icon::Grid
                                  : asset.type == AssetType::Image ? ui::Icon::Scene
+                                 : asset.type == AssetType::Scene ? ui::Icon::Flame
                                                                    : ui::Icon::Folder,
                                  16.0f, ui::Color::hex(0xF2A93B));
     auto& name = header.emplace<ui::TextField>("Name");
@@ -673,6 +692,14 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     name.setSelectAllOnFocus(true);
     name.setText(asset.fileName());
     name.setTooltip("Renaming changes the file name; scenes keep working because they use the asset's ID.");
+    // A scene file may be open, or be the project's start scene (stored by
+    // path in project.lantern), so scenes are renamed and deleted outside the
+    // editor for now.
+    const bool isScene = asset.type == AssetType::Scene;
+    if (isScene) {
+        name.setEnabled(false);
+        name.setTooltip("Scenes cannot be renamed in the editor yet (the project's start scene is saved by name).");
+    }
     name.setOnCommit([this, id](const std::string& text) {
         AssetDatabase* assets = m_editor.assets();
         const AssetRecord* a = assets != nullptr ? assets->find(id) : nullptr;
@@ -718,9 +745,11 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         });
     }
 
-    auto& info = content.emplace<ui::Section>(typeName == "image" ? "Image" : typeName == "tileset" ? "Tileset"
-                                                                    : typeName == "audio"   ? "Sound"
-                                                                                            : "Font");
+    auto& info = content.emplace<ui::Section>(typeName == "image"     ? "Image"
+                                              : typeName == "tileset" ? "Tileset"
+                                              : typeName == "audio"   ? "Sound"
+                                              : typeName == "scene"   ? "Scene"
+                                                                      : "Font");
     auto row = [&](const char* label, const std::string& value, const std::string& tip) {
         auto& r = info.body().emplace<ui::PropertyField>(label);
         auto& box = r.addValue(std::make_unique<ui::ValueBox>(value));
@@ -868,8 +897,20 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             revealInFileManager(assets->absolutePath(*a).parent_path());
         }
     });
+    if (isScene) {
+        actions.emplace<ui::Button>("Open Scene", [this, id] {
+            AssetDatabase* assets = m_editor.assets();
+            if (const AssetRecord* a = assets != nullptr ? assets->find(id) : nullptr) {
+                m_editor.openScene(assets->absolutePath(*a));
+            }
+        });
+    }
     auto& del = actions.emplace<ui::Button>("Delete…", [this, id] { confirmDeleteAsset(id); });
     del.setTooltip("Deletes the file from the project");
+    if (isScene) {
+        del.setEnabled(false);
+        del.setTooltip("Scenes cannot be deleted in the editor yet: delete the file in your file manager");
+    }
 
     auto& idRow = content.emplace<ui::Row>(6.0f, ui::Insets{0.0f, 6.0f, 0.0f, 0.0f});
     idRow.emplace<ui::Spacer>();

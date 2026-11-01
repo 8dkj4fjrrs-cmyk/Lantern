@@ -13,6 +13,7 @@
 #include "../panels/Panels.hpp"
 
 #include "lantern/core/Engine.hpp"
+#include "lantern/gameplay/Game.hpp"
 #include "lantern/runtime/Application.hpp"
 #include "lantern/scene/Project.hpp"
 #include "lantern/ui/DockLayout.hpp"
@@ -25,6 +26,7 @@
 
 namespace lantern::ui {
 class Context;
+class Button;
 class DockSpace;
 class Label;
 } // namespace lantern::ui
@@ -84,6 +86,18 @@ public:
     void setTileLayer(int layer) override { m_tileLayer = layer; }
     void showPanel(const std::string& id) override;
     void setSceneTool(int tool) override;
+    bool isPlaying() const override { return m_game != nullptr; }
+    bool isPaused() const override { return m_game != nullptr && m_paused; }
+    Input* gameInput() override { return m_game != nullptr ? &m_game->input() : nullptr; }
+
+    // --- Play mode ---------------------------------------------------------------------------
+    /// Plays the open scene in the Scene view (a copy of it: stopping
+    /// returns to the scene exactly as it was).
+    void play();
+    void stopPlaying();
+    void togglePause();
+    /// While paused: runs exactly one frame (1/60 s).
+    void stepFrame();
 
 private:
     // Called by the runtime (see PresentationSettings).
@@ -109,6 +123,13 @@ private:
     void saveScene(std::function<void()> then = {});
     void saveSceneAs(std::function<void()> then = {});
     void reloadScene();
+    void undo();
+    void redo();
+    /// Says (once per run) that scene edits wait until the game stops.
+    void refuseEditWhilePlaying();
+    /// Loads a scene of the project for a running game's scene change.
+    std::optional<Scene> loadSceneForGame(AssetId id, std::string& error);
+    void updateGame(UiFrame& frame);
     void moveSelection(int direction);
     /// Runs `then` once unsaved changes are saved or discarded (asks first);
     /// does nothing if the user cancels.
@@ -150,6 +171,13 @@ private:
     std::shared_ptr<const Scene> m_shownScene;   // what the runtime is drawing
     std::string m_shownTitle;
 
+    // Play mode.
+    std::unique_ptr<Game> m_game;   // non-null while playing
+    bool m_paused = false;
+    bool m_stepPending = false;
+    bool m_editRefused = false;     // the "stop to edit" message was shown this run
+    double m_lastFrameTime = -1.0;
+
     // Widgets (owned by the UI context; valid between setupUi and shutdownUi).
     ui::Context* m_ui = nullptr;
     ui::DockSpace* m_dock = nullptr;
@@ -161,6 +189,10 @@ private:
     InspectorPanel* m_inspector = nullptr;
     ConsolePanel* m_consolePanel = nullptr;
     ui::ChoiceField* m_sceneChoice = nullptr;
+    ui::Button* m_playButton = nullptr;
+    ui::Button* m_pauseButton = nullptr;
+    ui::Button* m_stepButton = nullptr;
+    ui::Button* m_revertButton = nullptr;
     std::vector<std::string> m_sceneChoices;   // project-relative paths behind the choice
     ui::Label* m_statusFps = nullptr;
     std::array<ui::Label*, 3> m_statusCounts{};   // messages, warnings, errors

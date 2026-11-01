@@ -2,6 +2,7 @@
 
 #include "../model/Commands.hpp"
 
+#include "lantern/gameplay/Collision.hpp"
 #include "lantern/ui/Context.hpp"
 
 #include <algorithm>
@@ -75,6 +76,49 @@ const char* sizeComponentOf(const Entity& entity)
     return nullptr;
 }
 
+// The editor's keys as the game's keys (play mode).
+Key toGameKey(ui::Key key)
+{
+    const auto k = static_cast<int>(key);
+    if (key >= ui::Key::A && key <= ui::Key::Z) {
+        return static_cast<Key>(static_cast<int>(Key::A) + (k - static_cast<int>(ui::Key::A)));
+    }
+    if (key >= ui::Key::Num0 && key <= ui::Key::Num9) {
+        return static_cast<Key>(static_cast<int>(Key::Num0) + (k - static_cast<int>(ui::Key::Num0)));
+    }
+    if (key >= ui::Key::F1 && key <= ui::Key::F12) {
+        return static_cast<Key>(static_cast<int>(Key::F1) + (k - static_cast<int>(ui::Key::F1)));
+    }
+    switch (key) {
+    case ui::Key::Space: return Key::Space;
+    case ui::Key::Enter: return Key::Enter;
+    case ui::Key::Escape: return Key::Escape;
+    case ui::Key::Tab: return Key::Tab;
+    case ui::Key::Backspace: return Key::Backspace;
+    case ui::Key::Left: return Key::Left;
+    case ui::Key::Right: return Key::Right;
+    case ui::Key::Up: return Key::Up;
+    case ui::Key::Down: return Key::Down;
+    case ui::Key::LeftShift: return Key::LeftShift;
+    case ui::Key::RightShift: return Key::RightShift;
+    case ui::Key::LeftControl: return Key::LeftControl;
+    case ui::Key::RightControl: return Key::RightControl;
+    case ui::Key::LeftAlt: return Key::LeftAlt;
+    case ui::Key::RightAlt: return Key::RightAlt;
+    default: return Key::Unknown;
+    }
+}
+
+std::optional<lantern::MouseButton> toGameButton(ui::MouseButton button)
+{
+    switch (button) {
+    case ui::MouseButton::Left: return lantern::MouseButton::Left;
+    case ui::MouseButton::Right: return lantern::MouseButton::Right;
+    case ui::MouseButton::Middle: return lantern::MouseButton::Middle;
+    }
+    return std::nullopt;
+}
+
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -93,6 +137,12 @@ public:
     // --- Camera ------------------------------------------------------------------------
     Vec2 center() const noexcept { return m_center; }
     float zoom() const noexcept { return m_zoom; }
+
+    void setCamera(Vec2 center, float zoom)
+    {
+        m_center = center;
+        m_zoom = zoom;
+    }
 
     // World coordinates (y up) <-> panel points (y down).
     ui::Vec2 toScreen(Vec2 world) const
@@ -199,9 +249,15 @@ public:
                              m_image.size.width, m_image.size.height};
             draw.image(m_image.texture, r, m_image.uv0, m_image.uv1);
         }
+        if (m_editor.isPlaying()) {
+            paintPlaying(ctx, draw);
+            draw.popClip();
+            return;
+        }
         paintGrid(draw);
         paintGameFrame(ctx, draw);
         paintTilemap(ctx, draw);
+        paintColliders(draw);
         paintSelection(ctx, draw);
         draw.popClip();
         if (isFocused()) {
@@ -209,9 +265,42 @@ public:
         }
     }
 
+    // While the game runs: only what the player sees, with the rest dimmed,
+    // and a reminder of where the keyboard goes.
+    void paintPlaying(ui::Context& ctx, ui::DrawList& draw) const
+    {
+        const ui::Theme& t = ctx.theme();
+        const ui::Rect b = bounds();
+        const auto [min, size] = gameArea();
+        const ui::Vec2 a = toScreen(min);
+        const ui::Vec2 c = toScreen(min + size);
+        const ui::Rect game{std::round(a.x), std::round(c.y), std::round(c.x - a.x), std::round(a.y - c.y)};
+        const ui::Color shade = ui::Color::hex(0x141416);
+        draw.fillRect({b.x, b.y, b.width, game.y - b.y}, shade);
+        draw.fillRect({b.x, game.bottom(), b.width, b.bottom() - game.bottom()}, shade);
+        draw.fillRect({b.x, game.y, game.x - b.x, game.height}, shade);
+        draw.fillRect({game.right(), game.y, b.right() - game.right(), game.height}, shade);
+        const ui::Color accent = m_editor.isPaused() ? ui::Color::hex(0x8A8A8A) : t.accent;
+        draw.strokeRoundedRect(b.inset(1.0f), 0.0f, accent, 2.0f);
+        std::string note;
+        if (m_editor.isPaused()) {
+            note = "Paused";
+        } else if (!isFocused()) {
+            note = "Click the game to give it the keyboard";
+        }
+        if (!note.empty()) {
+            const ui::Rect bar{b.x + 8.0f, b.y + 8.0f, 270.0f, 24.0f};
+            draw.fillRoundedRect(bar, 4.0f, ui::Color{0, 0, 0, 170});
+            draw.text(t.font, t.smallFontSize, {bar.x + 10.0f, bar.y + 5.0f}, ui::Color{255, 255, 255, 220}, note);
+        }
+    }
+
     // --- Input ------------------------------------------------------------------------------
     bool onScroll(ui::Context& ctx, const ui::ScrollEvent& event) override
     {
+        if (m_editor.isPlaying()) {
+            return true; // the view follows the game's camera
+        }
         // Up/away zooms in, around the mouse; a wheel notch is about 20%.
         const float factor = std::clamp(std::pow(1.005f, event.delta.y), 0.5f, 2.0f);
         setZoomAround(m_zoom * factor, ctx.pointerPosition());
@@ -221,6 +310,13 @@ public:
     bool onPointerDown(ui::Context& ctx, const ui::PointerEvent& event) override
     {
         ctx.setFocus(this);
+        if (Input* input = m_editor.gameInput()) {
+            input->setPointer(toWorld(event.position));
+            if (const auto button = toGameButton(event.button)) {
+                input->press(*button);
+            }
+            return true;
+        }
         m_pressScreen = event.position;
         const bool panButton = event.button == ui::MouseButton::Right || event.button == ui::MouseButton::Middle
                                || (event.button == ui::MouseButton::Left && event.modifiers.alt);
@@ -255,6 +351,10 @@ public:
 
     void onPointerMove(ui::Context&, const ui::PointerEvent& event) override
     {
+        if (Input* input = m_editor.gameInput()) {
+            input->setPointer(toWorld(event.position));
+            return;
+        }
         if (m_drag == Drag::Pan) {
             m_center = {m_panStartCenter.x - (event.position.x - m_pressScreen.x) / m_zoom,
                         m_panStartCenter.y + (event.position.y - m_pressScreen.y) / m_zoom};
@@ -270,8 +370,15 @@ public:
         }
     }
 
-    bool onPointerUp(ui::Context&, const ui::PointerEvent&) override
+    bool onPointerUp(ui::Context&, const ui::PointerEvent& event) override
     {
+        if (Input* input = m_editor.gameInput()) {
+            input->setPointer(toWorld(event.position));
+            if (const auto button = toGameButton(event.button)) {
+                input->release(*button);
+            }
+            return true;
+        }
         if ((m_drag == Drag::Transform && m_moved) || m_drag == Drag::Paint) {
             m_editor.endEdit();
         }
@@ -283,6 +390,18 @@ public:
     bool onKeyDown(ui::Context& ctx, const ui::KeyEvent& event) override
     {
         const ui::Modifiers& m = event.modifiers;
+        if (Input* input = m_editor.gameInput()) {
+            // The game gets the keyboard, except editor shortcuts (⌘/Ctrl + key).
+            const bool shortcut = (m.ctrl || m.super) && event.key != ui::Key::LeftControl
+                                  && event.key != ui::Key::RightControl && event.key != ui::Key::LeftSuper
+                                  && event.key != ui::Key::RightSuper;
+            const Key key = toGameKey(event.key);
+            if (shortcut || key == Key::Unknown) {
+                return false;
+            }
+            input->press(key);
+            return true;
+        }
         if (m.ctrl || m.super || m.alt) {
             return false;
         }
@@ -316,8 +435,33 @@ public:
         return false;
     }
 
+    bool onKeyUp(ui::Context&, const ui::KeyEvent& event) override
+    {
+        if (Input* input = m_editor.gameInput()) {
+            const Key key = toGameKey(event.key);
+            if (key != Key::Unknown) {
+                input->release(key);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void onFocusChanged(ui::Context&, bool focused) override
+    {
+        // Keys let go while another panel has focus would otherwise stay down.
+        if (!focused) {
+            if (Input* input = m_editor.gameInput()) {
+                input->releaseAll();
+            }
+        }
+    }
+
     ui::CursorShape cursor(ui::Vec2 point) const override
     {
+        if (m_editor.isPlaying()) {
+            return ui::CursorShape::Arrow;
+        }
         if (m_drag == Drag::Pan) {
             return ui::CursorShape::Hand;
         }
@@ -934,6 +1078,26 @@ private:
         }
     }
 
+    // Colliders as outlines: green blocks movement, blue is an area (a door,
+    // a pick-up) that gameplay code notices.
+    void paintColliders(ui::DrawList& draw) const
+    {
+        const Scene& scene = m_editor.document().scene();
+        scene.forEach([&](const Entity& entity, int) {
+            const Collider* collider = entity.get<Collider>();
+            const auto box = collider != nullptr ? colliderBox(scene, entity.id()) : std::nullopt;
+            if (!box) {
+                return;
+            }
+            const ui::Vec2 a = toScreen(box->min);
+            const ui::Vec2 c = toScreen(box->max);
+            const ui::Rect r{std::round(a.x) + 0.5f, std::round(c.y) + 0.5f, std::round(c.x - a.x), std::round(a.y - c.y)};
+            const ui::Color color = collider->solid ? ui::Color{111, 207, 79, 200} : ui::Color{86, 168, 245, 200};
+            draw.fillRect(r, color.fade(0.12f));
+            draw.strokeRoundedRect(r, 0.0f, color, 1.0f);
+        });
+    }
+
     void paintGameFrame(ui::Context& ctx, ui::DrawList& draw) const
     {
         const auto [min, size] = gameArea();
@@ -1071,6 +1235,7 @@ ViewportPanel::ViewportPanel(EditorServices& editor)
     , m_editor(editor)
 {
     auto& toolbar = makePanelToolbar(*this);
+    m_toolbar = &toolbar;
     const std::array<std::pair<ui::Icon, const char*>, 4> tools{{
         {ui::Icon::Move, "Move tool (W): drag the arrows, the square or the object itself. Shift snaps to the grid."},
         {ui::Icon::Rotate, "Rotate tool (E): drag the circle. Shift turns in 15° steps."},
@@ -1103,7 +1268,8 @@ ViewportPanel::ViewportPanel(EditorServices& editor)
     toolbar.emplace<ui::Separator>(ui::Axis::Vertical).setFixedSize({1.0f, 16.0f});
     addToolButton(toolbar, ui::Icon::Scene, "Show the whole game view", [this] { fitGameView(); });
     toolbar.emplace<ui::Spacer>();
-    auto& hint = toolbar.emplace<ui::Label>("Scroll to zoom · right-drag or ⌥-drag to pan", ui::Label::Style::Faint);
+    auto& hint = toolbar.emplace<ui::Label>("", ui::Label::Style::Faint);
+    m_hint = &hint;
     hint.setTooltip("Zoom: scroll wheel or two fingers on a trackpad, around the mouse.\n"
                     "Pan: drag with the right or middle mouse button, or hold ⌥ (Alt) and drag.\n"
                     "F: frame the selected object.");
@@ -1121,6 +1287,11 @@ void ViewportPanel::setTool(SceneTool tool)
     for (std::size_t i = 0; i < m_toolButtons.size(); ++i) {
         m_toolButtons[i]->setToggled(static_cast<SceneTool>(i) == tool);
     }
+}
+
+void ViewportPanel::focusView()
+{
+    m_editor.ui().setFocus(m_view);
 }
 
 void ViewportPanel::frameSelection()
@@ -1162,6 +1333,23 @@ std::optional<Vec2> ViewportPanel::worldAt(ui::Vec2 windowPoint) const
 
 void ViewportPanel::update(UiFrame& frame)
 {
+    // Play mode: the view follows the game's camera and the tools rest; the
+    // editor's own view comes back when the game stops.
+    const bool playing = m_editor.isPlaying();
+    for (const auto& child : m_toolbar->children()) {
+        if (child.get() != m_hint) {
+            child->setEnabled(!playing);
+        }
+    }
+    m_hint->setText(playing ? "Playing · the game has the keyboard while this view is focused"
+                            : "Scroll to zoom · right-drag or ⌥-drag to pan");
+    if (playing && !m_editorCamera) {
+        m_editorCamera = std::pair{m_view->center(), m_view->zoom()};
+    } else if (!playing && m_editorCamera) {
+        m_view->setCamera(m_editorCamera->first, m_editorCamera->second);
+        m_editorCamera.reset();
+    }
+
     // Tile tools only make sense with a tilemap selected.
     const auto map = m_view->selectedMap();
     for (std::size_t i = 4; i < m_toolButtons.size(); ++i) {
@@ -1191,6 +1379,13 @@ void ViewportPanel::update(UiFrame& frame)
 
     m_view->setFrameData(frame.worldImage(), static_cast<float>(frame.worldWidth()),
                          static_cast<float>(frame.worldHeight()), frame.gameCamera());
+    if (playing) {
+        const auto [min, size] = m_view->gameArea();
+        const ui::Rect b = m_view->bounds();
+        if (size.x > 0.0f && size.y > 0.0f && b.width > 0.0f && b.height > 0.0f) {
+            m_view->setCamera(min + size * 0.5f, std::min(b.width / size.x, b.height / size.y));
+        }
+    }
 
     // Render the world at this panel's size in real pixels, so it stays sharp.
     const ui::Rect b = m_view->bounds();

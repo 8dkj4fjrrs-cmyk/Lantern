@@ -9,8 +9,9 @@
 //
 // When the scene changes (its revision number goes up), or the project's
 // assets change, the mirror is rebuilt. Rebuilding everything is simple and
-// fast enough for editor-sized scenes; finer-grained updates can come later
-// without changing this interface.
+// fast enough for editor-sized scenes. The common case while a game runs,
+// things moving, is cheaper: if only Transforms changed (the scene's
+// contentRevision() stayed the same), the existing nodes are just moved.
 //
 // Internal to lantern_runtime.
 
@@ -21,6 +22,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_map>
 
 namespace lantern::detail {
 
@@ -61,9 +63,12 @@ public:
 
     /// Number of times the node tree has been built (for diagnostics and tests).
     std::uint64_t buildCount() const noexcept { return m_builds; }
+    /// The node mirroring an entity (for tests); null if none.
+    ax::Node* nodeFor(EntityId id) const;
 
 private:
     void rebuild();
+    void moveNodes();
     ax::Node* makeSpriteNode(const Sprite& sprite);
     ax::Node* makeTilemapNode(const Tilemap& map);
 
@@ -75,6 +80,8 @@ private:
     std::shared_ptr<const Scene> m_scene;
     const Scene* m_builtScene = nullptr;
     std::uint64_t m_builtRevision = 0;
+    std::uint64_t m_builtContentRevision = 0;
+    std::unordered_map<EntityId, ax::Node*> m_nodes;   // owned by m_container's tree
     const AssetDatabase* m_builtAssets = nullptr;
     std::uint64_t m_builtAssetsRevision = 0;
     std::uint64_t m_builtTextures = 0;

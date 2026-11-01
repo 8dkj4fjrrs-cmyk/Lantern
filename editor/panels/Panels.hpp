@@ -16,6 +16,7 @@
 #include "../model/SceneDocument.hpp"
 
 #include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/gameplay/Input.hpp"
 #include "lantern/runtime/Application.hpp"
 #include "lantern/scene/Project.hpp"
 #include "lantern/ui/widgets/Basic.hpp"
@@ -30,7 +31,9 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace lantern::editor {
@@ -45,8 +48,6 @@ inline constexpr const char* kConsolePanel = "console";
 inline constexpr const char* kTilePalettePanel = "tilepalette";
 
 // Tooltips for controls that are visible but not working yet.
-inline constexpr const char* kComingWithAssets = "Coming in Milestone 4, with importing images and other assets";
-inline constexpr const char* kComingWithPlayMode = "Coming in Milestone 5, with gameplay code and play mode";
 inline constexpr const char* kComingWithBuilds = "Coming in Milestone 8: building your game for players";
 
 enum class NewEntityKind { Empty, Rectangle, Ellipse, Sprite, Camera, Tilemap };
@@ -115,6 +116,12 @@ public:
     virtual void showPanel(const std::string& id) = 0;
     /// Chooses a Scene view tool (e.g. the Brush after picking a tile).
     virtual void setSceneTool(int tool) = 0;
+
+    // Play mode: the game runs on a copy of the scene inside the Scene view.
+    virtual bool isPlaying() const = 0;
+    virtual bool isPaused() const = 0;
+    /// Where the Scene view reports keys and the mouse while playing (null otherwise).
+    virtual Input* gameInput() = 0;
 };
 
 /// A toolbar strip along the top of a panel.
@@ -149,6 +156,8 @@ public:
     void frameSelection();
     /// Shows the whole game view (what the player sees).
     void fitGameView();
+    /// Gives the Scene view keyboard focus (so a running game gets the keys).
+    void focusView();
 
 private:
     class SceneView;
@@ -159,6 +168,9 @@ private:
     ui::Button* m_zoom = nullptr;
     std::array<ui::Button*, 8> m_toolButtons{};
     ui::Widget* m_tileToolsDivider = nullptr;
+    ui::Widget* m_toolbar = nullptr;
+    ui::Label* m_hint = nullptr;
+    std::optional<std::pair<Vec2, float>> m_editorCamera;   // saved while playing
     SceneTool m_tool = SceneTool::Move;
 };
 

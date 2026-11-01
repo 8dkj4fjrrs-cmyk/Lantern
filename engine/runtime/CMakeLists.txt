@@ -18,7 +18,7 @@ target_include_directories(lantern_runtime
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 target_link_libraries(lantern_runtime
-    PUBLIC lantern::core lantern::scene lantern::assets lantern::ui
+    PUBLIC lantern::core lantern::scene lantern::assets lantern::gameplay lantern::ui
     PRIVATE ${_AX_CORE_LIB})
 
 lantern_set_warnings(lantern_runtime)

@@ -139,6 +139,10 @@ bool Widget::onKeyDown(Context&, const KeyEvent&)
 {
     return false;
 }
+bool Widget::onKeyUp(Context&, const KeyEvent&)
+{
+    return false;
+}
 bool Widget::onText(Context&, std::string_view)
 {
     return false;

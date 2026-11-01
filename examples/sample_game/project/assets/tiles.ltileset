@@ -1,0 +1,9 @@
+{
+  "format": "lantern.tileset",
+  "version": 1,
+  "image": "5a4d1e0000000001",
+  "tileSize": [16, 16],
+  "margin": 0,
+  "spacing": 0,
+  "solid": [3, 4, 6]
+}

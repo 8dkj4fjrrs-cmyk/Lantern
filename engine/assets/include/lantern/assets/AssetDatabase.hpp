@@ -34,13 +34,15 @@ namespace lantern {
 
 class Scene;
 
-enum class AssetType { Image, Tileset, Audio, Font };
+enum class AssetType { Image, Tileset, Audio, Font, Scene };
 
-/// "image", "tileset", "audio", "font" (as in .meta files and PropertyOptions::assetType).
+/// "image", "tileset", "audio", "font", "scene" (as in .meta files and PropertyOptions::assetType).
 std::string_view assetTypeName(AssetType type);
 std::optional<AssetType> assetTypeFromName(std::string_view name);
 /// The type of asset a file name's extension stands for, if Lantern supports it:
-/// .png .jpg .jpeg (Image), .ltileset (Tileset), .wav .ogg .mp3 (Audio), .ttf .otf (Font).
+/// .png .jpg .jpeg (Image), .ltileset (Tileset), .wav .ogg .mp3 (Audio), .ttf .otf (Font),
+/// .lscene (Scene: scenes have IDs too, so gameplay can say "go to that scene"
+/// and keep working when the scene file is renamed).
 std::optional<AssetType> assetTypeForPath(const std::filesystem::path& path);
 
 /// How an image is smoothed when it is drawn larger or smaller than its size.

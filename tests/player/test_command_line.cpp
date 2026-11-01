@@ -92,3 +92,17 @@ TEST_CASE("A project or a scene can be chosen, not both", "[player][cli]")
     CHECK_FALSE(both.ok());
     CHECK(both.error.find("not both") != std::string::npos);
 }
+
+TEST_CASE("Held keys and fixed steps for gameplay tests", "[player][cli]")
+{
+    const ParseResult r = parse({"--hold", "Right", "--hold", "space", "--fixed-step"});
+    REQUIRE(r.ok());
+    CHECK(r.options.heldKeys == std::vector<lantern::Key>{lantern::Key::Right, lantern::Key::Space});
+    CHECK(r.options.fixedStep);
+
+    const ParseResult bad = parse({"--hold", "Rigth"});
+    CHECK_FALSE(bad.ok());
+    CHECK(bad.error.find("Rigth") != std::string::npos);
+    CHECK(lantern::player::keyFromName("left shift") == lantern::Key::LeftShift);
+    CHECK_FALSE(lantern::player::keyFromName("Unknown"));
+}

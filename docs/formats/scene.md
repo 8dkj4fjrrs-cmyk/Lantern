@@ -159,12 +159,30 @@ the map is one line of the file and a small change gives a small diff.
 (blocks movement) and 0 (gap). A cell blocks movement if it is painted
 solid, or if a visible layer has a tile there that the tileset marks solid.
 
-Gameplay components arrive in Milestone 5.
+**`lantern.Collider`**: a box for collision, centred on the entity (moved
+by `offset`), in the entity's own coordinates (so scaled with it). Used by
+gameplay code ([gameplay guide](../gameplay.md)).
+
+| Key | Type | Default |
+|---|---|---|
+| `size` | `[width, height]`, not negative | `[32, 32]` |
+| `offset` | `[x, y]` from the entity's centre | `[0, 0]` |
+| `solid` | `true`: blocks movement; `false`: an area gameplay notices (a door, a pick-up) | `true` |
+
+**Behaviours** (gameplay code from a game module) are stored like any other
+component: their `type` is the ID their module chose (e.g.
+`"sample.PlayerController"`) and their keys are their properties. A scene
+opened by a program that does not have the module keeps such components
+exactly as they are and writes them back unchanged.
+
+```json
+{ "type": "sample.SceneDoor", "scene": "5a4d1e0000000005" }
+```
 
 ## Asset IDs (`.meta` files)
 
-Every image, tileset, sound and font in a project has a small file beside
-it holding its permanent ID:
+Every image, tileset, sound, font and scene in a project has a small file
+beside it holding its permanent ID:
 
 ```
 assets/hero.png
@@ -176,7 +194,7 @@ assets/hero.png.meta    {"format": "lantern.asset", "version": 1,
 | Key | Meaning |
 |---|---|
 | `id` | The asset's permanent ID: 16 hex digits. Scenes refer to assets by this ID. |
-| `type` | `"image"`, `"tileset"`, `"audio"` or `"font"` (from the file extension). |
+| `type` | `"image"`, `"tileset"`, `"audio"`, `"font"` or `"scene"` (from the file extension). |
 | `filter` | Images: `"pixel"` (hard pixel edges, for pixel art) or `"smooth"`. |
 
 Keep each `.meta` file next to its asset when moving files outside the
@@ -184,7 +202,11 @@ editor; renaming or moving inside the editor does this for you. A file
 without one gets a new ID automatically (references to an old ID then show
 as missing). A copied file *and* `.meta` is noticed and the copy gets a new
 ID. Supported files: PNG and JPEG images, `.ltileset` tilesets, WAV, OGG and
-MP3 sounds, TTF and OTF fonts.
+MP3 sounds, TTF and OTF fonts, and `.lscene` scenes (scenes have IDs so that
+gameplay can refer to them, e.g. a door leading to another scene; the
+project's `startScene` stays a path). Files written by Lantern 0.4 have no
+`"scene"` type; they simply gain `.meta` files for their scenes when opened
+with 0.5.
 
 ## Tilesets (`.ltileset`)
 

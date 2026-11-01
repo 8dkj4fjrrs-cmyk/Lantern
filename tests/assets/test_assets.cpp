@@ -80,8 +80,17 @@ TEST_CASE("Importing copies the file, writes a .meta with an ID and reads the im
     CHECK(db.find(*photo)->filter == TextureFilter::Smooth);
     CHECK(db.find(*photo)->image->width == 300);
 
-    CHECK_FALSE(db.import(kData / "test_card.lscene", "assets", &error).has_value());
+    std::ofstream(project.path / "notes.txt") << "not an asset";
+    CHECK_FALSE(db.import(project.path / "notes.txt", "assets", &error).has_value());
     CHECK(error.find("not a supported asset") != std::string::npos);
+
+    // Scenes are assets too (so gameplay can refer to them by ID).
+    const auto scene = db.import(kData / "test_card.lscene", "scenes");
+    REQUIRE(scene.has_value());
+    CHECK(db.find(*scene)->type == AssetType::Scene);
+    CHECK(db.find(*scene)->isUsable());
+    CHECK(assetTypeForPath("levels/cave.lscene") == AssetType::Scene);
+    CHECK(assetTypeFromName("scene") == AssetType::Scene);
 }
 
 TEST_CASE("IDs survive a restart and a move; copies get new IDs", "[assets]")

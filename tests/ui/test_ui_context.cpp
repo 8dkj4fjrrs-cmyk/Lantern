@@ -39,6 +39,11 @@ public:
         keys.push_back(e.key);
         return handlesKeys;
     }
+    bool onKeyUp(Context&, const KeyEvent& e) override
+    {
+        released.push_back(e.key);
+        return handlesKeys;
+    }
     bool onText(Context&, std::string_view t) override
     {
         text += t;
@@ -60,6 +65,7 @@ public:
     int lastClickCount = 0;
     Vec2 lastMove;
     std::vector<Key> keys;
+    std::vector<Key> released;
     std::string text;
     float scrolled = 0.0f;
 };
@@ -281,4 +287,18 @@ TEST_CASE("Rendering produces a draw list covering the viewport", "[ui][render]"
     const DrawList& draw = f.ctx.render();
     REQUIRE_FALSE(draw.commands().empty());
     CHECK(draw.commands()[0].clip == Rect{0, 0, 400, 300});
+}
+
+TEST_CASE("Key releases go to the focused widget", "[ui][input]")
+{
+    Fixture f;
+    f.ctx.keyUp(Key::A, {});   // nothing focused: nobody hears it
+    f.click({20, 20});
+    REQUIRE(f.ctx.focused() == f.a);
+    f.ctx.keyDown(Key::Right, {});
+    f.ctx.keyUp(Key::Right, {});
+    f.ctx.keyDown(Key::LeftShift, {});
+    CHECK(f.a->keys == std::vector<Key>{Key::Right, Key::LeftShift});
+    CHECK(f.a->released == std::vector<Key>{Key::Right});
+    CHECK(f.b->released.empty());
 }

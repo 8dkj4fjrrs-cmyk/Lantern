@@ -21,7 +21,32 @@ std::optional<T> parseNumber(std::string_view text, T minimum, T maximum)
     return value;
 }
 
+bool equalsIgnoringCase(std::string_view a, std::string_view b)
+{
+    if (a.size() != b.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        const auto lower = [](char c) { return c >= 'A' && c <= 'Z' ? static_cast<char>(c - 'A' + 'a') : c; };
+        if (lower(a[i]) != lower(b[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace
+
+std::optional<Key> keyFromName(std::string_view name)
+{
+    for (int i = 1; i < static_cast<int>(Key::Count); ++i) {
+        const Key key = static_cast<Key>(i);
+        if (equalsIgnoringCase(keyName(key), name)) {
+            return key;
+        }
+    }
+    return std::nullopt;
+}
 
 ParseResult parseCommandLine(std::span<const std::string_view> args)
 {
@@ -48,6 +73,18 @@ ParseResult parseCommandLine(std::span<const std::string_view> args)
             opt.showVersion = true;
         } else if (arg == "--no-stats") {
             opt.showStats = false;
+        } else if (arg == "--fixed-step") {
+            opt.fixedStep = true;
+        } else if (arg == "--hold") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            const auto key = keyFromName(value);
+            if (!key) {
+                result.error = "--hold needs a key name such as Right, Space or W, got '" + std::string(value) + "'.";
+                return result;
+            }
+            opt.heldKeys.push_back(*key);
         } else if (arg == "--title") {
             if (!nextValue(value)) {
                 return result;
@@ -118,6 +155,8 @@ std::string helpText()
            "  --no-stats         Hide the frame-rate overlay\n"
            "  --frames N         Quit automatically after N frames (used by tests)\n"
            "  --screenshot FILE  Save the last frame as a PNG (needs --frames)\n"
+           "  --hold KEY         Hold a key down for the whole run, e.g. Right (tests)\n"
+           "  --fixed-step       Count every frame as 1/60 s, for repeatable runs (tests)\n"
            "\n"
            "Press Escape or close the window to quit.\n";
 }

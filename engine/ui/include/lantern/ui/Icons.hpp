@@ -23,6 +23,9 @@ enum class Icon {
     Warning,       // triangle with "!"
     Error,         // filled circle with a cross
     Play,          // start the game
+    Stop,          // filled square: stop the game
+    Pause,         // two bars: pause the game
+    Step,          // a bar and a triangle: advance one frame
     Refresh,       // circular arrow: reload
     Send,          // paper plane: build / publish
     Folder,        // a folder

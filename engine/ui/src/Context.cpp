@@ -464,9 +464,16 @@ void Context::keyDown(Key key, Modifiers modifiers, bool repeat)
     runPosted();
 }
 
-void Context::keyUp(Key, Modifiers modifiers)
+void Context::keyUp(Key key, Modifiers modifiers)
 {
     m_modifiers = modifiers;
+    const KeyEvent event{key, modifiers, false};
+    for (Widget* w = m_focused; w != nullptr; w = w->parent()) {
+        if (w->isEnabled() && w->onKeyUp(*this, event)) {
+            break;
+        }
+    }
+    runPosted();
 }
 
 void Context::textInput(char32_t codepoint)

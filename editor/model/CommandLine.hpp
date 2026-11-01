@@ -26,6 +26,8 @@ struct EditorOptions {
 
     /// Ignore the saved panel layout and start with the default one.
     bool resetLayout = false;
+    /// Start playing the opened scene straight away (used by tests).
+    bool play = false;
 
     std::uint64_t maxFrames = 0;   // 0 = until closed
     std::string screenshotPath;    // empty = none

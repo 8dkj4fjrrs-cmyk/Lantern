@@ -3,6 +3,8 @@
 #include "../model/EditorPaths.hpp"
 
 #include "lantern/core/Version.hpp"
+#include "lantern/gameplay/GameModule.hpp"
+#include "lantern/scene/SceneFile.hpp"
 #include "lantern/ui/Context.hpp"
 #include "lantern/ui/widgets/Basic.hpp"
 #include "lantern/ui/widgets/Box.hpp"
@@ -93,6 +95,12 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
     , m_options(std::move(options))
     , m_document(std::make_unique<SceneDocument>(makeStartScene()))
 {
+    // The game's behaviours (linked game modules) join Lantern's components:
+    // the Inspector can add them, scenes using them load, play mode runs them.
+    registerGameModules(m_registry, m_engine.logger());
+    for (std::string_view module : linkedGameModules()) {
+        m_engine.logger().info(kCategory, "Game module: " + std::string(module));
+    }
 }
 
 ui::DockLayout EditorApp::defaultLayout()
@@ -363,7 +371,128 @@ void EditorApp::showImportDialog()
 
 bool EditorApp::execute(std::unique_ptr<Command> command)
 {
+    if (m_game) {
+        refuseEditWhilePlaying();
+        return false;
+    }
     return m_document->execute(std::move(command));
+}
+
+void EditorApp::undo()
+{
+    if (m_game) {
+        refuseEditWhilePlaying();
+        return;
+    }
+    m_document->undo();
+}
+
+void EditorApp::redo()
+{
+    if (m_game) {
+        refuseEditWhilePlaying();
+        return;
+    }
+    m_document->redo();
+}
+
+void EditorApp::refuseEditWhilePlaying()
+{
+    if (!m_editRefused) {
+        m_editRefused = true;
+        log().warning(kCategory, "The scene cannot be changed while the game is playing. Stop the game (■) to edit.");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Play mode
+// ---------------------------------------------------------------------------
+void EditorApp::play()
+{
+    if (m_game) {
+        return;
+    }
+    m_document->history().breakMerge();
+    m_game = std::make_unique<Game>(m_engine.logger(), m_assetDb.get(),
+                                    [this](AssetId id, std::string& error) { return loadSceneForGame(id, error); });
+    m_game->start(m_document->scene());
+    m_paused = false;
+    m_stepPending = false;
+    m_editRefused = false;
+    m_lastFrameTime = -1.0;
+    log().info(kCategory, "Playing '" + m_document->scene().name()
+                              + "'. The game gets the keyboard while the Scene view is focused; stop with ■ or "
+                              + ui::primaryShortcutLabel(m_ui->platform(), "P") + ".");
+    showPanel(kViewportPanel);
+    if (m_viewport != nullptr) {
+        m_viewport->focusView();
+    }
+}
+
+void EditorApp::stopPlaying()
+{
+    if (!m_game) {
+        return;
+    }
+    const std::uint64_t frames = m_game->frameCount();
+    m_game.reset();   // the game's copy of the scene goes with it
+    m_paused = false;
+    log().info(kCategory, "Stopped playing after " + std::to_string(frames)
+                              + " frames. The scene is back as it was before playing.");
+}
+
+void EditorApp::togglePause()
+{
+    if (m_game) {
+        m_paused = !m_paused;
+        log().info(kCategory, m_paused ? "Paused." : "Resumed.");
+    }
+}
+
+void EditorApp::stepFrame()
+{
+    if (m_game) {
+        m_paused = true;
+        m_stepPending = true;
+    }
+}
+
+void EditorApp::updateGame(UiFrame& frame)
+{
+    if (!m_game) {
+        return;
+    }
+    const double now = frame.ui().time();
+    const float dt = m_lastFrameTime < 0.0 ? 1.0f / 60.0f : static_cast<float>(now - m_lastFrameTime);
+    m_lastFrameTime = now;
+    if (!m_paused) {
+        m_game->update(dt);
+    } else if (m_stepPending) {
+        m_stepPending = false;
+        m_game->update(1.0f / 60.0f);
+    }
+}
+
+std::optional<Scene> EditorApp::loadSceneForGame(AssetId id, std::string& error)
+{
+    const AssetRecord* record = m_assetDb ? m_assetDb->find(id) : nullptr;
+    if (record == nullptr || record->type != AssetType::Scene) {
+        error = "it is not a scene of this project";
+        return std::nullopt;
+    }
+    const std::filesystem::path path = m_assetDb->absolutePath(*record);
+    // The scene being edited: play it as it is now, unsaved changes included.
+    std::error_code ec;
+    if (!m_document->isUntitled() && std::filesystem::equivalent(path, m_document->path(), ec)) {
+        return m_document->scene();
+    }
+    SceneLoadResult loaded = loadSceneFile(path, m_registry);
+    reportIssues(path, loaded.issues);
+    if (!loaded.ok()) {
+        error = record->path + " could not be read";
+        return std::nullopt;
+    }
+    return std::move(*loaded.scene);
 }
 
 void EditorApp::endEdit()
@@ -509,6 +638,7 @@ void EditorApp::reportIssues(const std::filesystem::path& file, const std::vecto
 
 void EditorApp::setDocument(std::unique_ptr<SceneDocument> document)
 {
+    stopPlaying();   // the game was playing the scene being replaced
     m_document = std::move(document);
     m_document->history().setAssets(m_assetDb.get());   // for undoable asset changes
     ++m_documentGeneration;
@@ -697,6 +827,7 @@ bool EditorApp::openProjectFolder(const std::filesystem::path& folder, bool repo
     }
     m_project = std::move(*project);
     m_state.addRecentProject(m_project->folder().string());
+    stopPlaying();   // the game uses the old project's assets
     if (m_assetDb) {
         m_retiredAssetDbs.push_back(std::move(m_assetDb)); // the runtime may still draw from it this frame
     }
@@ -941,14 +1072,14 @@ void EditorApp::buildMenus(ui::Widget& root)
                       ui::MenuItem::divider(),
                       menuItem("Quit Lantern Editor", key("Q"), [this] { closeRequested(); })}});
 
-    ui::MenuItem undo = menuItem("Undo", key("Z"), [this] { m_document->undo(); },
+    ui::MenuItem undo = menuItem("Undo", key("Z"), [this] { this->undo(); },
                                  [this] { return m_document->history().canUndo(); });
     undo.dynamicLabel = [this] {
         const std::string what = m_document->history().undoLabel();
         return what.empty() ? std::string("Undo") : "Undo " + what;
     };
     ui::MenuItem redo = menuItem("Redo", platform.macConventions ? "⇧⌘Z" : "Ctrl+Y",
-                                 [this] { m_document->redo(); }, [this] { return m_document->history().canRedo(); });
+                                 [this] { this->redo(); }, [this] { return m_document->history().canRedo(); });
     redo.dynamicLabel = [this] {
         const std::string what = m_document->history().redoLabel();
         return what.empty() ? std::string("Redo") : "Redo " + what;
@@ -985,6 +1116,16 @@ void EditorApp::buildMenus(ui::Widget& root)
         log().info(kCategory, "Panel layout reset.");
     }));
     menuBar.addMenu({"View", std::move(view)});
+
+    ui::MenuItem playItem = menuItem("Play", key("P"), [this] { m_game ? stopPlaying() : play(); });
+    playItem.dynamicLabel = [this] { return m_game ? std::string("Stop") : std::string("Play"); };
+    ui::MenuItem pauseItem = menuItem("Pause", platform.macConventions ? "⇧⌘P" : "Ctrl+Shift+P",
+                                      [this] { togglePause(); }, [this] { return m_game != nullptr; });
+    pauseItem.dynamicLabel = [this] { return m_paused && m_game ? std::string("Resume") : std::string("Pause"); };
+    menuBar.addMenu({"Game",
+                     {std::move(playItem), std::move(pauseItem),
+                      menuItem("Step One Frame", platform.macConventions ? "⌥⌘P" : "Ctrl+Alt+P",
+                               [this] { stepFrame(); }, [this] { return m_game != nullptr; })}});
     menuBar.addMenu({"Help", {menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
 }
 
@@ -1002,8 +1143,8 @@ void EditorApp::buildToolbar(ui::Widget& root)
     small(addToolbarButton(toolbar, ui::Icon::Save, "", "Save scene (" + ui::primaryShortcutLabel(platform, "S") + ")",
                            [this] { saveScene(); }));
     small(addToolbarButton(toolbar, ui::Icon::Undo, "", "Undo (" + ui::primaryShortcutLabel(platform, "Z") + ")",
-                           [this] { m_document->undo(); }));
-    small(addToolbarButton(toolbar, ui::Icon::Redo, "", "Redo", [this] { m_document->redo(); }));
+                           [this] { undo(); }));
+    small(addToolbarButton(toolbar, ui::Icon::Redo, "", "Redo", [this] { redo(); }));
     toolbar.emplace<ui::Spacer>();
 
     auto& scene = toolbar.emplace<ui::ChoiceField>();
@@ -1019,10 +1160,17 @@ void EditorApp::buildToolbar(ui::Widget& root)
         }
     });
     m_sceneChoice = &scene;
-    small(addToolbarButton(toolbar, ui::Icon::Play, "",
-                           std::string("Play the game in the editor. ") + kComingWithPlayMode, nullptr));
-    small(addToolbarButton(toolbar, ui::Icon::Refresh, "", "Revert the scene to its saved version",
-                           [this] { reloadScene(); }));
+    m_playButton = &addToolbarButton(toolbar, ui::Icon::Play, "", "", [this] { m_game ? stopPlaying() : play(); });
+    small(*m_playButton);
+    m_pauseButton = &addToolbarButton(toolbar, ui::Icon::Pause, "",
+                                      "Pause or resume the game (" + std::string(platform.macConventions ? "⇧⌘P" : "Ctrl+Shift+P") + ")",
+                                      [this] { togglePause(); });
+    small(*m_pauseButton);
+    m_stepButton = &addToolbarButton(toolbar, ui::Icon::Step, "", "Pause and run one frame", [this] { stepFrame(); });
+    small(*m_stepButton);
+    m_revertButton = &addToolbarButton(toolbar, ui::Icon::Refresh, "", "Revert the scene to its saved version",
+                                       [this] { reloadScene(); });
+    small(*m_revertButton);
     toolbar.emplace<ui::Spacer>();
     addToolbarButton(toolbar, ui::Icon::Send, "Build", kComingWithBuilds, nullptr);
     small(addToolbarButton(toolbar, ui::Icon::Folder, "", "Show the project folder", [this] {
@@ -1042,9 +1190,14 @@ void EditorApp::addShortcuts()
     m_ui->addShortcut(ui::Key::S, primary, [this] { saveScene(); });
     m_ui->addShortcut(ui::Key::S, primaryShift, [this] { saveSceneAs(); });
     m_ui->addShortcut(ui::Key::N, primary, [this] { newScene(); });
-    m_ui->addShortcut(ui::Key::Z, primary, [this] { m_document->undo(); });
-    m_ui->addShortcut(ui::Key::Z, primaryShift, [this] { m_document->redo(); });
-    m_ui->addShortcut(ui::Key::Y, primary, [this] { m_document->redo(); });
+    m_ui->addShortcut(ui::Key::Z, primary, [this] { undo(); });
+    m_ui->addShortcut(ui::Key::Z, primaryShift, [this] { redo(); });
+    m_ui->addShortcut(ui::Key::Y, primary, [this] { redo(); });
+    m_ui->addShortcut(ui::Key::P, primary, [this] { m_game ? stopPlaying() : play(); });
+    m_ui->addShortcut(ui::Key::P, primaryShift, [this] { togglePause(); });
+    ui::Modifiers primaryAlt = primary;
+    primaryAlt.alt = true;
+    m_ui->addShortcut(ui::Key::P, primaryAlt, [this] { stepFrame(); });
     m_ui->addShortcut(ui::Key::D, primary, [this] { duplicateSelection(); });
     m_ui->addShortcut(ui::Key::F2, {}, [this] { renameSelection(); });
 
@@ -1234,6 +1387,9 @@ void EditorApp::setupUi(UiFrame& frame)
     restoreLayout();
     m_layoutDirty = false;
     openInitialContent();
+    if (m_options.play) {
+        play();
+    }
     // Files dragged from Finder / Explorer onto the window are imported.
     frame.setDropHandler([this](const std::vector<std::filesystem::path>& files) { importFiles(files); });
 }
@@ -1279,11 +1435,23 @@ void EditorApp::updateUi(UiFrame& frame)
         frame.setAssets(m_runtimeAssets);
     }
     m_retiredAssetDbs.clear(); // the runtime no longer uses them
-    // Show the open document's scene (it changes when another scene is opened).
-    if (m_shownScene != m_document->sharedScene()) {
-        m_shownScene = m_document->sharedScene();
+    // Run the game (if playing), then show its scene; otherwise show the
+    // open document's scene (it changes when another scene is opened).
+    updateGame(frame);
+    const std::shared_ptr<const Scene> show = m_game ? m_game->sharedScene() : m_document->sharedScene();
+    if (m_shownScene != show) {
+        m_shownScene = show;
         frame.showScene(m_shownScene);
     }
+    const ui::Platform& platform = frame.ui().platform();
+    m_playButton->setIcon(m_game ? ui::Icon::Stop : ui::Icon::Play);
+    m_playButton->setToggled(m_game != nullptr);
+    m_playButton->setTooltip(std::string(m_game ? "Stop the game and return to editing" : "Play the scene in the Scene view")
+                             + " (" + ui::primaryShortcutLabel(platform, "P") + ")");
+    m_pauseButton->setEnabled(m_game != nullptr);
+    m_pauseButton->setToggled(isPaused());
+    m_stepButton->setEnabled(m_game != nullptr);
+    m_revertButton->setEnabled(m_game == nullptr);
     m_viewport->update(frame);
     m_hierarchy->update(frame);
     m_assets->update(frame);
@@ -1305,6 +1473,7 @@ void EditorApp::updateUi(UiFrame& frame)
 
 void EditorApp::shutdownUi(UiFrame& /*frame*/)
 {
+    stopPlaying();
     saveLayout();
     m_state.panels.viewport = m_dock->isOpen(kViewportPanel);
     m_state.panels.hierarchy = m_dock->isOpen(kHierarchyPanel);
@@ -1324,6 +1493,10 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_inspector = nullptr;
     m_consolePanel = nullptr;
     m_sceneChoice = nullptr;
+    m_playButton = nullptr;
+    m_pauseButton = nullptr;
+    m_stepButton = nullptr;
+    m_revertButton = nullptr;
     m_statusFps = nullptr;
     m_statusCounts = {};
 }

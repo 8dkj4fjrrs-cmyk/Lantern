@@ -94,8 +94,20 @@ public:
 
     /// Increases with every change.
     std::uint64_t revision() const noexcept { return m_revision; }
+    /// Increases with every change except moving, rotating or scaling
+    /// (Transform changes). When only revision() went up, everything is
+    /// where it was, just placed differently: the renderer then moves its
+    /// nodes instead of building them again, which matters when a game moves
+    /// things every frame.
+    std::uint64_t contentRevision() const noexcept { return m_contentRevision; }
     /// Call after changing components directly (not through Scene's methods).
-    void markChanged() noexcept { ++m_revision; }
+    void markChanged() noexcept
+    {
+        ++m_revision;
+        ++m_contentRevision;
+    }
+    /// Call after changing only Transforms directly.
+    void markMoved() noexcept { ++m_revision; }
 
     // --- Reading --------------------------------------------------------------------------
     std::size_t size() const noexcept { return m_entities.size(); }
@@ -129,6 +141,15 @@ public:
 
     /// Sets a component property (the value is coerced, see PropertyInfo::coerce).
     bool setProperty(EntityId id, std::string_view componentType, std::string_view key, const PropertyValue& value);
+    /// A component to change directly, e.g. by gameplay code; null if the
+    /// entity or component is missing. Counts as a change (for a Transform,
+    /// as a move only), so take it again for each frame's changes.
+    Component* editComponent(EntityId id, std::string_view componentType);
+    template <class T>
+    T* edit(EntityId id)
+    {
+        return static_cast<T*>(editComponent(id, T::componentType().id));
+    }
     /// Changes a component in ways properties cannot express (e.g. painting
     /// tiles). `change` returns true if it changed anything.
     bool modifyComponent(EntityId id, std::string_view componentType, const std::function<bool(Component&)>& change);
@@ -173,6 +194,7 @@ private:
     std::vector<EntityId> m_roots;
     EntityIdGenerator m_ids;
     std::uint64_t m_revision = 1;
+    std::uint64_t m_contentRevision = 1;
 };
 
 /// The scene a new Lantern project starts with: a lantern glowing in the dark,

@@ -44,6 +44,7 @@ Scene::Scene(const Scene& other)
     , m_roots(other.m_roots)
     , m_ids(other.m_ids)
     , m_revision(other.m_revision)
+    , m_contentRevision(other.m_contentRevision)
 {
     for (const auto& [id, entity] : other.m_entities) {
         auto copy = std::make_unique<Entity>();
@@ -71,7 +72,7 @@ Scene& Scene::operator=(const Scene& other)
 void Scene::setName(std::string name)
 {
     m_name = std::move(name);
-    ++m_revision;
+    markChanged();
 }
 
 // --- Reading ---------------------------------------------------------------------------
@@ -183,7 +184,7 @@ Entity* Scene::create(std::string name, EntityId parent, std::optional<std::size
     m_entities.emplace(id, std::move(entity));
     const std::size_t at = std::min(index.value_or(siblings->size()), siblings->size());
     siblings->insert(siblings->begin() + static_cast<std::ptrdiff_t>(at), id);
-    ++m_revision;
+    markChanged();
     return raw;
 }
 
@@ -210,7 +211,7 @@ bool Scene::remove(EntityId id)
         siblings->erase(std::remove(siblings->begin(), siblings->end(), id), siblings->end());
     }
     eraseSubtree(id);
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -221,7 +222,7 @@ bool Scene::rename(EntityId id, std::string name)
         return false;
     }
     e->m_name = std::move(name);
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -232,7 +233,7 @@ bool Scene::setActive(EntityId id, bool active)
         return false;
     }
     e->m_active = active;
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -253,7 +254,7 @@ bool Scene::move(EntityId id, EntityId newParent, std::size_t index)
     e->m_parent = newParent;
     const std::size_t at = std::min(index, target->size());
     target->insert(target->begin() + static_cast<std::ptrdiff_t>(at), id);
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -267,8 +268,27 @@ bool Scene::setProperty(EntityId id, std::string_view componentType, std::string
     if (c == nullptr || !c->set(key, value)) {
         return false;
     }
-    ++m_revision;
+    if (componentType == Transform::componentType().id) {
+        markMoved();   // only where things are: the renderer can just move nodes
+    } else {
+        markChanged();
+    }
     return true;
+}
+
+Component* Scene::editComponent(EntityId id, std::string_view componentType)
+{
+    Entity* e = findMutable(id);
+    Component* c = e != nullptr ? e->component(componentType) : nullptr;
+    if (c == nullptr) {
+        return nullptr;
+    }
+    if (componentType == Transform::componentType().id) {
+        markMoved();
+    } else {
+        markChanged();
+    }
+    return c;
 }
 
 bool Scene::modifyComponent(EntityId id, std::string_view componentType,
@@ -279,7 +299,7 @@ bool Scene::modifyComponent(EntityId id, std::string_view componentType,
     if (c == nullptr || !change(*c)) {
         return false;
     }
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -298,7 +318,7 @@ Component* Scene::addComponent(EntityId id, std::unique_ptr<Component> component
     Component* raw = component.get();
     const std::size_t at = std::min(index.value_or(e->m_components.size()), e->m_components.size());
     e->m_components.insert(e->m_components.begin() + static_cast<std::ptrdiff_t>(at), std::move(component));
-    ++m_revision;
+    markChanged();
     return raw;
 }
 
@@ -320,7 +340,7 @@ std::unique_ptr<Component> Scene::removeComponent(EntityId id, std::string_view 
         }
         std::unique_ptr<Component> removed = std::move(*it);
         e->m_components.erase(it);
-        ++m_revision;
+        markChanged();
         return removed;
     }
     return nullptr;
@@ -404,7 +424,7 @@ bool Scene::restore(const EntitySnapshot& snapshot, EntityId parent, std::size_t
         const std::size_t at = i == 0 ? std::min(index, siblings->size()) : siblings->size();
         siblings->insert(siblings->begin() + static_cast<std::ptrdiff_t>(at), item.id);
     }
-    ++m_revision;
+    markChanged();
     return true;
 }
 
@@ -464,6 +484,11 @@ std::optional<LocalBounds> localBounds(const Entity& entity)
                           static_cast<float>(used->max.y + 1) * map->cellSize.y};
             return LocalBounds{{(lo.x + hi.x) * 0.5f, (lo.y + hi.y) * 0.5f}, hi - lo, false};
         }
+    }
+    if (const Collider* collider = entity.get<Collider>()) {
+        // An object with only a collider (e.g. a door area) can still be
+        // clicked and outlined in the editor.
+        return LocalBounds{collider->offset, collider->size, false};
     }
     return std::nullopt;
 }

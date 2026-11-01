@@ -89,6 +89,23 @@ Each preset builds into its own folder under `build/`. Downloaded Axmol lives
 in `external/` and is shared by all presets. To start completely fresh,
 delete `build/` (and `external/` to re-download Axmol).
 
+### Your game's code
+
+Gameplay is C++ in *game modules* built into the editor and the player
+([gameplay guide](gameplay.md)). Two options choose which:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `LANTERN_BUILD_SAMPLE_GAME` | `ON` | Build the sample game's module (`examples/sample_game`). |
+| `LANTERN_GAME_MODULE_DIRS` | empty | Folders with your own modules, separated by `;`. |
+
+```sh
+cmake --preset dev -DLANTERN_GAME_MODULE_DIRS="$HOME/Games/MyGame/code"
+cmake --build build/dev
+```
+
+After changing gameplay code, build again and restart the editor.
+
 ## Linux (Ubuntu 24.04)
 
 ```sh

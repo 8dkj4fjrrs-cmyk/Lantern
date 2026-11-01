@@ -5,10 +5,14 @@
 // Kept separate from main.cpp (and free of any backend code) so the parsing
 // rules can be unit-tested without opening a window.
 
+#include "lantern/gameplay/Input.hpp"
+
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace lantern::player {
 
@@ -30,7 +34,14 @@ struct PlayerOptions {
     std::uint64_t maxFrames = 0;  // 0 = until closed
     std::string screenshotPath;   // empty = none
     bool showStats = true;
+
+    // For automated tests of gameplay.
+    std::vector<Key> heldKeys;    // --hold: keys held down for the whole run
+    bool fixedStep = false;       // --fixed-step: every frame counts as 1/60 s
 };
+
+/// A key by its name ("Right", "space", "W"; see lantern::keyName), ignoring case.
+std::optional<Key> keyFromName(std::string_view name);
 
 /// Result of parsing: either options, or an error message for the user.
 struct ParseResult {

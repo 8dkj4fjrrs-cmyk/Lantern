@@ -134,13 +134,14 @@ std::string_view assetTypeName(AssetType type)
     case AssetType::Tileset: return "tileset";
     case AssetType::Audio: return "audio";
     case AssetType::Font: return "font";
+    case AssetType::Scene: return "scene";
     }
     return "image";
 }
 
 std::optional<AssetType> assetTypeFromName(std::string_view name)
 {
-    for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font}) {
+    for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font, AssetType::Scene}) {
         if (assetTypeName(t) == name) {
             return t;
         }
@@ -162,6 +163,9 @@ std::optional<AssetType> assetTypeForPath(const fs::path& path)
     }
     if (ext == ".ttf" || ext == ".otf") {
         return AssetType::Font;
+    }
+    if (ext == SceneFormat::kExtension) {
+        return AssetType::Scene;
     }
     return std::nullopt;
 }

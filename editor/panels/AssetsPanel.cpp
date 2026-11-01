@@ -216,6 +216,7 @@ void AssetsPanel::rebuild()
             case AssetType::Tileset: item.icon = ui::Icon::Grid; item.detail = "Tileset"; break;
             case AssetType::Audio: item.icon = ui::Icon::Dot; item.detail = "Sound"; break;
             case AssetType::Font: item.icon = ui::Icon::Dot; item.detail = "Font"; break;
+            case AssetType::Scene: item.icon = ui::Icon::Flame; item.detail = "Scene"; break;
             }
             if (!asset->isUsable()) {
                 item.icon = ui::Icon::Warning;

@@ -7,6 +7,7 @@
 
 #include "lantern/core/Engine.hpp"
 #include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/gameplay/Input.hpp"
 #include "lantern/scene/Scene.hpp"
 #include "lantern/ui/Context.hpp"
 
@@ -207,8 +208,14 @@ public:
     /// called before run(). The database must outlive the run.
     void setAssets(const AssetDatabase* assets);
 
-    /// Called once per frame before drawing. Game logic will hook in here.
+    /// Called once per frame before drawing: run the game here.
     void setFrameCallback(std::function<void(const FrameInfo&)> callback);
+
+    /// Reports the window's keyboard and mouse to `input` (e.g. a Game's
+    /// input), with the pointer in world coordinates. For games (no UI
+    /// layer); the editor feeds its play mode from its own UI instead.
+    /// Call before run(); `input` must outlive the run.
+    void setGameInput(Input* input);
 
     /// Statistics from the last completed run().
     const RunReport& lastRunReport() const noexcept;

@@ -31,6 +31,8 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
             opt.resetLayout = true;
         } else if (arg == "--no-project") {
             opt.noProject = true;
+        } else if (arg == "--play") {
+            opt.play = true;
         } else if (arg == "--project" || arg == "--new-project") {
             if (!nextValue(value)) {
                 return result;
@@ -94,6 +96,7 @@ std::string editorHelpText()
            "  --new-project FOLDER  Create a new project in FOLDER and open it\n"
            "  --no-project        Start without opening the last project\n"
            "  --reset-layout      Start with the default panel layout\n"
+           "  --play              Start playing the scene at once (tests)\n"
            "  --config-dir DIR    Keep preferences and layout in DIR instead of the\n"
            "                      per-user settings folder\n"
            "  --frames N          Quit automatically after N frames (used by tests)\n"

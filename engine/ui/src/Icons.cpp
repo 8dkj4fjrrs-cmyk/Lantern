@@ -149,6 +149,19 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
         draw.fillConvexPolygon(tri, color);
         break;
     }
+    case Icon::Stop:
+        draw.fillRoundedRect(Rect{g(3.6f, 3.6f).x, g(3.6f, 3.6f).y, 8.8f * u, 8.8f * u}, 1.0f * u, color);
+        break;
+    case Icon::Pause:
+        draw.fillRect(Rect{g(4.0f, 3.0f).x, g(4.0f, 3.0f).y, 2.8f * u, 10.0f * u}, color);
+        draw.fillRect(Rect{g(9.2f, 3.0f).x, g(9.2f, 3.0f).y, 2.8f * u, 10.0f * u}, color);
+        break;
+    case Icon::Step: {
+        const std::array<Vec2, 3> tri{g(3.0f, 3.0f), g(10.0f, 8.0f), g(3.0f, 13.0f)};
+        draw.fillConvexPolygon(tri, color);
+        draw.fillRect(Rect{g(10.8f, 3.0f).x, g(10.8f, 3.0f).y, 2.4f * u, 10.0f * u}, color);
+        break;
+    }
     case Icon::Refresh:
         ring(draw, c, 5.2f * u, color, w, -1.1f, 4.4f, false);
         arrowHead(draw, g(12.6f, 2.6f), Vec2{0.5f, -0.86f}, 3.2f * u, color);

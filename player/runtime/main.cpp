@@ -1,23 +1,47 @@
 // Lantern Player — runs a Lantern game in a window.
 //
-// Shows a Lantern scene: a project's start scene (--project), one scene file
-// (--scene), or Lantern's own start scene. Gameplay code arrives in
-// Milestone 5; for now the player draws the scene as it was saved.
+// Plays a Lantern scene: a project's start scene (--project), one scene file
+// (--scene), or Lantern's own start scene. The game's behaviours (C++ code
+// from the game modules linked into this program) run every frame; doors and
+// other gameplay can change to other scenes of the project.
 
 #include "CommandLine.hpp"
 
 #include "lantern/core/Engine.hpp"
 #include "lantern/core/Version.hpp"
+#include "lantern/gameplay/Game.hpp"
+#include "lantern/gameplay/GameModule.hpp"
 #include "lantern/runtime/Application.hpp"
 #include "lantern/scene/Project.hpp"
-
-#include <memory>
 #include "lantern/scene/SceneFile.hpp"
 
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <string_view>
 #include <vector>
+
+namespace {
+
+// Reads a scene file, reporting what it finds wrong to the log.
+std::optional<lantern::Scene> loadScene(const std::filesystem::path& path, const lantern::ComponentRegistry& registry,
+                                        const lantern::Logger& log)
+{
+    lantern::SceneLoadResult loaded = lantern::loadSceneFile(path, registry);
+    for (const lantern::FileIssue& issue : loaded.issues) {
+        if (issue.isError()) {
+            log.error("scene", issue.toString());
+        } else {
+            log.warning("scene", issue.toString());
+        }
+    }
+    if (!loaded.ok()) {
+        return std::nullopt;
+    }
+    return std::move(*loaded.scene);
+}
+
+} // namespace
 
 int main(int argc, char** argv)
 {
@@ -66,27 +90,23 @@ int main(int argc, char** argv)
             title = project->settings().name;
         }
     }
-    lantern::PresentationSettings presentation;
+    // The component types this game can use: Lantern's own, plus the
+    // behaviours of the game modules linked into the player.
+    lantern::ComponentRegistry registry = lantern::ComponentRegistry::withBuiltins();
+    lantern::registerGameModules(registry, engine.logger());
+
+    std::optional<lantern::Scene> firstScene;
     if (!scenePath.empty()) {
-        const lantern::ComponentRegistry registry = lantern::ComponentRegistry::withBuiltins();
-        lantern::SceneLoadResult loaded = lantern::loadSceneFile(scenePath, registry);
-        for (const lantern::FileIssue& issue : loaded.issues) {
-            if (issue.isError()) {
-                engine.logger().error("scene", issue.toString());
-            } else {
-                engine.logger().warning("scene", issue.toString());
-            }
-        }
-        if (!loaded.ok()) {
+        firstScene = loadScene(scenePath, registry, engine.logger());
+        if (!firstScene) {
             engine.logger().error("player", "Could not open the scene " + scenePath.string() + ".");
             return 1;
         }
-        engine.logger().info("player", "Playing scene '" + loaded.scene->name() + "' (" + scenePath.string() + ")");
-        presentation.scene = std::make_shared<const lantern::Scene>(std::move(*loaded.scene));
+        engine.logger().info("player", "Playing scene '" + firstScene->name() + "' (" + scenePath.string() + ")");
     }
 
-    // The project's images and tilesets: from --project, or the project
-    // folder the scene file is in (searching upwards for project.lantern).
+    // The project's images, tilesets and scenes: from --project, or the
+    // project folder the scene file is in (searching upwards for project.lantern).
     std::filesystem::path projectFolder = opt.projectPath;
     if (projectFolder.empty() && !scenePath.empty()) {
         std::error_code ec;
@@ -107,16 +127,52 @@ int main(int argc, char** argv)
         for (const lantern::FileIssue& issue : assets->refresh()) {
             engine.logger().warning("assets", issue.where + ": " + issue.message);
         }
-        if (presentation.scene != nullptr) {
-            for (const lantern::FileIssue& issue : lantern::checkAssetReferences(*presentation.scene, *assets)) {
+        if (firstScene) {
+            for (const lantern::FileIssue& issue : lantern::checkAssetReferences(*firstScene, *assets)) {
                 engine.logger().warning("assets", issue.where + ": " + issue.message);
             }
+        }
+    }
+
+    // The game: plays the scene, loading other scenes of the project when
+    // gameplay asks for them.
+    lantern::Game game(engine.logger(), assets.get(),
+                       [&](lantern::AssetId id, std::string& error) -> std::optional<lantern::Scene> {
+                           const lantern::AssetRecord* record = assets != nullptr ? assets->find(id) : nullptr;
+                           if (record == nullptr || record->type != lantern::AssetType::Scene) {
+                               error = "it is not a scene of this project";
+                               return std::nullopt;
+                           }
+                           auto scene = loadScene(assets->absolutePath(*record), registry, engine.logger());
+                           if (!scene) {
+                               error = record->path + " could not be read";
+                           }
+                           return scene;
+                       });
+    lantern::PresentationSettings presentation;
+    if (firstScene) {
+        game.start(*firstScene);
+        presentation.scene = game.sharedScene();
+        for (const lantern::Key key : opt.heldKeys) {
+            game.input().press(key);
         }
     }
 
     lantern::Application app(engine, {.title = title, .width = opt.width, .height = opt.height},
                              std::move(presentation));
     app.setAssets(assets.get());
+    if (game.isRunning()) {
+        app.setGameInput(&game.input());
+        std::shared_ptr<const lantern::Scene> shown = game.sharedScene();
+        app.setFrameCallback([&, shown](const lantern::FrameInfo& frame) mutable {
+            const float dt = opt.fixedStep ? 1.0f / 60.0f : static_cast<float>(frame.deltaSeconds);
+            game.update(dt);
+            if (game.sharedScene() != shown) {   // the game changed scene
+                shown = game.sharedScene();
+                app.showScene(shown);
+            }
+        });
+    }
     const lantern::Status runStatus = app.run({
         .maxFrames = opt.maxFrames,
         .screenshotPath = opt.screenshotPath,

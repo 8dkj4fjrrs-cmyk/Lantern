@@ -68,6 +68,14 @@ ui::Key toKey(int key)
     case GLFW_KEY_END: return ui::Key::End;
     case GLFW_KEY_PAGE_UP: return ui::Key::PageUp;
     case GLFW_KEY_PAGE_DOWN: return ui::Key::PageDown;
+    case GLFW_KEY_LEFT_SHIFT: return ui::Key::LeftShift;
+    case GLFW_KEY_RIGHT_SHIFT: return ui::Key::RightShift;
+    case GLFW_KEY_LEFT_CONTROL: return ui::Key::LeftControl;
+    case GLFW_KEY_RIGHT_CONTROL: return ui::Key::RightControl;
+    case GLFW_KEY_LEFT_ALT: return ui::Key::LeftAlt;
+    case GLFW_KEY_RIGHT_ALT: return ui::Key::RightAlt;
+    case GLFW_KEY_LEFT_SUPER: return ui::Key::LeftSuper;
+    case GLFW_KEY_RIGHT_SUPER: return ui::Key::RightSuper;
     default: return ui::Key::Unknown;
     }
 }

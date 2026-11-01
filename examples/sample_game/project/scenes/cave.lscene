@@ -1,0 +1,159 @@
+{
+  "format": "lantern.scene",
+  "version": 1,
+  "name": "Cave",
+  "entities": [
+    {
+      "id": "e17e000000000065",
+      "name": "Ground",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [2, 2]
+        },
+        {
+          "type": "lantern.Tilemap",
+          "tileset": "5a4d1e0000000003",
+          "cellSize": [16, 16],
+          "data": {
+            "layers": [
+              {
+                "name": "Ground",
+                "visible": true,
+                "rows": [
+                  [0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+                  [1, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [2, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [3, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [4, 0, 6, 5, 5, 5, 5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [5, 0, 6, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 6],
+                  [6, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [7, 0, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [8, 0, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [9, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [10, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [11, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [12, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [13, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [14, 0, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6],
+                  [15, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+                ]
+              }
+            ],
+            "solid": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000066",
+      "name": "Gem 4",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [720, 400],
+          "rotation": 45,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [14, 14],
+          "color": "#f7d65cff",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [14, 14],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "sample.Collectible",
+          "message": "Picked up the cave's gem"
+        },
+        {
+          "type": "sample.Spinner",
+          "speed": 90
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000067",
+      "name": "Door to Meadow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [16, 256],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [24, 64],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "sample.SceneDoor",
+          "scene": "5a4d1e0000000004"
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000068",
+      "name": "Player",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [112, 256],
+          "rotation": 0,
+          "scale": [2, 2]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "5a4d1e0000000002",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 6],
+          "offset": [0, -9],
+          "solid": true
+        },
+        {
+          "type": "sample.PlayerController",
+          "speed": 140
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000069",
+      "parent": "e17e000000000068",
+      "name": "Camera",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Camera",
+          "zoom": 1
+        }
+      ]
+    }
+  ]
+}

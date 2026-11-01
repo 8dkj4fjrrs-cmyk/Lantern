@@ -34,8 +34,18 @@ add_executable(lantern_tests
     scene/test_scene_file.cpp
     scene/test_project.cpp
     scene/test_tilemap.cpp
-    assets/test_assets.cpp)
-target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+    assets/test_assets.cpp
+    gameplay/test_input.cpp
+    gameplay/test_collision.cpp
+    gameplay/test_game.cpp)
+target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::gameplay lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+if(TARGET sample_game)
+    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp)
+    lantern_link_game_modules(lantern_tests MODULES sample_game)
+    target_compile_definitions(lantern_tests PRIVATE LANTERN_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project")
+else()
+    lantern_link_game_modules(lantern_tests MODULES)
+endif()
 target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)
@@ -104,6 +114,20 @@ set_tests_properties(player.screenshot PROPERTIES
     FAIL_REGULAR_EXPRESSION "\\[ERROR\\]"
     TIMEOUT 60)
 
+if(TARGET sample_game)
+    # Gameplay end to end: the sample's player walks right (Right held, fixed
+    # 1/60 s frames so the run is the same every time) through the meadow's
+    # door into the cave.
+    add_test(NAME player.plays_sample_game
+        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --frames 800
+                --hold Right --fixed-step --no-stats
+                --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_sample_cave.png")
+    set_tests_properties(player.plays_sample_game PROPERTIES
+        PASS_REGULAR_EXPRESSION "Showing scene 'Meadow'.*Changed to scene 'Cave'.*Showing scene 'Cave'.*Screenshot saved"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        TIMEOUT 120)
+endif()
+
 if(TARGET lantern_editor)
     # Editor tests keep their settings in the build folder, never in your real
     # user settings.
@@ -152,6 +176,19 @@ if(TARGET lantern_editor)
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
         FIXTURES_REQUIRED editor_project
         TIMEOUT 60)
+
+    if(TARGET sample_game)
+        # Play mode: the editor opens the sample, plays it, and the game's
+        # behaviours run without errors; quitting stops the game.
+        add_test(NAME editor.plays_sample_game
+            COMMAND lantern_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-play-settings"
+                    --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --play --frames 60
+                    --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_playing.png")
+        set_tests_properties(editor.plays_sample_game PROPERTIES
+            PASS_REGULAR_EXPRESSION "Game module: sample_game.*Playing 'Meadow'.*Screenshot saved.*Stopped playing after [0-9]+ frames"
+            FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+            TIMEOUT 60)
+    endif()
 
     add_test(NAME player.plays_project
         COMMAND lantern_player --project "${_project}" --frames 30)

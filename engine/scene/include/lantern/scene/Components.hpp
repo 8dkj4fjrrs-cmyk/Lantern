@@ -64,6 +64,19 @@ struct Camera : ComponentBase<Camera> {
     static const ComponentType& componentType();
 };
 
+/// A box used for collision, centred on the entity (moved by `offset`), in
+/// the entity's own coordinates. Gameplay code asks about colliders through
+/// lantern::Game: solid colliders block movement (Game::move), and every
+/// collider is found by overlap queries (e.g. a door or a pickup area).
+/// Rotated objects use the box that encloses their rotated collider.
+struct Collider : ComponentBase<Collider> {
+    Vec2 size{32.0f, 32.0f};
+    Vec2 offset;
+    bool solid = true;
+
+    static const ComponentType& componentType();
+};
+
 /// A cell of a tilemap: column x (to the right) and row y (upwards), from
 /// the cell whose bottom-left corner is at the entity's position.
 struct TileCell {

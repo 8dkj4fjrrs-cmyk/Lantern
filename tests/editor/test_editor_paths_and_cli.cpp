@@ -92,3 +92,11 @@ TEST_CASE("New projects are suggested in Documents/Lantern Projects", "[editor][
                                                                 / "Lantern Projects");
     CHECK(defaultProjectsDirectory(HostOs::Linux, fakeEnvironment({})).empty());
 }
+
+TEST_CASE("Editor command line: play straight away", "[editor][cli]")
+{
+    CHECK_FALSE(parse({}).options.play);
+    const auto r = parse({"--project", "Game", "--play", "--frames", "60"});
+    REQUIRE(r.ok());
+    CHECK(r.options.play);
+}

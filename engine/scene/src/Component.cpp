@@ -140,6 +140,7 @@ ComponentRegistry ComponentRegistry::withBuiltins()
     static_cast<void>(registry.add(Sprite::componentType()));
     static_cast<void>(registry.add(Camera::componentType()));
     static_cast<void>(registry.add(Tilemap::componentType()));
+    static_cast<void>(registry.add(Collider::componentType()));
     return registry;
 }
 
@@ -222,6 +223,21 @@ const ComponentType& Camera::componentType()
                          "active Camera in the scene is used. Rotation and scale of the object are ignored.")
             .property("zoom", "Zoom", &Camera::zoom,
                       {.min = 0.05f, .max = 20.0f, .step = 0.1f, .help = "2 shows everything twice as large."})
+            .build();
+    return type;
+}
+
+const ComponentType& Collider::componentType()
+{
+    static const ComponentType type =
+        ComponentTypeBuilder<Collider>("lantern.Collider", "Collider")
+            .description("A box for collision. Solid colliders block movement; any collider can be found by "
+                         "gameplay code, e.g. to notice the player walking through a door.")
+            .property("size", "Size", &Collider::size, {.min = 0.0f, .help = "The box's width and height, in points."})
+            .property("offset", "Offset", &Collider::offset,
+                      {.help = "Moves the box away from the object's centre, e.g. to cover only a character's feet."})
+            .property("solid", "Solid", &Collider::solid,
+                      {.help = "Solid colliders block movement. Turn off for areas such as doors and triggers."})
             .build();
     return type;
 }

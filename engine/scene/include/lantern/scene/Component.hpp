@@ -76,6 +76,7 @@ public:
     std::string id;            // e.g. "lantern.Shape"; saved in files
     std::string displayName;   // e.g. "Shape"
     std::string description;   // one or two sentences for the editor
+    std::string category;      // groups the editor's Add Component menu, e.g. "Gameplay"; empty = Lantern's own
     bool required = false;     // every entity has one; it cannot be removed
     std::vector<PropertyInfo> properties;
     std::function<std::unique_ptr<Component>()> create;
@@ -187,6 +188,13 @@ public:
         return *this;
     }
 
+    /// Groups the type in the editor's Add Component menu (e.g. "Gameplay").
+    ComponentTypeBuilder& category(std::string name)
+    {
+        m_type.category = std::move(name);
+        return *this;
+    }
+
     ComponentTypeBuilder& required()
     {
         m_type.required = true;
@@ -229,7 +237,7 @@ private:
 };
 
 /// The component types a program knows about. Built-in types are always
-/// there; game modules add their own (Milestone 5).
+/// there; game modules add their own behaviours (see lantern/gameplay).
 class ComponentRegistry {
 public:
     /// A registry with Lantern's built-in components (Transform, Shape).

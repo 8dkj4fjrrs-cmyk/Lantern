@@ -1,8 +1,8 @@
 # Lantern Editor guide
 
-> Milestone 4: projects and scenes with sprites and tilemaps, imported
-> assets, a free Scene view camera and transform tools. Gameplay code and
-> Play mode arrive in Milestone 5.
+> Milestone 5: projects and scenes with sprites, tilemaps and colliders,
+> imported assets, a free Scene view camera and transform tools, C++
+> gameplay behaviours, and Play mode.
 
 ## Starting the editor
 
@@ -22,8 +22,8 @@ The editor uses the classic game-editor arrangement:
 
 ```
 +------------------------------------------------------------------+
-| File  Edit  View  Help                                           |
-| [save][undo][redo]    [main v] [>] [revert]          [Build] [F] |  main toolbar
+| File  Edit  View  Game  Help                                     |
+| [save][undo][redo]  [main v] [>][||][>|] [revert]    [Build] [F] |  main toolbar
 +-----------+-------------------------------------+----------------+
 | Hierarchy |  Scene                              |  Inspector     |
 |           |                                     |                |
@@ -43,10 +43,10 @@ The editor uses the classic game-editor arrangement:
 | **Assets Preview** | The folder chosen in Assets, as thumbnails. Click to inspect, double-click to open, and drag an image or tileset into the Scene view to place it. |
 | **Tile Palette** | The selected tilemap's tileset: click a tile to paint with it. With **Edit solid tiles** on, click tiles to make them block movement. |
 | **Console** | Messages from the engine, the runtime and the editor, including any problems found when opening a scene. Filter by level or text, copy, clear. |
-| **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component; a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file; with an asset selected, its preview and settings (see [Assets](#assets)). |
+| **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component (your game's behaviours are listed under *Gameplay*); a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file; with an asset selected, its preview and settings (see [Assets](#assets)). |
 
-The toolbar's **Play** and **Build** buttons are greyed out: hover over one to
-see which milestone brings it.
+The toolbar's **Build** button is greyed out: hover over it to see which
+milestone brings it. ▶ ⏸ ⏭ play the game (see [Playing the game](#playing-the-game)).
 
 The status bar shows the frame rate, how many messages, warnings and errors
 the Console holds, and the Lantern version.
@@ -112,6 +112,35 @@ The tools (top left of the Scene view):
 | Rect | T | Drag a corner or edge of a shape or sprite to resize it. Shift keeps the proportions. |
 
 Every drag is one undo step.
+
+Colliders are drawn as outlines: green for solid ones (they block
+movement), blue for areas such as doors and pick-ups. Select an object that
+has only a collider by clicking inside its outline.
+
+## Playing the game
+
+Press ▶ in the toolbar (or **Game > Play**, ⌘P / Ctrl+P) to play the open
+scene. The game runs in the Scene view, seen through the game's camera;
+everything outside the player's view is dimmed and the view gets an amber
+border.
+
+- **Keyboard:** the game gets the keys while the Scene view has focus.
+  Click the game first if the view says so. ⌘/Ctrl shortcuts still go to
+  the editor.
+- **⏸ Pause** (⇧⌘P) freezes the game; press again to resume. **⏭ Step**
+  (⌥⌘P) pauses and runs exactly one frame, to watch something closely.
+- **■ Stop** (⌘P again) ends the game. The game always plays a *copy* of
+  the scene, so stopping brings back the scene exactly as it was before
+  playing, whatever the game did.
+- While playing, the scene cannot be edited (the Console says so if you
+  try). Saving still saves the scene as edited, not as played.
+- Errors from gameplay code appear in the Console. A behaviour that fails
+  is switched off until the next play; the rest of the game continues.
+- If the game changes scene (e.g. through a door), the next scene is
+  loaded from the project; the scene you are editing is used as it is now,
+  unsaved changes included.
+
+Gameplay is written in C++: see the [gameplay guide](gameplay.md).
 
 ## Tilemaps
 
@@ -193,6 +222,7 @@ The layout and which panels are open are remembered between sessions.
 | ⌘N | New scene |
 | ⌘Z / ⇧⌘Z (Ctrl+Z / Ctrl+Y) | Undo / Redo |
 | ⌘D | Duplicate the selected object |
+| ⌘P / ⇧⌘P / ⌥⌘P | Play or stop / Pause or resume / Step one frame |
 | W, E, R, T | Move, Rotate, Scale, Rect tool |
 | B, X, G, I | Brush, Eraser, Fill, Picker (with a tilemap selected) |
 | F | Frame the selected object in the Scene view |
@@ -229,6 +259,7 @@ On Windows and Linux, read Ctrl for ⌘ and Alt for ⌥.
 --new-project FOLDER  Create a new project in FOLDER and open it
 --no-project          Start without opening the last project
 --reset-layout        Start with the default panel layout
+--play                Start playing the opened scene at once (used by tests)
 --config-dir DIR      Keep settings in DIR instead (useful for testing)
 --frames N            Quit after N frames (used by automated tests)
 --screenshot FILE     Save the last frame as PNG (needs --frames)

@@ -88,6 +88,56 @@ ax::Mat4 viewTransform(Vec2 center, float scale, float width, float height)
     return m;
 }
 
+// Axmol's key codes as Lantern keys (game code never sees Axmol's).
+Key toLanternKey(ax::EventKeyboard::KeyCode code)
+{
+    using K = ax::EventKeyboard::KeyCode;
+    const int c = static_cast<int>(code);
+    // Letters, digits and F-keys are consecutive in both enums.
+    if (c >= static_cast<int>(K::KEY_A) && c <= static_cast<int>(K::KEY_Z)) {
+        return static_cast<Key>(static_cast<int>(Key::A) + (c - static_cast<int>(K::KEY_A)));
+    }
+    if (c >= static_cast<int>(K::KEY_CAPITAL_A) && c <= static_cast<int>(K::KEY_CAPITAL_Z)) {
+        return static_cast<Key>(static_cast<int>(Key::A) + (c - static_cast<int>(K::KEY_CAPITAL_A)));
+    }
+    if (c >= static_cast<int>(K::KEY_0) && c <= static_cast<int>(K::KEY_9)) {
+        return static_cast<Key>(static_cast<int>(Key::Num0) + (c - static_cast<int>(K::KEY_0)));
+    }
+    if (c >= static_cast<int>(K::KEY_F1) && c <= static_cast<int>(K::KEY_F12)) {
+        return static_cast<Key>(static_cast<int>(Key::F1) + (c - static_cast<int>(K::KEY_F1)));
+    }
+    switch (code) {
+    case K::KEY_SPACE: return Key::Space;
+    case K::KEY_ENTER:
+    case K::KEY_KP_ENTER:
+    case K::KEY_RETURN: return Key::Enter;
+    case K::KEY_ESCAPE: return Key::Escape;
+    case K::KEY_TAB: return Key::Tab;
+    case K::KEY_BACKSPACE: return Key::Backspace;
+    case K::KEY_LEFT_ARROW: return Key::Left;
+    case K::KEY_RIGHT_ARROW: return Key::Right;
+    case K::KEY_UP_ARROW: return Key::Up;
+    case K::KEY_DOWN_ARROW: return Key::Down;
+    case K::KEY_LEFT_SHIFT: return Key::LeftShift;
+    case K::KEY_RIGHT_SHIFT: return Key::RightShift;
+    case K::KEY_LEFT_CTRL: return Key::LeftControl;
+    case K::KEY_RIGHT_CTRL: return Key::RightControl;
+    case K::KEY_LEFT_ALT: return Key::LeftAlt;
+    case K::KEY_RIGHT_ALT: return Key::RightAlt;
+    default: return Key::Unknown;
+    }
+}
+
+std::optional<MouseButton> toLanternButton(ax::EventMouse::MouseButton button)
+{
+    switch (button) {
+    case ax::EventMouse::MouseButton::BUTTON_LEFT: return MouseButton::Left;
+    case ax::EventMouse::MouseButton::BUTTON_RIGHT: return MouseButton::Right;
+    case ax::EventMouse::MouseButton::BUTTON_MIDDLE: return MouseButton::Middle;
+    default: return std::nullopt;
+    }
+}
+
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -106,6 +156,7 @@ struct Application::Impl {
     PresentationSettings presentation;
     RunOptions options;
     std::function<void(const FrameInfo&)> frameCallback;
+    Input* gameInput = nullptr;   // filled from the window's keyboard and mouse (not owned)
     RunReport report;
 
     bool hasRun = false;
@@ -139,6 +190,7 @@ struct Application::Impl {
     void captureWorld(ax::Renderer* renderer);
     bool resizeWorldTexture(int width, int height);
     void applyGameCamera();
+    void listenForGameInput(ax::Scene& scene);
     void setAssets(const AssetDatabase* db)
     {
         assets = db;
@@ -257,6 +309,10 @@ bool Application::Impl::startWindow()
 
     director->runWithScene(scene);
 
+    if (gameInput != nullptr && !uiEnabled()) {
+        listenForGameInput(*scene);
+    }
+
     if (options.escapeQuits) {
         auto* keyboard = ax::EventListenerKeyboard::create();
         keyboard->onKeyPressed = [this](ax::EventKeyboard::KeyCode code, ax::Event*) {
@@ -364,6 +420,48 @@ void Application::Impl::applyGameCamera()
     const float zoom = view ? std::max(0.01f, view->zoom) : 1.0f;
     world->setScale(zoom);
     world->setPosition(w * 0.5f - center.x * zoom, h * 0.5f - center.y * zoom);
+}
+
+void Application::Impl::listenForGameInput(ax::Scene& scene)
+{
+    auto* dispatcher = ax::Director::getInstance()->getEventDispatcher();
+    auto* keyboard = ax::EventListenerKeyboard::create();
+    keyboard->onKeyPressed = [this](ax::EventKeyboard::KeyCode code, ax::Event*) { gameInput->press(toLanternKey(code)); };
+    keyboard->onKeyReleased = [this](ax::EventKeyboard::KeyCode code, ax::Event*) {
+        gameInput->release(toLanternKey(code));
+    };
+    dispatcher->addEventListenerWithSceneGraphPriority(keyboard, &scene);
+
+    // The pointer in world coordinates: the world node carries the camera,
+    // so converting into its space undoes the camera's move and zoom.
+    auto* mouse = ax::EventListenerMouse::create();
+    const auto track = [this](ax::EventMouse* event) {
+        if (world != nullptr) {
+            const ax::Vec2 p = world->convertToNodeSpace(event->getLocation());
+            gameInput->setPointer({p.x, p.y});
+        }
+    };
+    // Axmol's mouse callbacks return whether the event was used; returning
+    // false lets other listeners see it too.
+    mouse->onMouseMove = [track](ax::EventMouse* event) {
+        track(event);
+        return false;
+    };
+    mouse->onMouseDown = [this, track](ax::EventMouse* event) {
+        track(event);
+        if (const auto button = toLanternButton(event->getMouseButton())) {
+            gameInput->press(*button);
+        }
+        return false;
+    };
+    mouse->onMouseUp = [this, track](ax::EventMouse* event) {
+        track(event);
+        if (const auto button = toLanternButton(event->getMouseButton())) {
+            gameInput->release(*button);
+        }
+        return false;
+    };
+    dispatcher->addEventListenerWithSceneGraphPriority(mouse, &scene);
 }
 
 void Application::Impl::startUi(ax::Scene& scene, ax::RenderView& view)
@@ -641,6 +739,11 @@ void Application::setAssets(const AssetDatabase* assets)
 void Application::requestQuit()
 {
     m_impl->quitRequested = true;
+}
+
+void Application::setGameInput(Input* input)
+{
+    m_impl->gameInput = input;
 }
 
 void Application::setFrameCallback(std::function<void(const FrameInfo&)> callback)

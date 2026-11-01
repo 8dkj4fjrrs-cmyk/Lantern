@@ -102,6 +102,9 @@ public:
     virtual void onPointerLeave(Context& ctx);
     virtual bool onScroll(Context& ctx, const ScrollEvent& event);
     virtual bool onKeyDown(Context& ctx, const KeyEvent& event);
+    /// A key was let go (sent to the focused widget, then its parents, like
+    /// onKeyDown). Most widgets only need onKeyDown; games need both.
+    virtual bool onKeyUp(Context& ctx, const KeyEvent& event);
     /// Typed text (already UTF-8), sent to the focused widget.
     virtual bool onText(Context& ctx, std::string_view text);
     virtual void onFocusChanged(Context& ctx, bool focused);

@@ -43,6 +43,7 @@ add_executable(lantern_editor
 # so editor code cannot reach into the backend by accident.
 target_link_libraries(lantern_editor PRIVATE lantern_editor_core lantern::runtime)
 lantern_set_warnings(lantern_editor)
+lantern_link_game_modules(lantern_editor)   # behaviours for the Inspector and play mode
 
 # Before Milestone 2 the editor was a single file at bin/lantern_editor; it is
 # now a folder (program + shaders). Remove the old file from existing builds.

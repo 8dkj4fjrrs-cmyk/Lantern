@@ -88,8 +88,34 @@ void SceneRenderer::update()
     const bool assetsChanged =
         m_assets != m_builtAssets || (m_assets != nullptr && m_assets->revision() != m_builtAssetsRevision);
     const bool texturesChanged = m_textures != nullptr && m_textures->generation() != m_builtTextures;
-    if (sceneChanged || assetsChanged || texturesChanged) {
+    if (!sceneChanged && !assetsChanged && !texturesChanged) {
+        return;
+    }
+    const bool onlyMoved = !assetsChanged && !texturesChanged && m_scene.get() == m_builtScene && m_scene != nullptr
+                           && m_scene->contentRevision() == m_builtContentRevision;
+    if (onlyMoved) {
+        moveNodes();
+    } else {
         rebuild();
+    }
+}
+
+ax::Node* SceneRenderer::nodeFor(EntityId id) const
+{
+    const auto it = m_nodes.find(id);
+    return it != m_nodes.end() ? it->second : nullptr;
+}
+
+void SceneRenderer::moveNodes()
+{
+    m_builtRevision = m_scene->revision();
+    for (const auto& [id, node] : m_nodes) {
+        if (const Entity* entity = m_scene->find(id)) {
+            const Transform& t = entity->transform();
+            node->setPosition(t.position.x, t.position.y);
+            node->setRotation(t.rotation);
+            node->setScale(t.scale.x, t.scale.y);
+        }
     }
 }
 
@@ -181,12 +207,18 @@ ax::Node* SceneRenderer::makeTilemapNode(const Tilemap& map)
                 continue; // a tile number the tileset does not have (e.g. after changing the tile size)
             }
             const TileRect r = tileset->tileRect(tile, imageWidth);
+            // Take the tile from a hair inside its edges. At some zoom levels a
+            // screen pixel falls exactly on the border between two tiles of the
+            // image; without the inset it may pick up the neighbouring tile's
+            // colour, which shows as thin lines across the map ("bleeding").
+            constexpr float kInset = 0.02f;   // in image pixels: invisible, but enough
+            const float w = static_cast<float>(r.width) - 2.0f * kInset;
+            const float h = static_cast<float>(r.height) - 2.0f * kInset;
             auto* sprite = ax::Sprite::createWithTexture(
-                texture, ax::Rect(static_cast<float>(r.x), static_cast<float>(r.y), static_cast<float>(r.width),
-                                  static_cast<float>(r.height)));
+                texture, ax::Rect(static_cast<float>(r.x) + kInset, static_cast<float>(r.y) + kInset, w, h));
             sprite->setAnchorPoint(ax::Vec2::ZERO);
             sprite->setPosition(static_cast<float>(cell.x) * cw, static_cast<float>(cell.y) * ch);
-            sprite->setScale(cw / static_cast<float>(r.width), ch / static_cast<float>(r.height));
+            sprite->setScale(cw / w, ch / h);
             layerNode->addChild(sprite);
         }
     }
@@ -199,8 +231,10 @@ void SceneRenderer::rebuild()
         m_container->removeFromParent();
         m_container = nullptr;
     }
+    m_nodes.clear();
     m_builtScene = m_scene.get();
     m_builtRevision = m_scene != nullptr ? m_scene->revision() : 0;
+    m_builtContentRevision = m_scene != nullptr ? m_scene->contentRevision() : 0;
     m_builtAssets = m_assets;
     m_builtAssetsRevision = m_assets != nullptr ? m_assets->revision() : 0;
     ++m_builds;
@@ -213,7 +247,7 @@ void SceneRenderer::rebuild()
     m_container->setName(m_scene->name());
     m_root.addChild(m_container);
 
-    std::unordered_map<EntityId, ax::Node*> nodes;
+    auto& nodes = m_nodes;
     m_scene->forEach([&](const Entity& entity, int) {
         auto* node = ax::Node::create();
         node->setName(entity.name());
