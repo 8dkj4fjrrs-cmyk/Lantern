@@ -510,6 +510,7 @@ void EditorApp::reportIssues(const std::filesystem::path& file, const std::vecto
 void EditorApp::setDocument(std::unique_ptr<SceneDocument> document)
 {
     m_document = std::move(document);
+    m_document->history().setAssets(m_assetDb.get());   // for undoable asset changes
     ++m_documentGeneration;
     m_state.selectedNodeId = 0;
     if (!m_document->isUntitled()) {
@@ -700,6 +701,9 @@ bool EditorApp::openProjectFolder(const std::filesystem::path& folder, bool repo
         m_retiredAssetDbs.push_back(std::move(m_assetDb)); // the runtime may still draw from it this frame
     }
     m_assetDb = std::make_unique<AssetDatabase>(m_project->folder());
+    if (m_document) {
+        m_document->history().setAssets(m_assetDb.get());   // never leave undo steps pointing at the old one
+    }
     m_selectedAsset = {};
     m_importFolder = std::string(AssetFormat::kDefaultFolder);
     refreshAssets();

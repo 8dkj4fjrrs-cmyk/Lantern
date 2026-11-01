@@ -8,7 +8,11 @@ namespace lantern::editor {
 
 bool CommandStack::execute(Scene& scene, std::unique_ptr<Command> command)
 {
-    if (command == nullptr || !command->apply(scene)) {
+    if (command == nullptr) {
+        return false;
+    }
+    command->useAssets(m_assets);
+    if (!command->apply(scene)) {
         return false;
     }
     // Merge into the newest command if it is still the newest thing that
@@ -75,6 +79,31 @@ bool CommandStack::redo(Scene& scene)
     ++m_position;
     m_mergeAllowed = false;
     return true;
+}
+
+bool CommandStack::isClean() const noexcept
+{
+    if (!m_cleanPosition) {
+        return false;
+    }
+    // Clean if every command between the save point and now changed only
+    // assets (which were saved to their own files when they ran).
+    const std::size_t from = std::min(*m_cleanPosition, m_position);
+    const std::size_t to = std::max(*m_cleanPosition, m_position);
+    for (std::size_t i = from; i < to; ++i) {
+        if (m_commands[i]->changesScene()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void CommandStack::setAssets(AssetDatabase* assets) noexcept
+{
+    m_assets = assets;
+    for (const auto& command : m_commands) {
+        command->useAssets(assets);
+    }
 }
 
 void CommandStack::markClean() noexcept
@@ -541,6 +570,18 @@ void CommandGroup::revert(Scene& scene)
     }
 }
 
+bool CommandGroup::changesScene() const
+{
+    return std::any_of(m_commands.begin(), m_commands.end(), [](const auto& c) { return c->changesScene(); });
+}
+
+void CommandGroup::useAssets(AssetDatabase* assets)
+{
+    for (const auto& c : m_commands) {
+        c->useAssets(assets);
+    }
+}
+
 bool RenameScene::apply(Scene& scene)
 {
     if (scene.name() == m_name) {
@@ -583,6 +624,63 @@ bool MoveEntity::apply(Scene& scene)
 void MoveEntity::revert(Scene& scene)
 {
     scene.move(m_id, m_oldParent, m_oldIndex);
+}
+
+// --- Asset commands ---------------------------------------------------------------------------
+
+ChangeTileset::ChangeTileset(AssetId tileset, Tileset definition, std::string label)
+    : m_id(tileset)
+    , m_after(std::move(definition))
+    , m_label(std::move(label))
+{
+}
+
+bool ChangeTileset::apply(Scene&)
+{
+    const AssetRecord* asset = m_assets != nullptr ? m_assets->find(m_id) : nullptr;
+    if (asset == nullptr || !asset->tileset || *asset->tileset == m_after) {
+        return false;
+    }
+    const Tileset before = *asset->tileset;   // copy: saving updates the record
+    if (!m_assets->saveTileset(m_id, m_after)) {
+        return false;
+    }
+    m_before = before;
+    return true;
+}
+
+void ChangeTileset::revert(Scene&)
+{
+    if (m_assets != nullptr && m_before) {
+        (void)m_assets->saveTileset(m_id, *m_before);   // the file may have gone; nothing else to undo
+    }
+}
+
+ChangeImageFilter::ChangeImageFilter(AssetId image, TextureFilter filter)
+    : m_id(image)
+    , m_after(filter)
+{
+}
+
+bool ChangeImageFilter::apply(Scene&)
+{
+    const AssetRecord* asset = m_assets != nullptr ? m_assets->find(m_id) : nullptr;
+    if (asset == nullptr || asset->type != AssetType::Image || asset->filter == m_after) {
+        return false;
+    }
+    const TextureFilter before = asset->filter;
+    if (!m_assets->setFilter(m_id, m_after)) {
+        return false;
+    }
+    m_before = before;
+    return true;
+}
+
+void ChangeImageFilter::revert(Scene&)
+{
+    if (m_assets != nullptr) {
+        (void)m_assets->setFilter(m_id, m_before);
+    }
 }
 
 } // namespace lantern::editor

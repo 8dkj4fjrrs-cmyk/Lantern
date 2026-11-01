@@ -77,9 +77,20 @@ size and position for Rect), `PaintTiles` (a stroke's cells, merged into
 one step), `ReplaceComponent` (layer changes). Each drag or stroke is one
 undo step.
 
-Tileset edits (tile size, solid tiles) are saved straight to the tileset
-asset and are not part of a scene's undo history, because tilesets are
-shared between scenes.
+Asset edits (a tileset's tile size or solid tiles, an image's filtering)
+are commands too (`ChangeTileset`, `ChangeImageFilter`), in the open
+scene's history, so Ctrl+Z works the same everywhere. They write the
+asset's file at once, because assets are shared between scenes, and so
+they do not mark the scene as unsaved (`Command::changesScene()` is false,
+and `CommandStack::isClean()` skips them). The stack hands them the
+project's `AssetDatabase` (`setAssets`), and is told again when the project
+changes, so an undo step never holds a pointer to a database that has gone;
+without one, asset steps do nothing.
+
+*Revised 2026-11-01:* at first, tileset edits were saved without undo. The
+alternative considered was Apply/Revert buttons for asset settings (as in
+Cocos Creator); undo was chosen because marking solid tiles feels like
+painting.
 
 ### 5. Import without native file dialogs
 

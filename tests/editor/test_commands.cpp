@@ -322,3 +322,104 @@ TEST_CASE("Replacing a component (e.g. adding a layer) undoes in place", "[edito
     f.doc.redo();
     CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 2);
 }
+
+// --- Asset commands ------------------------------------------------------------------------------
+
+namespace {
+
+// A project folder with hero.png imported and a tileset made from it.
+struct AssetFixture {
+    std::filesystem::path folder = std::filesystem::temp_directory_path() / "lantern-tests" / "asset-commands";
+    std::unique_ptr<AssetDatabase> db;
+    AssetId image;
+    AssetId tileset;
+
+    AssetFixture()
+    {
+        std::filesystem::remove_all(folder);
+        std::filesystem::create_directories(folder);
+        db = std::make_unique<AssetDatabase>(folder);
+        image = *db->import(std::filesystem::path(LANTERN_TEST_DATA_DIR) / "hero.png", "assets");
+        tileset = *db->createTileset(image, {8.0f, 8.0f}, "hero");
+    }
+    ~AssetFixture() { std::filesystem::remove_all(folder); }
+
+    Tileset current() const { return *db->find(tileset)->tileset; }
+    Tileset onDisk() const
+    {
+        AssetDatabase fresh(folder, AssetDatabase::Access::ReadOnly);
+        fresh.refresh();
+        return *fresh.find(tileset)->tileset;
+    }
+};
+
+} // namespace
+
+TEST_CASE("Tileset changes are undoable and saved to the tileset file", "[editor][commands][assets]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+
+    Tileset solid = a.current();
+    solid.solid.insert(3);
+    REQUIRE(f.doc.execute(std::make_unique<ChangeTileset>(a.tileset, solid, "Make Tile Solid")));
+    CHECK(f.doc.history().undoLabel() == "Make Tile Solid");
+    CHECK(a.current().isSolid(3));
+    CHECK(a.onDisk().isSolid(3));              // written straight away
+    CHECK_FALSE(f.doc.isDirty());              // the scene itself has nothing to save
+
+    REQUIRE(f.doc.undo());
+    CHECK_FALSE(a.current().isSolid(3));
+    CHECK_FALSE(a.onDisk().isSolid(3));
+    REQUIRE(f.doc.redo());
+    CHECK(a.onDisk().isSolid(3));
+
+    // Setting what is already there is not an undo step.
+    CHECK_FALSE(f.doc.execute(std::make_unique<ChangeTileset>(a.tileset, solid, "Again")));
+}
+
+TEST_CASE("Asset changes mixed with scene edits keep the unsaved state right", "[editor][commands][assets]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+
+    f.make("Player");                          // a scene change: unsaved
+    CHECK(f.doc.isDirty());
+    f.doc.history().markClean();               // "saved"
+    Tileset bigger = a.current();
+    bigger.tileWidth = 12;
+    REQUIRE(f.doc.execute(std::make_unique<ChangeTileset>(a.tileset, bigger, "Change Tile Size")));
+    REQUIRE(f.doc.execute(std::make_unique<ChangeImageFilter>(a.image, TextureFilter::Smooth)));
+    CHECK_FALSE(f.doc.isDirty());
+
+    // Undoing both asset steps and then the creation does change the scene.
+    REQUIRE(f.doc.undo());
+    REQUIRE(f.doc.undo());
+    CHECK(a.current().tileWidth == 8);
+    CHECK(a.db->find(a.image)->filter == TextureFilter::Pixel);   // small images import as pixel art
+    CHECK_FALSE(f.doc.isDirty());
+    REQUIRE(f.doc.undo());
+    CHECK(f.doc.isDirty());
+}
+
+TEST_CASE("Asset undo steps never use a database that has gone", "[editor][commands][assets]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+    Tileset solid = a.current();
+    solid.solid.insert(1);
+    REQUIRE(f.doc.execute(std::make_unique<ChangeTileset>(a.tileset, solid, "Make Tile Solid")));
+
+    // The project closes: the editor tells the history, then the database goes.
+    f.doc.history().setAssets(nullptr);
+    a.db.reset();
+    CHECK(f.doc.undo());                       // does nothing to any file, and does not crash
+    CHECK_FALSE(f.doc.redo());                 // cannot be redone without the project
+    CHECK_FALSE(f.doc.history().canRedo());
+
+    // Without assets, asset commands do nothing.
+    CHECK_FALSE(f.doc.execute(std::make_unique<ChangeImageFilter>(a.image, TextureFilter::Smooth)));
+}

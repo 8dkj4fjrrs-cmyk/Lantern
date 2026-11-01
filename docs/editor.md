@@ -144,13 +144,19 @@ tilemap is selected:
 - cells painted on the **Collision** layer: click its brush button in the
   Inspector and paint with the Brush (Eraser removes).
 
-Each stroke, fill, and layer change is one undo step.
+Each stroke, fill, and layer change is one undo step. So is marking a tile
+solid or changing a tileset's settings.
 
 ## Editing
 
 Every change can be undone: **Edit > Undo** (⌘Z) and **Redo** (⇧⌘Z). The
 Edit menu names what will be undone, e.g. "Undo Rename". The undo history
 belongs to the open scene; opening another scene starts a new one.
+
+Changes to assets in the Inspector or Tile Palette (an image's filtering, a
+tileset's tile size or solid tiles) are undoable too, but they are saved to
+the asset's file at once, so they do not count as unsaved scene changes.
+Undoing one changes the file back, for every scene that uses it.
 
 | To | Do |
 |---|---|

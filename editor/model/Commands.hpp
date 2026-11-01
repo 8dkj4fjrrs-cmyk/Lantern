@@ -12,7 +12,15 @@
 //
 // Commands store IDs and copies of values, never pointers into the scene, so
 // they stay valid however the scene changes between undo and redo.
+//
+// A few commands change project assets instead of the scene (a tileset's
+// solid tiles, an image's filtering). They sit in the same history, so Ctrl+Z
+// works the same everywhere, but they write the asset's file straight away
+// and do not count as unsaved scene changes. The stack tells them which
+// AssetDatabase to use (setAssets), because the database is replaced when
+// another project opens and a command must never keep a stale pointer.
 
+#include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/scene/Scene.hpp"
 
 #include <cstddef>
@@ -38,6 +46,13 @@ public:
     /// a number). Called on the newest command with the next one; return true
     /// after taking over `next`'s result.
     virtual bool mergeWith(const Command& /*next*/) { return false; }
+
+    /// False for commands that change only project assets (saved straight
+    /// away), so they do not make the scene count as unsaved.
+    virtual bool changesScene() const { return true; }
+    /// Gives asset commands the project's assets (null when there are none).
+    /// Called by CommandStack before apply, and again whenever the project changes.
+    virtual void useAssets(AssetDatabase* /*assets*/) {}
 };
 
 class CommandStack {
@@ -59,8 +74,13 @@ public:
 
     /// Remembers the current point as "saved".
     void markClean() noexcept;
-    /// True if the scene is as it was when last saved (or opened).
-    bool isClean() const noexcept { return m_cleanPosition && *m_cleanPosition == m_position; }
+    /// True if the scene is as it was when last saved (or opened). Asset-only
+    /// commands between that point and now do not count.
+    bool isClean() const noexcept;
+
+    /// The project's assets, for commands that change them (null: none). Set
+    /// it again whenever the project's AssetDatabase is replaced or destroyed.
+    void setAssets(AssetDatabase* assets) noexcept;
 
     /// Stops the next execute() from merging into the newest command (e.g.
     /// when a drag ends, or the user moves to another field).
@@ -75,6 +95,7 @@ private:
     std::optional<std::size_t> m_cleanPosition = 0;
     std::size_t m_limit;
     bool m_mergeAllowed = false;
+    AssetDatabase* m_assets = nullptr;
 };
 
 // --- The editor's commands -------------------------------------------------------------------
@@ -285,6 +306,8 @@ public:
     /// Applies the parts that make a change; succeeds if any did.
     bool apply(Scene& scene) override;
     void revert(Scene& scene) override;
+    bool changesScene() const override;
+    void useAssets(AssetDatabase* assets) override;
 
 private:
     std::string m_label;
@@ -322,6 +345,45 @@ private:
     EntityId m_oldParent;
     std::size_t m_oldIndex = 0;
     std::string m_name;
+};
+
+// --- Asset commands (change project files, not the scene) ---------------------------------------
+
+/// Replaces a tileset's definition (tile size, margin, spacing, image, solid
+/// tiles) and saves the .ltileset file. Undo saves the previous definition.
+/// Every scene using the tileset sees the change, since they share the file.
+class ChangeTileset final : public Command {
+public:
+    ChangeTileset(AssetId tileset, Tileset definition, std::string label);
+    std::string label() const override { return m_label; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool changesScene() const override { return false; }
+    void useAssets(AssetDatabase* assets) override { m_assets = assets; }
+
+private:
+    AssetId m_id;
+    Tileset m_after;
+    std::optional<Tileset> m_before;   // read on apply
+    std::string m_label;
+    AssetDatabase* m_assets = nullptr; // set by CommandStack; not owned
+};
+
+/// Changes how an image is filtered (Smooth or Pixel art), saved in its .meta.
+class ChangeImageFilter final : public Command {
+public:
+    ChangeImageFilter(AssetId image, TextureFilter filter);
+    std::string label() const override { return "Change Filtering"; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool changesScene() const override { return false; }
+    void useAssets(AssetDatabase* assets) override { m_assets = assets; }
+
+private:
+    AssetId m_id;
+    TextureFilter m_after;
+    TextureFilter m_before = TextureFilter::Smooth;
+    AssetDatabase* m_assets = nullptr;
 };
 
 } // namespace lantern::editor

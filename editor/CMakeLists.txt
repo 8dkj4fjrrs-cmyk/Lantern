@@ -20,7 +20,7 @@ add_library(lantern_editor_core STATIC
     model/Preferences.cpp
     model/SceneDocument.cpp)
 target_include_directories(lantern_editor_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/model")
-target_link_libraries(lantern_editor_core PUBLIC lantern::core lantern::scene)
+target_link_libraries(lantern_editor_core PUBLIC lantern::core lantern::scene lantern::assets)
 lantern_set_warnings(lantern_editor_core)
 
 if(NOT TARGET lantern_runtime)

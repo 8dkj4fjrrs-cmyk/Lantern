@@ -741,11 +741,15 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         filter.setTooltip("How the image looks when drawn larger or smaller: Smooth blends pixels (photos, "
                           "painted art), Pixel art keeps crisp square pixels.");
         filter.setOnChoose([this, id](int index) {
-            if (AssetDatabase* assets = m_editor.assets()) {
-                if (const Status s = assets->setFilter(id, index == 1 ? TextureFilter::Pixel : TextureFilter::Smooth);
-                    !s) {
-                    m_editor.showMessage("Could Not Save", s.message);
-                }
+            const TextureFilter chosen = index == 1 ? TextureFilter::Pixel : TextureFilter::Smooth;
+            const AssetRecord* a = m_editor.assets() != nullptr ? m_editor.assets()->find(id) : nullptr;
+            if (a == nullptr || a->filter == chosen) {
+                return;
+            }
+            const std::string path = a->path;
+            m_editor.endEdit();
+            if (!m_editor.execute(std::make_unique<ChangeImageFilter>(id, chosen))) {
+                m_editor.showMessage("Could Not Save", "Lantern could not write " + path + ".meta. Check that it is not read-only.");
             }
         });
     }
@@ -753,8 +757,8 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     if (asset.type == AssetType::Tileset && asset.tileset) {
         const Tileset tileset = *asset.tileset;
         const AssetRecord* image = db != nullptr ? db->find(tileset.image) : nullptr;
-        // Edits to the definition are saved straight away (tilesets are files of their own).
-        auto save = [this, id](const std::function<void(Tileset&)>& change) {
+        // Edits are saved to the tileset file straight away, as undoable steps.
+        auto save = [this, id](const char* label, const std::function<void(Tileset&)>& change) {
             AssetDatabase* assets = m_editor.assets();
             const AssetRecord* a = assets != nullptr ? assets->find(id) : nullptr;
             if (a == nullptr || !a->tileset) {
@@ -765,8 +769,11 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             if (t == *a->tileset) {
                 return;
             }
-            if (const Status s = assets->saveTileset(id, t); !s) {
-                m_editor.showMessage("Could Not Save the Tileset", s.message);
+            const std::string path = a->path;
+            m_editor.endEdit();
+            if (!m_editor.execute(std::make_unique<ChangeTileset>(id, std::move(t), label))) {
+                m_editor.showMessage("Could Not Save the Tileset",
+                                     "Lantern could not write " + path + ". Check that the file is not read-only.");
             }
         };
         auto& imageRow = info.body().emplace<ui::PropertyField>("Image");
@@ -787,13 +794,14 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         imageField.setSelected(selected);
         imageField.setOnChoose([save, ids](int index) {
             const AssetId chosen = index > 0 ? (*ids)[static_cast<std::size_t>(index)] : AssetId{};
-            save([chosen](Tileset& t) { t.image = chosen; });
+            save("Change Tileset Image", [chosen](Tileset& t) { t.image = chosen; });
         });
 
         const auto numberRow = [&](const char* label, const char* sx, const char* sy, int x, int y,
                                    std::function<void(Tileset&, int, int)> apply, const char* tip) {
             auto& r = info.body().emplace<ui::PropertyField>(label);
             r.setTooltip(tip);
+            const std::string undoLabel = std::string("Change ") + label;
             auto values = std::make_shared<std::pair<int, int>>(x, y);
             const auto make = [&](const char* suffix, bool first) -> ui::NumberField& {
                 auto& f = r.addValue(std::make_unique<ui::NumberField>());
@@ -804,8 +812,8 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
                 f.setOnValue([values, first](float v) {
                     (first ? values->first : values->second) = static_cast<int>(std::lround(v));
                 });
-                f.setOnEditEnd([save, values, apply] {
-                    save([&](Tileset& t) { apply(t, values->first, values->second); });
+                f.setOnEditEnd([save, values, apply, undoLabel] {
+                    save(undoLabel.c_str(), [&](Tileset& t) { apply(t, values->first, values->second); });
                 });
                 return f;
             };
@@ -831,7 +839,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
                 "How many tiles the image is cut into");
         }
         row("Solid Tiles", std::to_string(tileset.solid.size()),
-            "Tiles that block movement. Choose them in the Tile Palette with the Collision switch on.");
+            "Tiles that block movement. Choose them in the Tile Palette with \"Edit solid tiles\" on.");
     }
 
     // Where it is used.

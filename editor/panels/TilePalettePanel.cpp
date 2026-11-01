@@ -154,12 +154,16 @@ private:
             return;
         }
         Tileset changed = *asset->tileset;
-        if (!changed.solid.erase(tile)) {
+        const bool solid = changed.solid.erase(tile) == 0;
+        if (solid) {
             changed.solid.insert(tile);
         }
-        // The tileset is an asset of its own, saved straight away (not part of the scene's undo).
-        if (const Status s = db->saveTileset(m_tilesetId, changed); !s) {
-            m_editor.showMessage("Could Not Save the Tileset", s.message);
+        // Saved to the tileset file straight away, and undoable like any edit.
+        m_editor.endEdit();
+        if (!m_editor.execute(std::make_unique<ChangeTileset>(m_tilesetId, std::move(changed),
+                                                              solid ? "Make Tile Solid" : "Make Tile Not Solid"))) {
+            m_editor.showMessage("Could Not Save the Tileset",
+                                 "Lantern could not write " + asset->path + ". Check that the file is not read-only.");
         }
     }
 
