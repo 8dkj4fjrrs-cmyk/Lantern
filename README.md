@@ -24,6 +24,7 @@ cmake --workflow --preset dev
 Full instructions per platform: [docs/building.md](docs/building.md).
 Using the editor: [docs/editor.md](docs/editor.md).
 Writing gameplay in C++: [docs/gameplay.md](docs/gameplay.md).
+What comes next: [docs/roadmap.md](docs/roadmap.md).
 
 ## Repository layout
 
