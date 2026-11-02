@@ -77,7 +77,7 @@ AssetsPanel::AssetsPanel(EditorServices& editor)
     auto& toolbar = makePanelToolbar(*browser);
     ui::Button& plus = addToolButton(toolbar, ui::Icon::Plus, "Create", nullptr);
     plus.setEnabled(true);
-    plus.setTooltip("Create a scene, or import images, sounds and fonts");
+    plus.setTooltip("Create a scene, a dialogue, a quest or game variables, or import images, sounds and fonts");
     plus.setOnClick([this, &plus] {
         ui::MenuItem scene;
         scene.label = "New Scene";
@@ -85,7 +85,16 @@ AssetsPanel::AssetsPanel(EditorServices& editor)
         ui::MenuItem import;
         import.label = "Import Assets…";
         import.action = [this] { m_editor.showImportDialog(); };
-        openMenuAt(m_editor.ui(), plus.bounds(), {std::move(scene), ui::MenuItem::divider(), std::move(import)});
+        const auto content = [this](const char* label, AssetType type) {
+            ui::MenuItem item;
+            item.label = label;
+            item.action = [this, type] { m_editor.createContent(type); };
+            return item;
+        };
+        openMenuAt(m_editor.ui(), plus.bounds(),
+                   {std::move(scene), ui::MenuItem::divider(), content("New Dialogue", AssetType::Dialogue),
+                    content("New Quest", AssetType::Quest), content("New Variables", AssetType::Variables),
+                    ui::MenuItem::divider(), std::move(import)});
     });
     auto& search = toolbar.emplace<ui::TextField>("Search assets");
     search.setLeadingIcon(ui::Icon::Search);

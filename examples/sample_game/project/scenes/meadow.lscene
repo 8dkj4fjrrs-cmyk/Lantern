@@ -526,7 +526,7 @@
       "id": "e17e00000000000f",
       "parent": "e17e00000000000a",
       "name": "Dialogue Box",
-      "active": true,
+      "active": false,
       "components": [
         {
           "type": "lantern.Transform",

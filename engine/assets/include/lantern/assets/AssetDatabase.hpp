@@ -117,6 +117,17 @@ public:
     /// Saves a changed tileset definition.
     Status saveTileset(AssetId tileset, const Tileset& definition);
 
+    /// Creates a text asset (e.g. a new dialogue) as `folder`/<name><extension>
+    /// with `text` as its content, giving it a .meta and an ID. A file of the
+    /// same name gets a number added. `extension` must be a supported one.
+    std::optional<AssetId> createTextAsset(std::string_view folder, std::string_view name, std::string_view extension,
+                                           std::string_view text, std::string* error = nullptr);
+    /// Replaces a text asset's content (a content file, a tileset...). The
+    /// file is replaced safely (written aside, then renamed).
+    Status writeText(AssetId id, std::string_view text);
+    /// The current text of a text asset, read from disk.
+    std::optional<std::string> readText(AssetId id) const;
+
     /// Changes an image's filter (saved in its .meta).
     Status setFilter(AssetId id, TextureFilter filter);
     /// Renames or moves an asset (and its .meta) inside the project. The ID stays.

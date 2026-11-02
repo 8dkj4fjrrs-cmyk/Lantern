@@ -43,7 +43,8 @@ add_executable(lantern_tests
     content/test_content_files.cpp
     content/test_content_library.cpp
     content/test_content_runner.cpp
-    content/test_save.cpp)
+    content/test_save.cpp
+    content/test_notation.cpp)
 target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::content lantern::gameplay lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 if(TARGET sample_game)
     target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp)

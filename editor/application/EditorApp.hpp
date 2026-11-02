@@ -80,6 +80,8 @@ public:
     void openProject() override;
     void showMessage(const std::string& title, const std::string& text) override;
     void showImportDialog() override;
+    void createContent(AssetType type) override;
+    std::size_t checkContent() override;
     int tileBrush() const override { return m_tileBrush; }
     void setTileBrush(int tile) override { m_tileBrush = std::max(0, tile); }
     int tileLayer() const override { return m_tileLayer; }

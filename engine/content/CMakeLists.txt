@@ -9,7 +9,8 @@ add_library(lantern_content STATIC
     src/ContentLibrary.cpp
     src/ContentRunner.cpp
     src/GameState.cpp
-    src/Logic.cpp)
+    src/Logic.cpp
+    src/Notation.cpp)
 add_library(lantern::content ALIAS lantern_content)
 
 target_include_directories(lantern_content PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -407,6 +407,107 @@ void EditorApp::refuseEditWhilePlaying()
 }
 
 // ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+void EditorApp::createContent(AssetType type)
+{
+    if (!m_assetDb) {
+        showMessage("No Project", "Open or create a project first: content files belong to a project.");
+        return;
+    }
+    // A small working example, so the new file can be played at once.
+    std::string name;
+    std::string extension;
+    std::string text;
+    switch (type) {
+    case AssetType::Dialogue: {
+        name = "New Dialogue";
+        extension = ContentFormat::kDialogueExtension;
+        Dialogue d;
+        d.speakers = {{"someone", "Someone", Color{255, 255, 255, 255}, {}}};
+        d.start = "hello";
+        DialogueNode hello;
+        hello.id = "hello";
+        hello.speaker = "someone";
+        hello.text = "Hello!";
+        d.nodes = {hello};
+        text = serializeDialogue(d);
+        break;
+    }
+    case AssetType::Quest: {
+        name = "New Quest";
+        extension = ContentFormat::kQuestExtension;
+        Quest q;
+        q.name = "New Quest";
+        q.objectives = {{"first", "Do something", std::nullopt, false}};
+        text = serializeQuest(q);
+        break;
+    }
+    case AssetType::Variables:
+        name = "Variables";
+        extension = ContentFormat::kVariablesExtension;
+        text = serializeVariables({});
+        break;
+    default: return;
+    }
+    std::string error;
+    if (const auto id = m_assetDb->createTextAsset("content", name, extension, text, &error)) {
+        log().info(kCategory, "Created " + m_assetDb->find(*id)->path + ".");
+        selectAsset(*id);
+        refreshAssets();
+    } else {
+        showMessage("Could Not Create the File", error);
+    }
+}
+
+std::size_t EditorApp::checkContent()
+{
+    if (!m_assetDb) {
+        log().info("content", "No project is open, so there is no content to check.");
+        return 0;
+    }
+    m_assetDb->refresh();
+    std::vector<FileIssue> issues;
+    const ContentLibrary library = ContentLibrary::load(*m_assetDb, &issues);
+    for (FileIssue& issue : library.check()) {
+        issues.push_back(std::move(issue));
+    }
+    // The open scene's triggers (as edited, saved or not).
+    const std::string sceneName = m_document->isUntitled() ? std::string("this scene") : m_document->displayName();
+    m_document->scene().forEach([&](const Entity& e, int) {
+        if (const Trigger* t = e.get<Trigger>()) {
+            const std::string where = sceneName + ", object '" + e.name() + "', Trigger";
+            if (t->reaction.condition) {
+                library.checkCondition(*t->reaction.condition, where, issues);
+            }
+            library.checkActions(t->reaction.actions, where, issues);
+            for (const Action& a : t->reaction.actions) {
+                if ((a.kind == Action::Kind::SetActive || a.kind == Action::Kind::Destroy) && !a.entity.isNull()
+                    && !m_document->scene().contains(a.entity)) {
+                    issues.push_back({FileIssue::Severity::Error, where,
+                                      "An action names object " + a.entity.toString() + ", which is not in this scene."});
+                }
+            }
+            if ((t->on == TriggerOn::Interact || t->on == TriggerOn::EnterArea || t->on == TriggerOn::LeaveArea)
+                && e.get<Collider>() == nullptr) {
+                issues.push_back({FileIssue::Severity::Warning, where,
+                                  "This trigger needs a Collider on the same object: it is the trigger's area."});
+            }
+        }
+    });
+    for (const FileIssue& issue : issues) {
+        (issue.isError() ? log().error("content", issue.where + ": " + issue.message)
+                         : log().warning("content", issue.where + ": " + issue.message));
+    }
+    const std::size_t errors =
+        static_cast<std::size_t>(std::count_if(issues.begin(), issues.end(), [](const FileIssue& i) { return i.isError(); }));
+    log().info("content", issues.empty() ? std::string("Content check: no problems found.")
+                                         : "Content check: " + std::to_string(errors) + " errors and "
+                                               + std::to_string(issues.size() - errors) + " warnings (see above).");
+    return issues.size();
+}
+
+// ---------------------------------------------------------------------------
 // Play mode
 // ---------------------------------------------------------------------------
 void EditorApp::play()
@@ -1171,7 +1272,18 @@ void EditorApp::buildMenus(ui::Widget& root)
     menuBar.addMenu({"Game",
                      {std::move(playItem), std::move(pauseItem),
                       menuItem("Step One Frame", platform.macConventions ? "⌥⌘P" : "Ctrl+Alt+P",
-                               [this] { stepFrame(); }, [this] { return m_game != nullptr; })}});
+                               [this] { stepFrame(); }, [this] { return m_game != nullptr; }),
+                      ui::MenuItem::divider(),
+                      menuItem("Check Content", "", [this] {
+                          checkContent();
+                          showPanel(kConsolePanel);
+                      }, [this] { return m_assetDb != nullptr; }),
+                      menuItem("New Dialogue", "", [this] { createContent(AssetType::Dialogue); },
+                               [this] { return m_assetDb != nullptr; }),
+                      menuItem("New Quest", "", [this] { createContent(AssetType::Quest); },
+                               [this] { return m_assetDb != nullptr; }),
+                      menuItem("New Variables", "", [this] { createContent(AssetType::Variables); },
+                               [this] { return m_assetDb != nullptr; })}});
     menuBar.addMenu({"Help", {menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
 }
 

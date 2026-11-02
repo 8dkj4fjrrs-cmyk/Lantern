@@ -28,6 +28,10 @@ and AI assistants.
   `LANTERN_GAME_MODULE` / `lantern_add_game_module` (docs/gameplay.md). `engine/gameplay` has no
   backend; the runtime and editor translate their input into `lantern::Input`. A game always plays a
   copy of the scene (`Game::start`), never the scene being edited.
+- RPG content (`engine/content`) is data: conditions and actions are a fixed, typed set, never code or
+  free expressions. Authored definitions (variables, dialogues, quests) stay apart from progress
+  (`GameState`, save files). New action or condition types need the JSON form, the written form
+  (`Notation.hpp`), checks in `ContentLibrary`, docs/formats/content.md and tests.
 - Scenes refer to project files by `AssetId`, never by path; files reach the runtime only through `AssetDatabase` (`engine/assets`). Games open it read-only. `engine/scene` and `engine/assets` stay free of Axmol so they are tested in every preset.
 - File formats (`docs/formats/`) are versioned: changing one means bumping its version, adding an upgrade step and a test with an old file.
 - No global mutable state. Pass `Engine&` / `Logger&` explicitly.

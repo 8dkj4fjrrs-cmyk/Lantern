@@ -22,7 +22,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.5.0
+    VERSION 0.6.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
 

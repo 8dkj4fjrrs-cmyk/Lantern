@@ -3,15 +3,15 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 5 (C++ gameplay and Play mode).** `lantern_editor`
-> creates and opens projects; imports images, sounds and fonts with
-> permanent asset IDs; and edits scenes with sprites, shapes, cameras,
-> colliders and tilemaps (layers, brush, eraser, fill, collision), with undo,
+> **Status: Milestone 6 (RPG content).** `lantern_editor` creates and opens
+> projects, imports assets with permanent IDs, and edits scenes with
+> sprites, shapes, text, cameras, colliders and tilemaps, all with undo,
 > saved as versioned JSON. Gameplay is written in C++ as **behaviours** in
-> statically linked game modules; the editor plays, pauses, steps and stops
-> the game in the Scene view (always on a copy of the scene), and
-> `lantern_player` plays a project with keyboard and mouse input, collision
-> and scene changes. Try the sample: `examples/sample_game`.
+> game modules; story content (game variables, dialogues, quests, and
+> triggers in scenes) is data, edited in the editor and checked as you go.
+> Play mode runs the game in the Scene view on a copy of the scene;
+> `lantern_player` plays a project with input, collision, scene changes,
+> dialogue and save games. Try the sample: `examples/sample_game`.
 
 ## Quick start
 
@@ -32,6 +32,7 @@ What comes next: [docs/roadmap.md](docs/roadmap.md).
 engine/core/     Engine lifecycle, logging, version (no third-party deps)
 engine/scene/    Scenes, entities, components, scene and project files (no backend)
 engine/assets/   Asset IDs (.meta files), import, image checks, tilesets (no backend)
+engine/content/  RPG content: variables, dialogue, quests, conditions, actions, saves (no backend)
 engine/gameplay/ Behaviours, game modules, input, collision queries, scene changes (no backend)
 engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately

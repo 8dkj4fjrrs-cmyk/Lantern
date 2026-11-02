@@ -560,6 +560,71 @@ std::optional<AssetId> AssetDatabase::createTileset(AssetId image, Vec2 tileSize
     return id;
 }
 
+std::optional<AssetId> AssetDatabase::createTextAsset(std::string_view folder, std::string_view name,
+                                                      std::string_view extension, std::string_view text,
+                                                      std::string* error)
+{
+    if (m_access == Access::ReadOnly) {
+        setError(error, "The project is open read-only.");
+        return std::nullopt;
+    }
+    const fs::path target = freeName(m_folder / fs::path(folder) / (std::string(name) + std::string(extension)));
+    const auto type = assetTypeForPath(target);
+    if (!type) {
+        setError(error, "\"" + std::string(extension) + "\" is not a supported asset type.");
+        return std::nullopt;
+    }
+    std::error_code ec;
+    fs::create_directories(target.parent_path(), ec);
+    if (const Status s = writeTextFileAtomically(target, text); !s) {
+        setError(error, "Could not write the file: " + s.message);
+        return std::nullopt;
+    }
+    AssetRecord record;
+    record.path = relativeTo(m_folder, target);
+    record.type = *type;
+    record.id = newId();
+    if (const Status s = writeMeta(record); !s) {
+        setError(error, "Could not write the .meta file: " + s.message);
+        return std::nullopt;
+    }
+    std::vector<FileIssue> ignored;
+    readAsset(record, ignored, false);
+    m_stamps[record.path] = fs::last_write_time(target, ec);
+    const AssetId id = record.id;
+    m_assets.push_back(std::move(record));
+    index();
+    ++m_revision;
+    return id;
+}
+
+Status AssetDatabase::writeText(AssetId id, std::string_view text)
+{
+    const auto it = m_byId.find(id);
+    if (it == m_byId.end()) {
+        return Status::failure("There is no such asset.");
+    }
+    if (m_access == Access::ReadOnly) {
+        return Status::failure("The project is open read-only.");
+    }
+    AssetRecord& record = m_assets[it->second];
+    if (const Status s = writeTextFileAtomically(m_folder / record.path, text); !s) {
+        return s;
+    }
+    std::vector<FileIssue> ignored;
+    readAsset(record, ignored, false);   // e.g. a tileset's definition
+    std::error_code ec;
+    m_stamps[record.path] = fs::last_write_time(m_folder / record.path, ec);
+    ++m_revision;
+    return Status::success();
+}
+
+std::optional<std::string> AssetDatabase::readText(AssetId id) const
+{
+    const AssetRecord* record = find(id);
+    return record != nullptr ? readTextFile(absolutePath(*record)) : std::nullopt;
+}
+
 Status AssetDatabase::saveTileset(AssetId id, const Tileset& definition)
 {
     const auto it = m_byId.find(id);

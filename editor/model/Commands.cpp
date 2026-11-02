@@ -656,6 +656,46 @@ void ChangeTileset::revert(Scene&)
     }
 }
 
+ChangeAssetText::ChangeAssetText(AssetId asset, std::string text, std::string label)
+    : m_id(asset)
+    , m_after(std::move(text))
+    , m_label(std::move(label))
+{
+}
+
+bool ChangeAssetText::apply(Scene&)
+{
+    if (m_assets == nullptr) {
+        return false;
+    }
+    const auto current = m_assets->readText(m_id);
+    if (!current || *current == m_after) {
+        return false;
+    }
+    if (!m_assets->writeText(m_id, m_after)) {
+        return false;
+    }
+    m_before = current;
+    return true;
+}
+
+void ChangeAssetText::revert(Scene&)
+{
+    if (m_assets != nullptr && m_before) {
+        (void)m_assets->writeText(m_id, *m_before);
+    }
+}
+
+bool ChangeAssetText::mergeWith(const Command& next)
+{
+    const auto* other = dynamic_cast<const ChangeAssetText*>(&next);
+    if (other == nullptr || other->m_id != m_id || other->m_label != m_label) {
+        return false;
+    }
+    m_after = other->m_after;   // keep m_before: undo goes back before the first edit
+    return true;
+}
+
 ChangeImageFilter::ChangeImageFilter(AssetId image, TextureFilter filter)
     : m_id(image)
     , m_after(filter)

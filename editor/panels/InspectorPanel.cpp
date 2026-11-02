@@ -1,5 +1,7 @@
 #include "Panels.hpp"
 
+#include "lantern/gameplay/Components.hpp"
+
 #include "../model/EditorPaths.hpp"
 
 #include "lantern/ui/Context.hpp"
@@ -127,6 +129,15 @@ void InspectorPanel::focusName()
 
 void InspectorPanel::rebuild()
 {
+    // Which keyed field has focus, to give it focus again after rebuilding
+    // (pages are rebuilt after each change, e.g. when Tab leaves a field).
+    std::string focusedKey;
+    for (const auto& [key, widget] : m_keyed) {
+        if (widget == m_editor.ui().focused()) {
+            focusedKey = key;
+        }
+    }
+    m_keyed.clear();
     m_refresh.clear();
     m_name = nullptr;
     const Scene& scene = m_editor.document().scene();
@@ -146,6 +157,9 @@ void InspectorPanel::rebuild()
         buildEntity(*content, *entity);
     }
     m_details->setContent(std::move(content));
+    if (const auto it = m_keyed.find(focusedKey); !focusedKey.empty() && it != m_keyed.end()) {
+        m_editor.ui().setFocus(it->second);
+    }
 }
 
 // --- The scene itself --------------------------------------------------------------------------
@@ -265,6 +279,9 @@ void InspectorPanel::buildComponent(ui::Column& content, const Entity& entity, c
     }
     for (const PropertyInfo& info : type.properties) {
         addPropertyEditor(section, id, typeId, info);
+    }
+    if (dynamic_cast<const Trigger*>(&component) != nullptr) {
+        buildTriggerEditor(section, id);
     }
     if (dynamic_cast<const Tilemap*>(&component) != nullptr) {
         buildTilemapLayers(section, id);
@@ -684,6 +701,9 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     header.emplace<ui::IconView>(asset.type == AssetType::Tileset ? ui::Icon::Grid
                                  : asset.type == AssetType::Image ? ui::Icon::Scene
                                  : asset.type == AssetType::Scene ? ui::Icon::Flame
+                                 : asset.type == AssetType::Variables ? ui::Icon::Sliders
+                                 : asset.type == AssetType::Dialogue ? ui::Icon::Terminal
+                                 : asset.type == AssetType::Quest    ? ui::Icon::Check
                                                                    : ui::Icon::Folder,
                                  16.0f, ui::Color::hex(0xF2A93B));
     auto& name = header.emplace<ui::TextField>("Name");
@@ -872,6 +892,10 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         }
         row("Solid Tiles", std::to_string(tileset.solid.size()),
             "Tiles that block movement. Choose them in the Tile Palette with \"Edit solid tiles\" on.");
+    }
+
+    if (asset.type == AssetType::Variables || asset.type == AssetType::Dialogue || asset.type == AssetType::Quest) {
+        buildContentAsset(content, asset);
     }
 
     // Where it is used.

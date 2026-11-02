@@ -369,6 +369,27 @@ private:
     AssetDatabase* m_assets = nullptr; // set by CommandStack; not owned
 };
 
+/// Replaces the text of a content file (variables, dialogue, quest) and
+/// saves it. Undo writes the previous text back. Consecutive edits with the
+/// same label to the same file merge while merging is allowed (typing).
+class ChangeAssetText final : public Command {
+public:
+    ChangeAssetText(AssetId asset, std::string text, std::string label);
+    std::string label() const override { return m_label; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool mergeWith(const Command& next) override;
+    bool changesScene() const override { return false; }
+    void useAssets(AssetDatabase* assets) override { m_assets = assets; }
+
+private:
+    AssetId m_id;
+    std::string m_after;
+    std::optional<std::string> m_before;
+    std::string m_label;
+    AssetDatabase* m_assets = nullptr;
+};
+
 /// Changes how an image is filtered (Smooth or Pixel art), saved in its .meta.
 class ChangeImageFilter final : public Command {
 public:

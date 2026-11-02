@@ -37,6 +37,7 @@ add_executable(lantern_editor
     panels/PanelCommon.cpp
     panels/TilePalettePanel.cpp
     panels/InspectorPanel.cpp
+    panels/InspectorContent.cpp
     panels/ViewportPanel.cpp)
 
 # The runtime gives the editor Lantern's own headers only — never Axmol's —

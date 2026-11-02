@@ -44,10 +44,10 @@ def transform(x=0.0, y=0.0, rotation=0.0, scale=(1, 1)):
     return {"type": "lantern.Transform", "position": [x, y], "rotation": rotation, "scale": list(scale)}
 
 
-def entity(name, components, parent=None):
-    e = {"id": entity_id(), "name": name, "active": True, "components": components}
+def entity(name, components, parent=None, active=True):
+    e = {"id": entity_id(), "name": name, "active": active, "components": components}
     if parent:
-        e = {"id": e["id"], "parent": parent, "name": name, "active": True, "components": components}
+        e = {"id": e["id"], "parent": parent, "name": name, "active": active, "components": components}
     return e
 
 
@@ -94,7 +94,7 @@ def interface(camera_id):
         {"type": "lantern.Shape", "kind": "rectangle", "size": [1000, 166], "color": "#101018e8", "filled": True,
          "lineWidth": 2},
         {"type": "lantern.DialogueView", "marker": "> "},
-    ], parent=camera_id)
+    ], parent=camera_id, active=False)   # hidden while editing; the game shows it during dialogues
     items += [box,
               text("Speaker", -480, 68, "", box["id"], source="dialogueSpeaker", size=20),
               text("Line", -480, 38, "", box["id"], source="dialogueLine", size=18, width=960),

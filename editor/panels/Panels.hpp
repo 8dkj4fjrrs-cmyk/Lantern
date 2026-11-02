@@ -16,6 +16,8 @@
 #include "../model/SceneDocument.hpp"
 
 #include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/content/ContentLibrary.hpp"
+#include "lantern/content/Notation.hpp"
 #include "lantern/gameplay/Input.hpp"
 #include "lantern/runtime/Application.hpp"
 #include "lantern/scene/Project.hpp"
@@ -31,6 +33,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <map>
 #include <optional>
 #include <string>
 #include <utility>
@@ -104,6 +107,12 @@ public:
     virtual void showMessage(const std::string& title, const std::string& text) = 0;
     /// Asks for files to import (the dialog explains drag and drop too).
     virtual void showImportDialog() = 0;
+    /// Creates a new content file (Variables, Dialogue or Quest) from a
+    /// starting template in the project's content folder, and selects it.
+    virtual void createContent(AssetType type) = 0;
+    /// Checks the project's content and the open scene's triggers; problems
+    /// go to the Console. Returns how many problems were found.
+    virtual std::size_t checkContent() = 0;
 
     // Tilemap painting.
     /// The tile the Brush paints (a number in the tileset).
@@ -265,6 +274,25 @@ private:
     void confirmDeleteAsset(AssetId id);
     void buildComponent(ui::Column& content, const Entity& entity, const Component& component);
     void buildTilemapLayers(ui::Section& section, EntityId id);
+
+    // RPG content pages and the Trigger editor (InspectorContent.cpp).
+    void buildContentAsset(ui::Column& content, const AssetRecord& asset);
+    void buildVariablesPage(ui::Column& content, AssetId id, const VariableSet& vars);
+    void buildDialoguePage(ui::Column& content, AssetId id, const Dialogue& dialogue);
+    void buildQuestPage(ui::Column& content, AssetId id, const Quest& quest);
+    void buildTriggerEditor(ui::Section& section, EntityId id);
+    /// How conditions and actions name assets and objects here.
+    NotationNames notationNames() const;
+    /// A text field for a condition in its written form; `apply` gets the
+    /// new condition (nothing: empty), or the field shows what is wrong.
+    void conditionField(ui::Widget& parent, const std::string& key, const std::optional<Condition>& value,
+                        const std::string& placeholder, std::function<void(std::optional<Condition>)> apply);
+    /// One text field per action, a remove button each, and a field to add one.
+    void actionList(ui::Column& parent, const std::string& key, const std::vector<Action>& actions,
+                    std::function<void(std::vector<Action>)> apply);
+    /// Remembers an editable widget by a key that stays the same when the
+    /// page is rebuilt, so keyboard focus can come back to it.
+    ui::Widget& keyed(std::string key, ui::Widget& widget);
     void addPropertyEditor(ui::Section& section, EntityId id, const std::string& typeId, const PropertyInfo& info);
     void openComponentMenu(ui::Section& section, EntityId id, const std::string& typeId);
     void openAddComponentMenu(ui::Button& button, EntityId id);
@@ -277,6 +305,7 @@ private:
     std::string m_builtFor;                      // signature() when last built
     UiFrame* m_frame = nullptr;                  // valid during update() (thumbnails)
     std::vector<std::function<void()>> m_refresh; // copy scene values into the widgets
+    std::map<std::string, ui::Widget*> m_keyed;   // see keyed()
 };
 
 /// Log messages from the engine, the backend and the editor.

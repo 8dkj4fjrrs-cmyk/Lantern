@@ -423,3 +423,27 @@ TEST_CASE("Asset undo steps never use a database that has gone", "[editor][comma
     // Without assets, asset commands do nothing.
     CHECK_FALSE(f.doc.execute(std::make_unique<ChangeImageFilter>(a.image, TextureFilter::Smooth)));
 }
+
+TEST_CASE("Content files are edited through undoable steps", "[editor][commands][assets]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+    std::string error;
+    const auto id = a.db->createTextAsset("content", "talk", ".ldialogue", "{\"v\":1}\n", &error);
+    REQUIRE(id);
+    CHECK(a.db->find(*id)->type == AssetType::Dialogue);
+    CHECK(a.db->find(*id)->path == "content/talk.ldialogue");
+    CHECK(std::filesystem::exists(a.folder / "content/talk.ldialogue.meta"));
+
+    REQUIRE(f.doc.execute(std::make_unique<ChangeAssetText>(*id, "{\"v\":2}\n", "Edit Line")));
+    REQUIRE(f.doc.execute(std::make_unique<ChangeAssetText>(*id, "{\"v\":3}\n", "Edit Line")));   // merges
+    CHECK(f.doc.history().size() == 1);
+    CHECK(*a.db->readText(*id) == "{\"v\":3}\n");
+    CHECK_FALSE(f.doc.isDirty());
+    REQUIRE(f.doc.undo());
+    CHECK(*a.db->readText(*id) == "{\"v\":1}\n");
+    REQUIRE(f.doc.redo());
+    CHECK(*a.db->readText(*id) == "{\"v\":3}\n");
+    CHECK_FALSE(f.doc.execute(std::make_unique<ChangeAssetText>(*id, "{\"v\":3}\n", "Edit Line")));   // no change
+}

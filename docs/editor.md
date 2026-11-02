@@ -1,8 +1,9 @@
 # Lantern Editor guide
 
-> Milestone 5: projects and scenes with sprites, tilemaps and colliders,
-> imported assets, a free Scene view camera and transform tools, C++
-> gameplay behaviours, and Play mode.
+> Milestone 6: projects and scenes with sprites, tilemaps, colliders and
+> text, imported assets, a free Scene view camera and transform tools, C++
+> gameplay behaviours, Play mode, and story content: game variables,
+> dialogues, quests and triggers, with saving and loading.
 
 ## Starting the editor
 
@@ -139,8 +140,62 @@ border.
 - If the game changes scene (e.g. through a door), the next scene is
   loaded from the project; the scene you are editing is used as it is now,
   unsaved changes included.
+- **F5** saves the game to the "quick" slot and **F9** loads it. Saves made
+  in Play mode are kept in the editor's settings folder (`play-saves`),
+  never with the real game's saves.
 
 Gameplay is written in C++: see the [gameplay guide](gameplay.md).
+
+## Story content: dialogues, quests, variables
+
+An RPG's story is content, not code ([formats](formats/content.md), and the
+[gameplay guide](gameplay.md#story-content-dialogue-quests-and-triggers-without-code)
+for how scenes use it).
+
+**Create** content with **Game > New Dialogue / New Quest / New Variables**
+or the Assets panel's **+**. Files go in the project's `content` folder;
+rename them in the Inspector. Select one in Assets to edit it in the
+Inspector:
+
+- **Variables**: the game's variables, each with a type (bool, int, text)
+  and the value a new game starts with. Type a name in the last row and
+  press Enter to add one.
+- **Quest**: name and description; *Starts When* and *Fails When*
+  conditions (empty: only by an action / never); *Prerequisites*;
+  *Objectives* (text shown to the player, *Done When*, *Optional*);
+  *Rewards*.
+- **Dialogue**: speakers (name and colour), where it starts, and its lines.
+  A line has a speaker, what is said, and either *Then* (the next line) or
+  choices (*Player Says*, *Shown When*, *Then*, actions). A *branch* has no
+  text: it goes to the first line whose *If* is true, else *Otherwise*.
+  The **⋮** menu of a line moves it up or deletes it.
+
+**Conditions and actions are typed in a short form**, checked when you
+leave the field (a mistake is shown under it in red, and nothing changes):
+
+| Conditions | Actions (one per field) |
+|---|---|
+| `met_elder`, `not met_elder` | `set met_elder true` |
+| `gems >= 3`, `name == "Ana"` | `add gems 1` |
+| `quest gems is completed` | `startQuest gems`, `failQuest gems` |
+| `objective gems return done` | `completeObjective gems return` |
+| `gems >= 3 and (a or not b)` | `startDialogue elder`, `changeScene cave` |
+| *(empty: always)* | `setActive Door off`, `destroy this` |
+| | `emit door_opened`, `log "Hi {name}"`, `wait 1.5`, `saveGame quick` |
+
+Quests, dialogues and scenes are named by file name (`gems` for
+`content/gems.lquest`); objects by their name in the scene, or `this`.
+Files store the full form, so renaming a file or an object never breaks
+anything.
+
+Every change is saved to the file at once and can be undone (⌘Z). Problems
+in a file (a line leading nowhere, a variable that does not exist...) are
+listed at the top of its Inspector page. **Game > Check Content** checks
+everything, including the open scene's triggers, and lists the problems in
+the Console; Play does the same each time it starts.
+
+A **Trigger** on an object shows *Only If* and its *Actions* the same way,
+below its other settings.
 
 ## Tilemaps
 
