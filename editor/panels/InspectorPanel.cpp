@@ -749,6 +749,9 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
                                               : typeName == "tileset" ? "Tileset"
                                               : typeName == "audio"   ? "Sound"
                                               : typeName == "scene"   ? "Scene"
+                                              : typeName == "variables" ? "Variables"
+                                              : typeName == "dialogue" ? "Dialogue"
+                                              : typeName == "quest"   ? "Quest"
                                                                       : "Font");
     auto row = [&](const char* label, const std::string& value, const std::string& tip) {
         auto& r = info.body().emplace<ui::PropertyField>(label);

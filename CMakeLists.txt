@@ -5,6 +5,8 @@
 #                    Depends only on the C++ standard library.
 #   lantern_ui       static library: Lantern's own UI toolkit (widgets, docking,
 #                    text). No backend; always built and unit-tested.
+#   lantern_content  static library: RPG content (variables, dialogues, quests,
+#                    conditions, actions), checks, progress and save files.
 #   lantern_gameplay static library: behaviours, input, collision queries,
 #                    scene changes (no backend; always built and tested).
 #   sample_game      the sample game module (examples/sample_game).
@@ -89,6 +91,7 @@ endif()
 add_subdirectory(engine/core)
 add_subdirectory(engine/scene)
 add_subdirectory(engine/assets)
+add_subdirectory(engine/content)
 add_subdirectory(engine/gameplay)
 add_subdirectory(engine/ui)
 

@@ -217,6 +217,9 @@ void AssetsPanel::rebuild()
             case AssetType::Audio: item.icon = ui::Icon::Dot; item.detail = "Sound"; break;
             case AssetType::Font: item.icon = ui::Icon::Dot; item.detail = "Font"; break;
             case AssetType::Scene: item.icon = ui::Icon::Flame; item.detail = "Scene"; break;
+            case AssetType::Variables: item.icon = ui::Icon::Sliders; item.detail = "Variables"; break;
+            case AssetType::Dialogue: item.icon = ui::Icon::Terminal; item.detail = "Dialogue"; break;
+            case AssetType::Quest: item.icon = ui::Icon::Check; item.detail = "Quest"; break;
             }
             if (!asset->isUsable()) {
                 item.icon = ui::Icon::Warning;

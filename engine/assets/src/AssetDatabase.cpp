@@ -135,13 +135,17 @@ std::string_view assetTypeName(AssetType type)
     case AssetType::Audio: return "audio";
     case AssetType::Font: return "font";
     case AssetType::Scene: return "scene";
+    case AssetType::Variables: return "variables";
+    case AssetType::Dialogue: return "dialogue";
+    case AssetType::Quest: return "quest";
     }
     return "image";
 }
 
 std::optional<AssetType> assetTypeFromName(std::string_view name)
 {
-    for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font, AssetType::Scene}) {
+    for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font, AssetType::Scene,
+                        AssetType::Variables, AssetType::Dialogue, AssetType::Quest}) {
         if (assetTypeName(t) == name) {
             return t;
         }
@@ -166,6 +170,16 @@ std::optional<AssetType> assetTypeForPath(const fs::path& path)
     }
     if (ext == SceneFormat::kExtension) {
         return AssetType::Scene;
+    }
+    // RPG content (read and checked by lantern_content's ContentLibrary).
+    if (ext == ".lvars") {
+        return AssetType::Variables;
+    }
+    if (ext == ".ldialogue") {
+        return AssetType::Dialogue;
+    }
+    if (ext == ".lquest") {
+        return AssetType::Quest;
     }
     return std::nullopt;
 }
