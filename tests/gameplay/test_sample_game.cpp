@@ -1,6 +1,7 @@
 // The sample game (examples/sample_game), played from its real project files:
 // the module, the scenes, the content, and a whole playthrough.
 
+#include "support/TempFolder.hpp"
 #include "SampleBehaviours.hpp"
 
 #include "lantern/content/ContentLibrary.hpp"
@@ -30,7 +31,7 @@ struct SampleProject {
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     AssetDatabase assets{kSample, AssetDatabase::Access::ReadOnly};
     ContentLibrary content;
-    FolderSaveStore saves{std::filesystem::temp_directory_path() / "lantern-tests" / "sample-saves"};
+    FolderSaveStore saves{lantern::test::uniqueTempFolder("sample-saves")};
     std::unique_ptr<Game> game;
 
     SampleProject()
@@ -161,6 +162,16 @@ TEST_CASE("The sample project opens cleanly: scenes, assets, content and behavio
             }
         });
         CHECK(issues.empty());
+        // Every Animator plays a clip its animations have.
+        loaded.scene->forEach([&](const Entity& e, int) {
+            if (const Animator* a = e.get<Animator>()) {
+                const AssetRecord* set = p.assets.find(a->animations);
+                REQUIRE(set != nullptr);
+                REQUIRE(set->animation.has_value());
+                INFO(e.name() << " plays " << a->clip);
+                CHECK(set->animation->findClip(a->clip) != nullptr);
+            }
+        });
     }
     CHECK(project->settings().startScene == "scenes/meadow.lscene");
     CHECK(p.content.variables().size() == 3);
@@ -175,12 +186,15 @@ TEST_CASE("Playing the sample: walls stop the player, the boulder blocks the cav
     const float startX = game.worldPosition(player).x;
 
     // Walking left: stopped by the wall around the meadow (cell 0 is 0..32).
+    CHECK(game.currentClip(player) == "idle_down");
     game.input().press(Key::Left);
     p.frames(120);
+    CHECK(game.currentClip(player) == "walk_left");   // the hero's walk animation
     game.input().release(Key::Left);
+    p.frames(1);
+    CHECK(game.currentClip(player) == "idle_left");   // standing, still facing left
     CHECK(game.colliderBox(player)->min.x == Catch::Approx(32.0f).margin(0.01f));
     CHECK(game.worldPosition(player).x < startX);
-    CHECK(game.scene().find(player)->get<Sprite>()->flipX);   // facing left
 
     // Walking right along the path: the boulder stops the player.
     game.input().press(Key::Right);

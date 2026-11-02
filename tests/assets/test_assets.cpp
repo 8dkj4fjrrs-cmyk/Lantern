@@ -1,3 +1,4 @@
+#include "support/TempFolder.hpp"
 #include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/core/Files.hpp"
 #include "lantern/scene/Scene.hpp"
@@ -18,7 +19,7 @@ const fs::path kData = LANTERN_TEST_DATA_DIR;
 struct TempProject {
     fs::path path;
     explicit TempProject(const char* name)
-        : path(fs::temp_directory_path() / "lantern-tests" / name)
+        : path(lantern::test::uniqueTempFolder(name))
     {
         fs::remove_all(path);
         fs::create_directories(path / "scenes");

@@ -142,6 +142,7 @@ ComponentRegistry ComponentRegistry::withBuiltins()
     static_cast<void>(registry.add(Tilemap::componentType()));
     static_cast<void>(registry.add(Collider::componentType()));
     static_cast<void>(registry.add(Text::componentType()));
+    static_cast<void>(registry.add(Animator::componentType()));
     return registry;
 }
 
@@ -261,6 +262,22 @@ const ComponentType& Text::componentType()
             .property("align", "Align", &Text::align, {.choices = {"left", "center", "right"}})
             .property("width", "Wrap Width", &Text::width,
                       {.min = 0.0f, .help = "Long text wraps onto new lines at this width. 0: no wrapping.", .unit = "pt"})
+            .build();
+    return type;
+}
+
+const ComponentType& Animator::componentType()
+{
+    static const ComponentType type =
+        ComponentTypeBuilder<Animator>("lantern.Animator", "Animator")
+            .description("Plays a flipbook clip on the object's Sprite (the Sprite keeps its size, colour and "
+                         "flipping). Clips come from an animation asset (.lanim); gameplay code switches clips.")
+            .property("animations", "Animations", &Animator::animations,
+                      {.help = "The animation set: a sprite sheet and its clips.", .assetType = "animation"})
+            .property("clip", "Clip", &Animator::clip, {.help = "The clip it plays, e.g. walk_down."})
+            .property("speed", "Speed", &Animator::speed,
+                      {.min = 0.0f, .max = 20.0f, .step = 0.1f, .help = "2 plays twice as fast."})
+            .property("playing", "Playing", &Animator::playing, {.help = "Off: shows the clip's first frame."})
             .build();
     return type;
 }

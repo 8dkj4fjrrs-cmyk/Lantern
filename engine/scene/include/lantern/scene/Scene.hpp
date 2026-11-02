@@ -150,6 +150,11 @@ public:
     {
         return static_cast<T*>(editComponent(id, T::componentType().id));
     }
+    /// An object's Animator, to switch clips (null if it has none). Counts
+    /// as a move, not a content change: the renderer reads the clip, speed,
+    /// playing and startTime again every frame, so nothing needs rebuilding.
+    /// To give it a different animation set, use edit<Animator>() instead.
+    Animator* editAnimatorPlayback(EntityId id);
     /// Changes a component in ways properties cannot express (e.g. painting
     /// tiles). `change` returns true if it changed anything.
     bool modifyComponent(EntityId id, std::string_view componentType, const std::function<bool(Component&)>& change);

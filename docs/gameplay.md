@@ -120,6 +120,29 @@ with `.assetType = "scene"` and choose the scene in the Inspector (see
 `SceneDoor` in the sample). The new scene starts fresh: objects of the old
 one, and their behaviours, are gone.
 
+### Animation
+
+An object with an **Animator** (and usually a Sprite) plays flipbook clips
+from an animation set (`.lanim`, made in the editor's Animation panel; see
+the [editor guide](editor.md#animation)). Gameplay code picks the clip:
+
+```cpp
+game.play(entity(), "walk_left");          // carries on if it is already playing
+game.play(entity(), "attack", /*restart=*/true);
+if (game.isAnimationFinished(entity())) {  // a clip that does not loop reached its end
+    game.play(entity(), "idle_down");
+}
+game.stopAnimation(entity());              // holds the clip's first frame
+game.currentClip(entity());                // "walk_left"
+game.isAnimationPlaying(entity());
+```
+
+Calling `play()` every frame with the same clip is fine and cheap: the clip
+only starts again when it changes (or with `restart`). Clips run on game
+time, so pausing the game pauses them, and switching clips does not redraw
+the scene. The sample's `PlayerController` plays `walk_<direction>` while
+moving and `idle_<direction>` while standing.
+
 **Other:** `game.time()` (seconds of game time), `game.deltaTime()`,
 `game.log().info("game", "...")` (shown in the editor's Console).
 

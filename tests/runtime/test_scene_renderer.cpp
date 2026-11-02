@@ -1,3 +1,4 @@
+#include "support/TempFolder.hpp"
 #include "SceneRenderer.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -131,7 +132,7 @@ TEST_CASE("Asset changes trigger a rebuild", "[runtime][renderer]")
     auto scene = std::make_shared<Scene>("S");
     renderer.show(scene);
     renderer.update();
-    const std::filesystem::path folder = std::filesystem::temp_directory_path() / "lantern-tests" / "renderer-assets";
+    const std::filesystem::path folder = lantern::test::uniqueTempFolder("renderer-assets");
     std::filesystem::create_directories(folder);
     AssetDatabase assets(folder);
     renderer.setAssets(&assets);

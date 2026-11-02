@@ -35,9 +35,11 @@ add_executable(lantern_tests
     scene/test_project.cpp
     scene/test_tilemap.cpp
     assets/test_assets.cpp
+    assets/test_animation.cpp
     gameplay/test_input.cpp
     gameplay/test_collision.cpp
     gameplay/test_game.cpp
+    gameplay/test_animation_play.cpp
     gameplay/test_game_content.cpp
     content/test_logic.cpp
     content/test_content_files.cpp
@@ -54,6 +56,7 @@ else()
     lantern_link_game_modules(lantern_tests MODULES)
 endif()
 target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+target_include_directories(lantern_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)
 
@@ -72,7 +75,7 @@ add_executable(lantern_runtime_tests
 target_link_libraries(lantern_runtime_tests PRIVATE
     lantern_player_cli lantern::runtime ${_AX_CORE_LIB} Catch2::Catch2WithMain)
 # These tests check internal headers of lantern_runtime.
-target_include_directories(lantern_runtime_tests PRIVATE "${PROJECT_SOURCE_DIR}/engine/runtime/src")
+target_include_directories(lantern_runtime_tests PRIVATE "${PROJECT_SOURCE_DIR}/engine/runtime/src" "${CMAKE_CURRENT_SOURCE_DIR}")
 lantern_set_warnings(lantern_runtime_tests)
 catch_discover_tests(lantern_runtime_tests)
 

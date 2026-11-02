@@ -1,5 +1,7 @@
 #include "lantern/gameplay/Game.hpp"
 
+#include "lantern/assets/Animation.hpp"
+
 #include "lantern/gameplay/Behaviour.hpp"
 #include "lantern/gameplay/Components.hpp"
 
@@ -77,6 +79,12 @@ void Game::beginScene(Scene scene, AssetId id)
     });
     m_triggers.clear();
     m_prompt.clear();
+    // Clips start with the scene (game time keeps counting across scenes).
+    scene.forEach([&](const Entity& e, int) {
+        if (e.get<Animator>() != nullptr) {
+            scene.editAnimatorPlayback(e.id())->startTime = m_time;
+        }
+    });
     m_scene = std::make_shared<Scene>(std::move(scene));
 
     // After loading a save: put the player where they stood.
@@ -607,6 +615,62 @@ MoveResult Game::move(EntityId id, Vec2 delta)
         t->position = t->position + local;
     }
     return result;
+}
+
+// --- Animation ----------------------------------------------------------------------------------
+
+bool Game::play(EntityId id, std::string_view clip, bool restart)
+{
+    const Entity* entity = m_scene != nullptr ? m_scene->find(id) : nullptr;
+    const Animator* current = entity != nullptr ? entity->get<Animator>() : nullptr;
+    if (current == nullptr) {
+        return false;
+    }
+    if (current->clip == clip && current->playing && !restart) {
+        return true;   // already playing: carry on
+    }
+    Animator* animator = m_scene->editAnimatorPlayback(id);
+    animator->clip = std::string(clip);
+    animator->playing = true;
+    animator->startTime = m_time;
+    return true;
+}
+
+void Game::stopAnimation(EntityId id)
+{
+    const Entity* entity = m_scene != nullptr ? m_scene->find(id) : nullptr;
+    if (entity != nullptr && entity->get<Animator>() != nullptr && entity->get<Animator>()->playing) {
+        m_scene->editAnimatorPlayback(id)->playing = false;
+    }
+}
+
+std::string Game::currentClip(EntityId id) const
+{
+    const Entity* entity = m_scene != nullptr ? m_scene->find(id) : nullptr;
+    const Animator* animator = entity != nullptr ? entity->get<Animator>() : nullptr;
+    return animator != nullptr ? animator->clip : std::string();
+}
+
+bool Game::isAnimationPlaying(EntityId id) const
+{
+    const Entity* entity = m_scene != nullptr ? m_scene->find(id) : nullptr;
+    const Animator* animator = entity != nullptr ? entity->get<Animator>() : nullptr;
+    return animator != nullptr && animator->playing;
+}
+
+bool Game::isAnimationFinished(EntityId id) const
+{
+    const Entity* entity = m_scene != nullptr ? m_scene->find(id) : nullptr;
+    const Animator* animator = entity != nullptr ? entity->get<Animator>() : nullptr;
+    if (animator == nullptr || !animator->playing || m_setup.assets == nullptr) {
+        return false;
+    }
+    const AssetRecord* asset = m_setup.assets->find(animator->animations);
+    if (asset == nullptr || !asset->animation) {
+        return false;
+    }
+    const AnimationClip* clip = animatorClip(*asset->animation, *animator);
+    return clip != nullptr && clip->finishedAt(animatorTime(*animator, m_time));
 }
 
 } // namespace lantern

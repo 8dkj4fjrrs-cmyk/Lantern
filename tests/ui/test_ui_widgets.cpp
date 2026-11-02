@@ -357,6 +357,30 @@ TEST_CASE("Dialogs close with their button, Enter or Escape", "[ui][dialog]")
     CHECK_FALSE(h.ctx.hasOverlays());
 }
 
+TEST_CASE("Enter in a dialog's text field presses the dialog's main button", "[ui][dialog][text]")
+{
+    // Regression: the focused field kept Enter, so typing a name and pressing
+    // Enter did nothing.
+    Harness<Label> h("background");
+    int creates = 0;
+    std::string created;
+    auto dialog = std::make_unique<Dialog>("New Clip");
+    auto& name = dialog->body().emplace<TextField>("");
+    dialog->addButton("Cancel");
+    dialog->addButton("Create", Button::Style::Primary, [&] {
+        ++creates;
+        created = name.text();
+    });
+    showDialog(h.ctx, std::move(dialog));
+    h.ctx.render();
+    h.ctx.setFocus(&name);
+    h.ctx.textInput(U'a');
+    h.key(Key::Enter);
+    CHECK(creates == 1);
+    CHECK(created == "a");
+    CHECK_FALSE(h.ctx.hasOverlays());
+}
+
 TEST_CASE("Flow wraps children onto new lines when they do not fit", "[ui][layout]")
 {
     Context ctx;

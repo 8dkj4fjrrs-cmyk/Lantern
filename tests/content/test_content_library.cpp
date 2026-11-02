@@ -1,3 +1,4 @@
+#include "support/TempFolder.hpp"
 #include "ContentFixture.hpp"
 
 #include "lantern/core/Files.hpp"
@@ -115,7 +116,7 @@ TEST_CASE("Loops that could never finish are found", "[content][library]")
 TEST_CASE("A project's content is loaded from its asset files", "[content][library]")
 {
     namespace fs = std::filesystem;
-    const fs::path folder = fs::temp_directory_path() / "lantern-tests" / "content-library";
+    const fs::path folder = lantern::test::uniqueTempFolder("content-library");
     fs::remove_all(folder);
     fs::create_directories(folder / "content");
     std::ofstream(folder / "project.lantern") << R"({"format":"lantern.project","version":1,"name":"T"})";

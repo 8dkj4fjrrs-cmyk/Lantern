@@ -1,3 +1,5 @@
+#include "support/TempFolder.hpp"
+#include "lantern/assets/Animation.hpp"
 #include "Commands.hpp"
 #include "SceneDocument.hpp"
 
@@ -329,7 +331,7 @@ namespace {
 
 // A project folder with hero.png imported and a tileset made from it.
 struct AssetFixture {
-    std::filesystem::path folder = std::filesystem::temp_directory_path() / "lantern-tests" / "asset-commands";
+    std::filesystem::path folder = lantern::test::uniqueTempFolder("asset-commands");
     std::unique_ptr<AssetDatabase> db;
     AssetId image;
     AssetId tileset;
@@ -422,6 +424,23 @@ TEST_CASE("Asset undo steps never use a database that has gone", "[editor][comma
 
     // Without assets, asset commands do nothing.
     CHECK_FALSE(f.doc.execute(std::make_unique<ChangeImageFilter>(a.image, TextureFilter::Smooth)));
+}
+
+TEST_CASE("Animation edits are undoable and read again at once", "[editor][commands][assets][animation]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+    const auto id = a.db->createAnimationSet(a.image, {8.0f, 8.0f}, "hero");
+    REQUIRE(id);
+    AnimationSet changed = *a.db->find(*id)->animation;
+    changed.clips.push_back(AnimationClip{"walk", {1, 2, 3}, 12.0f, true});
+    REQUIRE(f.doc.execute(std::make_unique<ChangeAssetText>(*id, serializeAnimationSet(changed), "Add Clip")));
+    REQUIRE(a.db->find(*id)->animation->findClip("walk") != nullptr);   // the record is up to date
+    REQUIRE(f.doc.undo());
+    CHECK(a.db->find(*id)->animation->findClip("walk") == nullptr);
+    REQUIRE(f.doc.redo());
+    CHECK(a.db->find(*id)->animation->findClip("walk")->fps == 12.0f);
 }
 
 TEST_CASE("Content files are edited through undoable steps", "[editor][commands][assets]")

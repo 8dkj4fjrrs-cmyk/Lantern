@@ -138,6 +138,7 @@ std::string_view assetTypeName(AssetType type)
     case AssetType::Variables: return "variables";
     case AssetType::Dialogue: return "dialogue";
     case AssetType::Quest: return "quest";
+    case AssetType::Animation: return "animation";
     }
     return "image";
 }
@@ -145,7 +146,7 @@ std::string_view assetTypeName(AssetType type)
 std::optional<AssetType> assetTypeFromName(std::string_view name)
 {
     for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font, AssetType::Scene,
-                        AssetType::Variables, AssetType::Dialogue, AssetType::Quest}) {
+                        AssetType::Variables, AssetType::Dialogue, AssetType::Quest, AssetType::Animation}) {
         if (assetTypeName(t) == name) {
             return t;
         }
@@ -180,6 +181,9 @@ std::optional<AssetType> assetTypeForPath(const fs::path& path)
     }
     if (ext == ".lquest") {
         return AssetType::Quest;
+    }
+    if (ext == AnimationFormat::kExtension) {
+        return AssetType::Animation;
     }
     return std::nullopt;
 }
@@ -241,6 +245,7 @@ void AssetDatabase::readAsset(AssetRecord& record, std::vector<FileIssue>& issue
     record.problem.clear();
     record.image.reset();
     record.tileset.reset();
+    record.animation.reset();
     const fs::path file = m_folder / record.path;
 
     if (record.type == AssetType::Image) {
@@ -257,6 +262,16 @@ void AssetDatabase::readAsset(AssetRecord& record, std::vector<FileIssue>& issue
         } else {
             record.problem = "This file is not a readable PNG or JPEG image (is it damaged, or a different "
                              "format renamed?).";
+        }
+    } else if (record.type == AssetType::Animation) {
+        std::string error;
+        const auto text = readTextFile(file);
+        if (!text) {
+            record.problem = "The animation file could not be read.";
+        } else if (auto set = parseAnimationSet(*text, &error)) {
+            record.animation = std::move(*set);
+        } else {
+            record.problem = error;
         }
     } else if (record.type == AssetType::Tileset) {
         std::string error;
@@ -410,8 +425,10 @@ std::vector<FileIssue> AssetDatabase::refresh()
         if (known && lastStamp != m_stamps.end() && lastStamp->second == stamp
             && m_assets[old->second].filter == record.filter) {
             const AssetRecord& previous = m_assets[old->second];
+            // Unchanged: keep what was read from the file last time.
             record.image = previous.image;
             record.tileset = previous.tileset;
+            record.animation = previous.animation;
             record.problem = previous.problem;
             continue;
         }
@@ -558,6 +575,24 @@ std::optional<AssetId> AssetDatabase::createTileset(AssetId image, Vec2 tileSize
     index();
     ++m_revision;
     return id;
+}
+
+std::optional<AssetId> AssetDatabase::createAnimationSet(AssetId image, Vec2 frameSize, std::string_view name,
+                                                        std::string* error)
+{
+    const AssetRecord* img = find(image);
+    if (img == nullptr || img->type != AssetType::Image) {
+        setError(error, "Choose an image (a sprite sheet) to make the animations from.");
+        return std::nullopt;
+    }
+    AnimationSet set;
+    set.image = image;
+    set.frameWidth = std::max(1, static_cast<int>(frameSize.x));
+    set.frameHeight = std::max(1, static_cast<int>(frameSize.y));
+    set.clips.push_back({"idle", {0}, 8.0f, true});
+    const std::size_t slash = img->path.rfind('/');
+    const std::string folder = slash == std::string::npos ? std::string() : img->path.substr(0, slash);
+    return createTextAsset(folder, name, AnimationFormat::kExtension, serializeAnimationSet(set), error);
 }
 
 std::optional<AssetId> AssetDatabase::createTextAsset(std::string_view folder, std::string_view name,

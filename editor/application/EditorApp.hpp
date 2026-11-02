@@ -190,6 +190,7 @@ private:
     AssetsPanel* m_assets = nullptr;
     AssetsPreviewPanel* m_preview = nullptr;
     TilePalettePanel* m_tilePalette = nullptr;
+    AnimationPanel* m_animation = nullptr;
     InspectorPanel* m_inspector = nullptr;
     ConsolePanel* m_consolePanel = nullptr;
     ui::ChoiceField* m_sceneChoice = nullptr;

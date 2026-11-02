@@ -16,7 +16,7 @@ My Game/
   project.lantern      project settings
   scenes/
     main.lscene        one file per scene
-  assets/              images, tilesets, sounds, fonts (each with a .meta file)
+  assets/              images, tilesets, animations, sounds, fonts (each with a .meta file)
 ```
 
 `project.lantern`:
@@ -123,6 +123,19 @@ normal size.
 | `color` | tint, `"#rrggbbaa"` (white = the image's own colours) | `"#ffffffff"` |
 | `flipX`, `flipY` | mirror the image | `false` |
 
+**`lantern.Animator`**: plays a flipbook clip from an animation set (below)
+on the entity's Sprite: the frames replace the Sprite's image, and the Sprite
+still decides the size, colour and flipping. Without a Sprite, frames are
+drawn at their size in pixels. Gameplay code switches clips
+([gameplay guide](../gameplay.md#animation)).
+
+| Key | Type | Default |
+|---|---|---|
+| `animations` | an animation asset's ID, or `null` | `null` |
+| `clip` | the clip's id, e.g. `"walk_left"` (empty: the set's first clip) | `""` |
+| `speed` | 0 to 20; 2 plays twice as fast | `1` |
+| `playing` | `false` shows the clip's first frame | `true` |
+
 **`lantern.Camera`**: what the player sees. The first active Camera (in
 hierarchy order) centres the game view on its entity's position.
 
@@ -213,7 +226,7 @@ exactly as they are and writes them back unchanged.
 
 ## Asset IDs (`.meta` files)
 
-Every image, tileset, sound, font and scene in a project has a small file
+Every image, tileset, animation set, sound, font and scene in a project has a small file
 beside it holding its permanent ID:
 
 ```
@@ -226,14 +239,14 @@ assets/hero.png.meta    {"format": "lantern.asset", "version": 1,
 | Key | Meaning |
 |---|---|
 | `id` | The asset's permanent ID: 16 hex digits. Scenes refer to assets by this ID. |
-| `type` | `"image"`, `"tileset"`, `"audio"`, `"font"` or `"scene"` (from the file extension). |
+| `type` | `"image"`, `"tileset"`, `"animation"`, `"audio"`, `"font"` or `"scene"`, and the content types (from the file extension). |
 | `filter` | Images: `"pixel"` (hard pixel edges, for pixel art) or `"smooth"`. |
 
 Keep each `.meta` file next to its asset when moving files outside the
 editor; renaming or moving inside the editor does this for you. A file
 without one gets a new ID automatically (references to an old ID then show
 as missing). A copied file *and* `.meta` is noticed and the copy gets a new
-ID. Supported files: PNG and JPEG images, `.ltileset` tilesets, WAV, OGG and
+ID. Supported files: PNG and JPEG images, `.ltileset` tilesets, `.lanim` animation sets, WAV, OGG and
 MP3 sounds, TTF and OTF fonts, and `.lscene` scenes (scenes have IDs so that
 gameplay can refer to them, e.g. a door leading to another scene; the
 project's `startScene` stays a path). Files written by Lantern 0.4 have no
@@ -258,6 +271,38 @@ with 0.5.
 with `margin` pixels around the edge and `spacing` between tiles. Tiles are
 numbered from 0, left to right, then top to bottom. `solid` lists the tiles
 that block movement wherever they are painted.
+
+## Animation sets (`.lanim`)
+
+A sprite sheet cut into equal frames (like a tileset), and named clips that
+show some of those frames one after another. Added in Lantern 0.6.5.
+
+```json
+{
+  "format": "lantern.animations",
+  "version": 1,
+  "image": "5a4d1e0000000007",
+  "frameSize": [16, 24],
+  "margin": 0,
+  "spacing": 0,
+  "clips": [
+    { "id": "idle_down", "frames": [0], "fps": 1, "loop": true },
+    { "id": "walk_down", "frames": [1, 0, 2, 0], "fps": 8, "loop": true },
+    { "id": "attack", "frames": [12, 13, 14], "fps": 12, "loop": false }
+  ]
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `image` | The sprite sheet (an image asset, by ID), or `null`. |
+| `frameSize` | `[width, height]` of one frame in pixels (1 to 4096). |
+| `margin`, `spacing` | Pixels around the edge of the sheet, and between frames (0 to 4096). |
+| `clips` | The clips, each with an `id` (letters, digits and `_`, starting with a letter or `_`; unique in the file), `frames` (frame numbers, from 0, left to right, then top to bottom; a frame may repeat), `fps` (frames per second, more than 0 and at most 240; default 8) and `loop` (default `true`; `false` stays on the last frame). |
+
+A clip with no frames is allowed (it shows nothing until frames are added).
+Frame numbers past the end of the sheet are not an error in the file (the
+sheet may be changed later); they are drawn as the sheet's first frame.
 
 ## How Lantern reads files
 

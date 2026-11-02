@@ -3,10 +3,11 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 6 (RPG content).** `lantern_editor` creates and opens
+> **Status: Milestone 6.5 (flipbook animation).** `lantern_editor` creates and opens
 > projects, imports assets with permanent IDs, and edits scenes with
-> sprites, shapes, text, cameras, colliders and tilemaps, all with undo,
-> saved as versioned JSON. Gameplay is written in C++ as **behaviours** in
+> sprites, shapes, text, cameras, colliders, tilemaps and sprite-sheet
+> animations (made in its Animation panel), all with undo, saved as
+> versioned JSON. Gameplay is written in C++ as **behaviours** in
 > game modules; story content (game variables, dialogues, quests, and
 > triggers in scenes) is data, edited in the editor and checked as you go.
 > Play mode runs the game in the Scene view on a copy of the scene;

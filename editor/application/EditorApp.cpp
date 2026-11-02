@@ -42,6 +42,7 @@ constexpr PanelInfo kPanels[] = {
     {kPreviewPanel, "Assets Preview", ui::Icon::Eye},
     {kConsolePanel, "Console", ui::Icon::Terminal},
     {kTilePalettePanel, "Tile Palette", ui::Icon::Grid},
+    {kAnimationPanel, "Animation", ui::Icon::Play},
     {kInspectorPanel, "Inspector", ui::Icon::Sliders},
 };
 
@@ -116,6 +117,7 @@ ui::DockLayout EditorApp::defaultLayout()
     layout.dock(kPreviewPanel, kViewportPanel, ui::DockSide::Bottom, 0.32f);
     layout.dock(kConsolePanel, kPreviewPanel, ui::DockSide::Center);
     layout.dock(kTilePalettePanel, kPreviewPanel, ui::DockSide::Center);
+    layout.dock(kAnimationPanel, kPreviewPanel, ui::DockSide::Center);
     layout.activate(kConsolePanel);
     return layout;
 }
@@ -618,6 +620,9 @@ void EditorApp::updateGame(UiFrame& frame)
         m_stepPending = false;
         m_game->update(1.0f / 60.0f);
     }
+    // Animations follow game time, so pausing freezes them too. (While
+    // editing, the runtime's own clock plays them in the Scene view.)
+    frame.setAnimationTime(m_game->time());
 }
 
 std::optional<Scene> EditorApp::loadSceneForGame(AssetId id, std::string& error)
@@ -1425,6 +1430,10 @@ void EditorApp::buildWorkspace(UiFrame& frame)
             auto p = std::make_unique<TilePalettePanel>(*this);
             m_tilePalette = p.get();
             content = std::move(p);
+        } else if (id == kAnimationPanel) {
+            auto p = std::make_unique<AnimationPanel>(*this);
+            m_animation = p.get();
+            content = std::move(p);
         } else if (id == kAssetsPanel) {
             auto p = std::make_unique<AssetsPanel>(*this);
             m_assets = p.get();
@@ -1615,6 +1624,7 @@ void EditorApp::updateUi(UiFrame& frame)
     m_assets->update(frame);
     m_preview->update(frame);
     m_tilePalette->update(frame);
+    m_animation->update(frame);
     m_inspector->update(frame);
     if (m_renamePending) {
         m_renamePending = false;
@@ -1648,6 +1658,7 @@ void EditorApp::shutdownUi(UiFrame& /*frame*/)
     m_assets = nullptr;
     m_preview = nullptr;
     m_tilePalette = nullptr;
+    m_animation = nullptr;
     m_inspector = nullptr;
     m_consolePanel = nullptr;
     m_sceneChoice = nullptr;

@@ -229,6 +229,12 @@ void AssetsPanel::rebuild()
             case AssetType::Variables: item.icon = ui::Icon::Sliders; item.detail = "Variables"; break;
             case AssetType::Dialogue: item.icon = ui::Icon::Terminal; item.detail = "Dialogue"; break;
             case AssetType::Quest: item.icon = ui::Icon::Check; item.detail = "Quest"; break;
+            case AssetType::Animation:
+                item.icon = ui::Icon::Play;
+                item.detail = asset->animation ? std::to_string(asset->animation->clips.size())
+                                                     + (asset->animation->clips.size() == 1 ? " clip" : " clips")
+                                               : "Animations";
+                break;
             }
             if (!asset->isUsable()) {
                 item.icon = ui::Icon::Warning;
@@ -496,6 +502,10 @@ void AssetsPreviewPanel::update(UiFrame& frame)
             AssetId imageId = asset->type == AssetType::Image ? asset->id : AssetId{};
             if (asset->type == AssetType::Tileset && asset->tileset) {
                 imageId = asset->tileset->image;
+            }
+            if (asset->type == AssetType::Animation && asset->animation) {
+                imageId = asset->animation->image;
+                e.icon = ui::Icon::Play;
             }
             const AssetRecord* image = db->find(imageId);
             if (image != nullptr && image->isUsable()) {

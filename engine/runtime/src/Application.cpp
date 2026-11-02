@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -176,6 +177,8 @@ struct Application::Impl {
     ax::RenderTexture* worldTexture = nullptr;  // retained here (Offscreen only)
     std::unique_ptr<detail::UiHost> ui;
     float fps = 0.0f;
+    double realClock = 0.0;                     // seconds of frames shown: animations' default clock
+    std::optional<double> animationTime;        // set for one frame by setAnimationTime()
 
 
     Logger& log() { return engine.logger(); }
@@ -500,6 +503,7 @@ void Application::Impl::logDiagnostics(ax::RenderView& view)
 
 void Application::Impl::onFrame(float deltaSeconds)
 {
+    realClock += static_cast<double>(deltaSeconds);
     if (frameCallback) {
         frameCallback(FrameInfo{report.framesRendered, static_cast<double>(deltaSeconds)});
     }
@@ -534,10 +538,12 @@ void Application::Impl::onFrame(float deltaSeconds)
     if (renderer) {
         const Scene* before = shownScene;
         renderer->update(); // redraw the scene if it changed this frame
+        renderer->animate(animationTime.value_or(realClock));
         if (presentation.worldDisplay == WorldDisplay::FullWindow) {
             applyGameCamera();
         }
         shownScene = renderer->scene().get();
+        animationTime.reset();
         if (shownScene != before && shownScene != nullptr) {
             log().info(kCategory, "Showing scene '" + shownScene->name() + "' ("
                                       + std::to_string(shownScene->size()) + " entities)");
@@ -685,6 +691,11 @@ void UiFrame::setAssets(const AssetDatabase* assets)
     m_access.impl.setAssets(assets);
 }
 
+void UiFrame::setAnimationTime(double seconds)
+{
+    m_access.impl.animationTime = seconds;
+}
+
 std::optional<UiImage> UiFrame::loadImage(const std::filesystem::path& path, bool pixelArt)
 {
     Application::Impl& impl = m_access.impl;
@@ -734,6 +745,11 @@ void Application::showScene(std::shared_ptr<const Scene> scene)
 void Application::setAssets(const AssetDatabase* assets)
 {
     m_impl->setAssets(assets);
+}
+
+void Application::setAnimationTime(double seconds)
+{
+    m_impl->animationTime = seconds;
 }
 
 void Application::requestQuit()

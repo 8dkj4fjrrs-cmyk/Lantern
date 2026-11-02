@@ -150,7 +150,23 @@ public:
     /// collider it simply moves.
     MoveResult move(EntityId id, Vec2 delta);
 
-    // --- Content: variables, quests, dialogue, events, saves ----------------------------------------
+    // --- Animation (see lantern::Animator) ---------------------------------------------------------
+    /// Plays a clip on the object's Animator, e.g. play(entity(), "walk_left").
+    /// Asking for the clip already playing lets it carry on (so it can be
+    /// called every frame), unless `restart` is true. False if the object has
+    /// no Animator.
+    bool play(EntityId id, std::string_view clip, bool restart = false);
+    /// Stops the object's animation on its clip's first frame; play() starts it again.
+    void stopAnimation(EntityId id);
+    /// The clip the object's Animator plays ("" if it has no Animator).
+    std::string currentClip(EntityId id) const;
+    /// True while the object's Animator is playing (not stopped).
+    bool isAnimationPlaying(EntityId id) const;
+    /// True once a clip that does not loop has played to its end (e.g. an
+    /// attack). Always false for looping clips and for objects without one.
+    bool isAnimationFinished(EntityId id) const;
+
+        // --- Content: variables, quests, dialogue, events, saves ----------------------------------------
     /// Variables, quests, dialogues and actions (see ContentRunner).
     ContentRunner& content() noexcept { return *m_runner; }
     const ContentRunner& content() const noexcept { return *m_runner; }

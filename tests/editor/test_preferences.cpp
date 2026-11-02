@@ -1,3 +1,4 @@
+#include "support/TempFolder.hpp"
 #include "EditorState.hpp"
 #include "Preferences.hpp"
 
@@ -14,7 +15,7 @@ namespace {
 struct TempDir {
     std::filesystem::path path;
     explicit TempDir(const char* name)
-        : path(std::filesystem::temp_directory_path() / "lantern-tests" / name)
+        : path(lantern::test::uniqueTempFolder(name))
     {
         std::filesystem::remove_all(path);
     }

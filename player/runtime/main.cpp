@@ -223,6 +223,7 @@ int main(int argc, char** argv)
             }
             const float dt = opt.fixedStep ? 1.0f / 60.0f : static_cast<float>(frame.deltaSeconds);
             game.update(dt);
+            app.setAnimationTime(game.time());   // animations follow game time
             if (game.sharedScene() != shown) {   // the game changed scene
                 shown = game.sharedScene();
                 app.showScene(shown);

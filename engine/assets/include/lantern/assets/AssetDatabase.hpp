@@ -18,6 +18,7 @@
 // The database reads files only; it never needs the graphics backend, so it
 // is unit-tested in every preset. Image sizes come from stb_image.
 
+#include "lantern/assets/Animation.hpp"
 #include "lantern/assets/Tileset.hpp"
 #include "lantern/scene/EntityId.hpp"
 #include "lantern/scene/SceneFile.hpp" // FileIssue
@@ -34,9 +35,9 @@ namespace lantern {
 
 class Scene;
 
-enum class AssetType { Image, Tileset, Audio, Font, Scene, Variables, Dialogue, Quest };
+enum class AssetType { Image, Tileset, Audio, Font, Scene, Variables, Dialogue, Quest, Animation };
 
-/// "image", "tileset", "audio", "font", "scene", "variables", "dialogue", "quest"
+/// "image", "tileset", "audio", "font", "scene", "variables", "dialogue", "quest", "animation"
 /// (as in .meta files and PropertyOptions::assetType).
 std::string_view assetTypeName(AssetType type);
 std::optional<AssetType> assetTypeFromName(std::string_view name);
@@ -44,7 +45,8 @@ std::optional<AssetType> assetTypeFromName(std::string_view name);
 /// .png .jpg .jpeg (Image), .ltileset (Tileset), .wav .ogg .mp3 (Audio), .ttf .otf (Font),
 /// .lscene (Scene: scenes have IDs too, so gameplay can say "go to that scene"
 /// and keep working when the scene file is renamed), .lvars (Variables),
-/// .ldialogue (Dialogue), .lquest (Quest): RPG content, see lantern_content.
+/// .ldialogue (Dialogue), .lquest (Quest): RPG content, see lantern_content;
+/// .lanim (Animation): flipbook clips cut from an image.
 std::optional<AssetType> assetTypeForPath(const std::filesystem::path& path);
 
 /// How an image is smoothed when it is drawn larger or smaller than its size.
@@ -65,6 +67,7 @@ struct AssetRecord {
     TextureFilter filter = TextureFilter::Smooth;   // images (and the images of tilesets)
     std::optional<ImageInfo> image;      // images: size, if the file is a valid image
     std::optional<Tileset> tileset;      // tilesets: the definition, if valid
+    std::optional<AnimationSet> animation;   // animations: the definition, if valid
     std::string problem;                 // empty when the asset is usable; else what is wrong
 
     bool isUsable() const noexcept { return problem.empty(); }
@@ -100,6 +103,9 @@ public:
     /// set of assets or their contents changed.
     std::uint64_t revision() const noexcept { return m_revision; }
 
+    /// The asset with this ID, or null. The pointer is only good until the
+    /// next refresh() or change (records are rebuilt then, even when nothing
+    /// changed), so look assets up again rather than keeping it.
     const AssetRecord* find(AssetId id) const;
     const AssetRecord* findByPath(std::string_view relativePath) const;
     /// Every asset (optionally only one type), sorted by path.
@@ -127,6 +133,11 @@ public:
     Status writeText(AssetId id, std::string_view text);
     /// The current text of a text asset, read from disk.
     std::optional<std::string> readText(AssetId id) const;
+
+    /// Creates an animation set for an image (`folder`/<name>.lanim), with
+    /// one clip showing the first frame.
+    std::optional<AssetId> createAnimationSet(AssetId image, Vec2 frameSize, std::string_view name,
+                                              std::string* error = nullptr);
 
     /// Changes an image's filter (saved in its .meta).
     Status setFilter(AssetId id, TextureFilter filter);

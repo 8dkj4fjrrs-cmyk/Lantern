@@ -23,19 +23,30 @@ bool containsPlayer(const Game& game, const std::vector<EntityId>& ids)
 
 void PlayerController::update(Game& game, float dt)
 {
-    if (game.isInDialogue()) {
-        return; // the arrow keys choose answers now
-    }
-    const Vec2 direction = game.input().moveDirection();
+    const Entity* self = game.scene().find(entity());
+    const bool animated = self != nullptr && self->get<Animator>() != nullptr;
+    const Vec2 direction = game.isInDialogue() ? Vec2{} : game.input().moveDirection();   // in a dialogue, arrows choose answers
     if (direction.x == 0.0f && direction.y == 0.0f) {
+        if (animated) {
+            game.play(entity(), "idle_" + facing);   // carries on if already playing
+        }
         return;
     }
     // move() slides along walls and solid tiles instead of going through.
     game.move(entity(), direction * (speed * dt));
 
-    // Face the way we walk. Only change the sprite when the facing changes:
-    // changing a sprite redraws it, moving does not.
-    const Entity* self = game.scene().find(entity());
+    // Face the way we walk: sideways wins on diagonals, as in most top-down games.
+    if (direction.x != 0.0f) {
+        facing = direction.x < 0.0f ? "left" : "right";
+    } else {
+        facing = direction.y > 0.0f ? "up" : "down";
+    }
+    if (animated) {
+        game.play(entity(), "walk_" + facing);
+        return;
+    }
+    // No animations: flip the image. Only change the sprite when the facing
+    // changes (changing a sprite redraws it, moving does not).
     const Sprite* sprite = self != nullptr ? self->get<Sprite>() : nullptr;
     const bool faceLeft = direction.x < 0.0f;
     if (sprite != nullptr && direction.x != 0.0f && sprite->flipX != faceLeft) {

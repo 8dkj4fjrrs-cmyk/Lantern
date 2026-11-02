@@ -127,6 +127,13 @@
           "flipY": false
         },
         {
+          "type": "lantern.Animator",
+          "animations": "5a4d1e0000000008",
+          "clip": "idle_down",
+          "speed": 1,
+          "playing": true
+        },
+        {
           "type": "lantern.Collider",
           "size": [12, 6],
           "offset": [0, -9],

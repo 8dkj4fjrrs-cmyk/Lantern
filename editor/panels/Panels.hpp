@@ -15,6 +15,7 @@
 #include "../model/EditorState.hpp"
 #include "../model/SceneDocument.hpp"
 
+#include "lantern/assets/Animation.hpp"
 #include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/content/ContentLibrary.hpp"
 #include "lantern/content/Notation.hpp"
@@ -49,6 +50,7 @@ inline constexpr const char* kInspectorPanel = "inspector";
 inline constexpr const char* kPreviewPanel = "preview";
 inline constexpr const char* kConsolePanel = "console";
 inline constexpr const char* kTilePalettePanel = "tilepalette";
+inline constexpr const char* kAnimationPanel = "animation";
 
 // Tooltips for controls that are visible but not working yet.
 inline constexpr const char* kComingWithBuilds = "Coming in Milestone 8: building your game for players";
@@ -140,6 +142,13 @@ ui::Row& makePanelToolbar(ui::Widget& parent);
 ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string tooltip, std::function<void()> action = {});
 /// Opens a menu just below `anchor`.
 void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items);
+
+/// Changes an animation set (.lanim) and saves it as one undoable step.
+/// With `merge`, consecutive changes with the same label join into one step
+/// until the next endEdit() (e.g. while typing a number). False if nothing
+/// changed or it could not be saved (the user is told why).
+bool editAnimationSet(EditorServices& editor, AssetId id, const std::string& label,
+                      const std::function<void(AnimationSet&)>& change, bool merge = false);
 
 /// The game world, scaled to fit. Click an object to select it.
 /// The tools of the Scene view (W, E, R, T as in most editors), and the
@@ -257,6 +266,60 @@ private:
     Palette* m_palette = nullptr;
 };
 
+/// Edits an animation set: the sprite sheet with its frames (click to add
+/// one to the clip), the clip's frames in order, its speed and looping, and
+/// a preview playing it. Shows the set selected in Assets, or the one the
+/// selected object's Animator uses.
+class AnimationPanel final : public ui::Column {
+public:
+    explicit AnimationPanel(EditorServices& editor);
+    void update(UiFrame& frame);
+
+    /// What the panel is editing; shared with its parts.
+    struct State {
+        AssetId setId;
+        std::optional<AnimationSet> set;
+        ui::TextureId texture = 0;
+        ui::Size image;            // the sheet's size in pixels
+        std::string clip;          // the clip being edited
+        int selected = -1;         // a frame of the clip (index in its list), or -1
+        bool previewPlaying = true;
+
+        const AnimationClip* currentClip() const { return set ? set->findClip(clip) : nullptr; }
+        int frameCount() const;
+        /// The frame's corners in the image, as fractions (for drawing it).
+        std::pair<ui::Vec2, ui::Vec2> frameUv(int frame) const;
+    };
+
+private:
+    class Sheet;
+    class Strip;
+    class Preview;
+    void showSet(AssetId id, const std::string& clip);
+    void refreshControls();
+    void editClip(const std::string& label, const std::function<void(AnimationClip&)>& change, bool merge = false);
+    void showClipNameDialog(bool rename);
+    void deleteClip();
+    void moveSelected(int by);
+    void removeSelected();
+
+    EditorServices& m_editor;
+    State m_state;
+    AssetId m_lastSelectedAsset;
+    EntityId m_lastSelectedEntity;
+    std::uint64_t m_shownRevision = 0;
+    ui::Widget* m_empty = nullptr;
+    ui::Widget* m_body = nullptr;
+    ui::Label* m_info = nullptr;
+    ui::ChoiceField* m_clipChoice = nullptr;
+    ui::NumberField* m_fps = nullptr;
+    ui::Checkbox* m_loop = nullptr;
+    ui::Button* m_play = nullptr;
+    ui::Label* m_frameInfo = nullptr;
+    std::vector<ui::Button*> m_clipButtons;    // need a clip
+    std::vector<ui::Button*> m_frameButtons;   // need a selected frame
+};
+
 /// The selected object's (or the scene's) properties, editable.
 class InspectorPanel final : public ui::Column {
 public:
@@ -271,6 +334,10 @@ private:
     void buildScene(ui::Column& content);
     void buildAsset(ui::Column& content, const AssetRecord& asset);
     void showCreateTilesetDialog(AssetId image);
+    void showCreateAnimationsDialog(AssetId image);
+    void buildAnimationAsset(ui::Column& body, const AssetRecord& asset);
+    void addClipChoice(ui::PropertyField& row, EntityId id, std::function<void(PropertyValue)> set,
+                       std::function<void()> end);
     void confirmDeleteAsset(AssetId id);
     void buildComponent(ui::Column& content, const Entity& entity, const Component& component);
     void buildTilemapLayers(ui::Section& section, EntityId id);

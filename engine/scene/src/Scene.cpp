@@ -291,6 +291,16 @@ Component* Scene::editComponent(EntityId id, std::string_view componentType)
     return c;
 }
 
+Animator* Scene::editAnimatorPlayback(EntityId id)
+{
+    Entity* e = findMutable(id);
+    auto* animator = e != nullptr ? static_cast<Animator*>(e->component(Animator::componentType().id)) : nullptr;
+    if (animator != nullptr) {
+        markMoved();
+    }
+    return animator;
+}
+
 bool Scene::modifyComponent(EntityId id, std::string_view componentType,
                             const std::function<bool(Component&)>& change)
 {

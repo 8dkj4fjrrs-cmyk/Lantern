@@ -26,6 +26,10 @@ IDS = {
     "game.lvars": "5a4d1e0000000010",
     "elder.ldialogue": "5a4d1e0000000011",
     "gems.lquest": "5a4d1e0000000012",
+    "hero_walk.png": "5a4d1e0000000007",
+    "hero.lanim": "5a4d1e0000000008",
+    "elder_idle.png": "5a4d1e0000000009",
+    "elder.lanim": "5a4d1e000000000a",
 }
 GRASS, FLOWERS, PATH, WALL, WATER, CAVE_FLOOR, CAVE_WALL, MAT = range(8)
 CELL = 16      # tile size in pixels
@@ -108,6 +112,9 @@ def player(x, y):
         transform(x, y, scale=(SCALE, SCALE)),
         {"type": "lantern.Sprite", "image": IDS["hero.png"], "size": [16, 24], "color": "#ffffffff",
          "flipX": False, "flipY": False},
+        # The PlayerController switches clips: walk_left, idle_up, ...
+        {"type": "lantern.Animator", "animations": IDS["hero.lanim"], "clip": "idle_down", "speed": 1,
+         "playing": True},
         # Only the feet collide, so the head can overlap a wall's top edge.
         {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
         {"type": "lantern.Interactor", "key": "E"},
@@ -154,6 +161,7 @@ def elder(x, y):
         transform(x, y, scale=(SCALE, SCALE)),
         {"type": "lantern.Sprite", "image": IDS["elder.png"], "size": [16, 24], "color": "#ffffffff",
          "flipX": True, "flipY": False},
+        {"type": "lantern.Animator", "animations": IDS["elder.lanim"], "clip": "idle", "speed": 1, "playing": True},
         {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
     ])
     talk = entity("Talk Area", [
@@ -299,6 +307,28 @@ def gems_quest():
                         {"type": "log", "text": "The way to the cave is open."}]}
 
 
+def clip(clip_id, frames, fps, loop=True):
+    return {"id": clip_id, "frames": frames, "fps": fps, "loop": loop}
+
+
+def hero_animations():
+    """hero_walk.png: rows down, left, right, up; columns standing, left
+    foot forward, right foot forward."""
+    clips = []
+    for row, facing in enumerate(["down", "left", "right", "up"]):
+        first = row * 3
+        clips.append(clip(f"idle_{facing}", [first], 1))
+        clips.append(clip(f"walk_{facing}", [first + 1, first, first + 2, first], 8))
+    return {"format": "lantern.animations", "version": 1, "image": IDS["hero_walk.png"], "frameSize": [16, 24],
+            "margin": 0, "spacing": 0, "clips": clips}
+
+
+def elder_animations():
+    # Eyes open for a while, then a quick blink.
+    return {"format": "lantern.animations", "version": 1, "image": IDS["elder_idle.png"], "frameSize": [16, 24],
+            "margin": 0, "spacing": 0, "clips": [clip("idle", [0] * 15 + [1], 6)]}
+
+
 def meta(asset_id, kind, extra=None):
     m = {"format": "lantern.asset", "version": 1, "id": asset_id, "type": kind}
     m.update(extra or {})
@@ -336,6 +366,12 @@ def main():
     write(root / "assets/tiles.png.meta", meta(IDS["tiles.png"], "image", {"filter": "pixel"}))
     write(root / "assets/hero.png.meta", meta(IDS["hero.png"], "image", {"filter": "pixel"}))
     write(root / "assets/elder.png.meta", meta(IDS["elder.png"], "image", {"filter": "pixel"}))
+    write(root / "assets/hero_walk.png.meta", meta(IDS["hero_walk.png"], "image", {"filter": "pixel"}))
+    write(root / "assets/elder_idle.png.meta", meta(IDS["elder_idle.png"], "image", {"filter": "pixel"}))
+    write(root / "assets/hero.lanim", hero_animations())
+    write(root / "assets/hero.lanim.meta", meta(IDS["hero.lanim"], "animation"))
+    write(root / "assets/elder.lanim", elder_animations())
+    write(root / "assets/elder.lanim.meta", meta(IDS["elder.lanim"], "animation"))
     write(root / "content/game.lvars", variables())
     write(root / "content/game.lvars.meta", meta(IDS["game.lvars"], "variables"))
     write(root / "content/elder.ldialogue", elder_dialogue())

@@ -34,5 +34,36 @@ void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> ite
                     ui::OverlayOptions{.position = {anchor.x, anchor.bottom() + 2.0f}});
 }
 
+bool editAnimationSet(EditorServices& editor, AssetId id, const std::string& label,
+                      const std::function<void(AnimationSet&)>& change, bool merge)
+{
+    AssetDatabase* db = editor.assets();
+    const AssetRecord* asset = db != nullptr ? db->find(id) : nullptr;
+    if (asset == nullptr) {
+        return false;
+    }
+    if (!asset->animation) {
+        editor.showMessage("Cannot Edit", "The animation file has errors that must be fixed first: " + asset->problem);
+        return false;
+    }
+    AnimationSet changed = *asset->animation;
+    change(changed);
+    if (changed == *asset->animation) {
+        return false;
+    }
+    const std::string path = asset->path;
+    if (!merge) {
+        editor.endEdit();
+    }
+    const bool done = editor.execute(std::make_unique<ChangeAssetText>(id, serializeAnimationSet(changed), label));
+    if (!merge) {
+        editor.endEdit();
+    }
+    if (!done) {
+        editor.showMessage("Could Not Save the Animations",
+                           "Lantern could not write " + path + ". Check that the file is not read-only.");
+    }
+    return done;
+}
 
 } // namespace lantern::editor

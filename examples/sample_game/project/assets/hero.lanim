@@ -1,0 +1,58 @@
+{
+  "format": "lantern.animations",
+  "version": 1,
+  "image": "5a4d1e0000000007",
+  "frameSize": [16, 24],
+  "margin": 0,
+  "spacing": 0,
+  "clips": [
+    {
+      "id": "idle_down",
+      "frames": [0],
+      "fps": 1,
+      "loop": true
+    },
+    {
+      "id": "walk_down",
+      "frames": [1, 0, 2, 0],
+      "fps": 8,
+      "loop": true
+    },
+    {
+      "id": "idle_left",
+      "frames": [3],
+      "fps": 1,
+      "loop": true
+    },
+    {
+      "id": "walk_left",
+      "frames": [4, 3, 5, 3],
+      "fps": 8,
+      "loop": true
+    },
+    {
+      "id": "idle_right",
+      "frames": [6],
+      "fps": 1,
+      "loop": true
+    },
+    {
+      "id": "walk_right",
+      "frames": [7, 6, 8, 6],
+      "fps": 8,
+      "loop": true
+    },
+    {
+      "id": "idle_up",
+      "frames": [9],
+      "fps": 1,
+      "loop": true
+    },
+    {
+      "id": "walk_up",
+      "frames": [10, 9, 11, 9],
+      "fps": 8,
+      "loop": true
+    }
+  ]
+}

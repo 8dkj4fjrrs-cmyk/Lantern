@@ -286,6 +286,11 @@ void InspectorPanel::buildComponent(ui::Column& content, const Entity& entity, c
     if (dynamic_cast<const Tilemap*>(&component) != nullptr) {
         buildTilemapLayers(section, id);
     }
+    if (dynamic_cast<const Animator*>(&component) != nullptr) {
+        auto& buttons = section.body().emplace<ui::Row>(6.0f, ui::Insets{0.0f, 2.0f, 0.0f, 2.0f});
+        buttons.emplace<ui::Button>("Edit Clips", [this] { m_editor.showPanel(kAnimationPanel); })
+            .setTooltip("Opens the Animation panel for this object's animations");
+    }
 }
 
 // The layers of a tilemap: which one the tools paint on, visibility, names,
@@ -385,6 +390,52 @@ void InspectorPanel::buildTilemapLayers(ui::Section& section, EntityId id)
     });
     buttons.emplace<ui::Button>("Tile Palette", [this] { m_editor.showPanel(kTilePalettePanel); })
         .setTooltip("Choose the tile to paint with");
+}
+
+// An Animator's clip: chosen from the clips of its animation set.
+void InspectorPanel::addClipChoice(ui::PropertyField& row, EntityId id, std::function<void(PropertyValue)> set,
+                                   std::function<void()> end)
+{
+    auto& field = row.addValue(std::make_unique<ui::ChoiceField>());
+    field.setStretch(1.0f);
+    auto names = std::make_shared<std::vector<std::string>>();
+    field.setOnChoose([set, end, names](int index) {
+        if (index >= 0 && static_cast<std::size_t>(index) < names->size() && !(*names)[static_cast<std::size_t>(index)].empty()) {
+            set((*names)[static_cast<std::size_t>(index)]);
+            end();
+        }
+    });
+    m_refresh.push_back([this, id, names, &field] {
+        const Entity* e = m_editor.document().scene().find(id);
+        const Animator* animator = e != nullptr ? e->get<Animator>() : nullptr;
+        if (animator == nullptr) {
+            return;
+        }
+        const AssetDatabase* db = m_editor.assets();
+        const AssetRecord* a = db != nullptr ? db->find(animator->animations) : nullptr;
+        std::vector<std::string> now;
+        std::vector<std::string> labels;
+        if (a != nullptr && a->animation) {
+            for (const AnimationClip& c : a->animation->clips) {
+                now.push_back(c.id);
+                labels.push_back(c.id);
+            }
+        }
+        if (!animator->clip.empty() && std::find(now.begin(), now.end(), animator->clip) == now.end()) {
+            now.push_back(animator->clip);
+            labels.push_back(animator->clip + " (missing)");
+        }
+        if (now.empty()) {
+            now.emplace_back();
+            labels.emplace_back(animator->animations.isNull() ? "Choose Animations first" : "No clips");
+        }
+        if (now != *names) {
+            *names = now;
+            field.setOptions(std::move(labels));
+        }
+        const auto it = std::find(names->begin(), names->end(), animator->clip);
+        field.setSelected(it != names->end() ? static_cast<int>(it - names->begin()) : 0);
+    });
 }
 
 void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const std::string& typeId,
@@ -506,7 +557,8 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
         const std::string assetType = info.options.assetType;
         const bool isSpriteImage = typeId == Sprite::componentType().id && key == "image";
         const bool isTileset = typeId == Tilemap::componentType().id && key == "tileset";
-        field.setOnChoose([this, ids, id, typeId, key, label, isSpriteImage, isTileset, end](int index) {
+        const bool isAnimations = typeId == Animator::componentType().id && key == "animations";
+        field.setOnChoose([this, ids, id, typeId, key, label, isSpriteImage, isTileset, isAnimations, end](int index) {
             const AssetId chosen = index > 0 && static_cast<std::size_t>(index) < ids->size()
                                        ? (*ids)[static_cast<std::size_t>(index)]
                                        : AssetId{};
@@ -523,6 +575,25 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
                 if (const AssetRecord* a = m_editor.assets()->find(chosen); a != nullptr && a->tileset) {
                     changes.push_back({typeId, "cellSize", Vec2{static_cast<float>(a->tileset->tileWidth),
                                                                 static_cast<float>(a->tileset->tileHeight)}});
+                }
+            }
+            // Choosing an Animator's animations: the Sprite takes the frame
+            // size, and the clip becomes one the set has.
+            if (isAnimations && m_editor.assets() != nullptr) {
+                const AssetRecord* a = m_editor.assets()->find(chosen);
+                const Entity* e = m_editor.document().scene().find(id);
+                if (a != nullptr && a->animation && e != nullptr) {
+                    if (e->get<Sprite>() != nullptr) {
+                        changes.push_back({Sprite::componentType().id, "size",
+                                           Vec2{static_cast<float>(a->animation->frameWidth),
+                                                static_cast<float>(a->animation->frameHeight)}});
+                    }
+                    const Animator* animator = e->get<Animator>();
+                    if (animator != nullptr && a->animation->findClip(animator->clip) == nullptr) {
+                        changes.push_back({typeId, "clip", a->animation->clips.empty()
+                                                               ? std::string()
+                                                               : a->animation->clips.front().id});
+                    }
                 }
             }
             m_editor.execute(std::make_unique<SetProperties>(id, std::move(changes), "Change " + label));
@@ -557,6 +628,8 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
             const AssetRecord* a = db != nullptr ? db->find(current) : nullptr;
             if (a != nullptr && a->type == AssetType::Tileset && a->tileset) {
                 a = db->find(a->tileset->image); // a tileset shows its image
+            } else if (a != nullptr && a->type == AssetType::Animation && a->animation) {
+                a = db->find(a->animation->image); // and animations their sheet
             }
             if (a != nullptr && a->type == AssetType::Image && a->isUsable() && m_frame != nullptr) {
                 if (const auto image = m_frame->loadImage(db->absolutePath(*a), a->filter == TextureFilter::Pixel)) {
@@ -569,6 +642,10 @@ void InspectorPanel::addPropertyEditor(ui::Section& section, EntityId id, const 
         break;
     }
     case PropertyKind::String: {
+        if (typeId == Animator::componentType().id && key == "clip") {
+            addClipChoice(row, id, set, end);
+            break;
+        }
         auto& field = row.addValue(std::make_unique<ui::TextField>(""));
         field.setStretch(1.0f);
         field.setFixedSize({0.0f, 22.0f});
@@ -698,7 +775,8 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     // Header: the file name (editable: renames the file and its .meta).
     auto& header = content.emplace<ui::Row>(6.0f, ui::Insets{0.0f, 0.0f, 0.0f, 6.0f});
     header.setCrossAlign(ui::CrossAlign::Center);
-    header.emplace<ui::IconView>(asset.type == AssetType::Tileset ? ui::Icon::Grid
+    header.emplace<ui::IconView>(asset.type == AssetType::Tileset     ? ui::Icon::Grid
+                                 : asset.type == AssetType::Animation ? ui::Icon::Play
                                  : asset.type == AssetType::Image ? ui::Icon::Scene
                                  : asset.type == AssetType::Scene ? ui::Icon::Flame
                                  : asset.type == AssetType::Variables ? ui::Icon::Sliders
@@ -748,6 +826,9 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     if (asset.type == AssetType::Tileset && asset.tileset) {
         previewImage = asset.tileset->image;
     }
+    if (asset.type == AssetType::Animation && asset.animation) {
+        previewImage = asset.animation->image;
+    }
     if (!previewImage.isNull()) {
         auto& preview = content.emplace<ui::ImageView>(0, ui::Size{});
         preview.setFixedSize({0.0f, 150.0f});
@@ -772,6 +853,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
                                               : typeName == "variables" ? "Variables"
                                               : typeName == "dialogue" ? "Dialogue"
                                               : typeName == "quest"   ? "Quest"
+                                              : typeName == "animation" ? "Animations"
                                                                       : "Font");
     auto row = [&](const char* label, const std::string& value, const std::string& tip) {
         auto& r = info.body().emplace<ui::PropertyField>(label);
@@ -894,6 +976,10 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             "Tiles that block movement. Choose them in the Tile Palette with \"Edit solid tiles\" on.");
     }
 
+    if (asset.type == AssetType::Animation && asset.animation) {
+        buildAnimationAsset(info.body(), asset);
+    }
+
     if (asset.type == AssetType::Variables || asset.type == AssetType::Dialogue || asset.type == AssetType::Quest) {
         buildContentAsset(content, asset);
     }
@@ -917,6 +1003,8 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         }).setTooltip("Adds a sprite showing this image (or drag the image into the Scene view)");
         actions.emplace<ui::Button>("Create Tileset…", [this, id] { showCreateTilesetDialog(id); })
             .setTooltip("Cut this image into tiles for painting tilemaps");
+        actions.emplace<ui::Button>("Create Animations…", [this, id] { showCreateAnimationsDialog(id); })
+            .setTooltip("Use this image as a sprite sheet: cut it into frames and make animation clips from them");
     }
     actions.emplace<ui::Button>("Show in Folder", [this, id] {
         AssetDatabase* assets = m_editor.assets();
@@ -924,6 +1012,10 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             revealInFileManager(assets->absolutePath(*a).parent_path());
         }
     });
+    if (asset.type == AssetType::Animation) {
+        actions.emplace<ui::Button>("Edit Clips", [this] { m_editor.showPanel(kAnimationPanel); })
+            .setTooltip("Opens the Animation panel: choose frames, speed and looping, with a preview");
+    }
     if (isScene) {
         actions.emplace<ui::Button>("Open Scene", [this, id] {
             AssetDatabase* assets = m_editor.assets();
@@ -998,6 +1090,148 @@ void InspectorPanel::showCreateTilesetDialog(AssetId imageId)
             m_editor.selectAsset(*created);
         } else {
             m_editor.showMessage("Could Not Create the Tileset", error);
+        }
+    });
+    ui::showDialog(m_editor.ui(), std::move(dialog));
+}
+
+void InspectorPanel::buildAnimationAsset(ui::Column& body, const AssetRecord& asset)
+{
+    AssetDatabase* db = m_editor.assets();
+    const AssetId id = asset.id;
+    const AnimationSet set = *asset.animation;
+    const AssetRecord* image = db != nullptr ? db->find(set.image) : nullptr;
+    auto save = [this, id](const std::string& label, const std::function<void(AnimationSet&)>& change) {
+        editAnimationSet(m_editor, id, label, change);
+    };
+
+    auto& imageRow = body.emplace<ui::PropertyField>("Sheet");
+    imageRow.setTooltip("The image the frames are cut from");
+    std::vector<std::string> names{"None"};
+    auto ids = std::make_shared<std::vector<AssetId>>(1, AssetId{});
+    int selected = 0;
+    if (db != nullptr) {
+        for (const AssetRecord* a : db->all(AssetType::Image)) {
+            if (a->id == set.image) {
+                selected = static_cast<int>(ids->size());
+            }
+            ids->push_back(a->id);
+            names.push_back(a->path);
+        }
+    }
+    auto& imageField = imageRow.addValue(std::make_unique<ui::ChoiceField>(std::move(names)));
+    imageField.setStretch(1.0f);
+    imageField.setSelected(selected);
+    imageField.setOnChoose([save, ids](int index) {
+        const AssetId chosen = index > 0 ? (*ids)[static_cast<std::size_t>(index)] : AssetId{};
+        save("Change Sprite Sheet", [chosen](AnimationSet& s) { s.image = chosen; });
+    });
+
+    const auto numberRow = [&](const char* label, const char* sx, const char* sy, int x, int y,
+                               std::function<void(AnimationSet&, int, int)> apply, const char* tip) {
+        auto& r = body.emplace<ui::PropertyField>(label);
+        r.setTooltip(tip);
+        const std::string undoLabel = std::string("Change ") + label;
+        auto values = std::make_shared<std::pair<int, int>>(x, y);
+        const auto make = [&](const char* suffix, bool first) {
+            auto& f = r.addValue(std::make_unique<ui::NumberField>());
+            f.setInteger(true);
+            f.setRange(sy == nullptr ? 0.0f : 1.0f, 4096.0f);
+            f.setSuffix(suffix);
+            f.setValue(static_cast<float>(first ? x : y));
+            f.setOnValue([values, first](float v) {
+                (first ? values->first : values->second) = static_cast<int>(std::lround(v));
+            });
+            f.setOnEditEnd([save, values, apply, undoLabel] {
+                save(undoLabel, [&](AnimationSet& s) { apply(s, values->first, values->second); });
+            });
+        };
+        make(sx, true);
+        if (sy != nullptr) {
+            make(sy, false);
+        }
+    };
+    numberRow("Frame Size", "W", "H", set.frameWidth, set.frameHeight,
+              [](AnimationSet& s, int w, int h) {
+                  s.frameWidth = std::max(1, w);
+                  s.frameHeight = std::max(1, h);
+              },
+              "The size of one frame in the sheet, in pixels");
+    numberRow("Margin", "px", nullptr, set.margin, 0, [](AnimationSet& s, int m, int) { s.margin = std::max(0, m); },
+              "Empty pixels around the edge of the sheet");
+    numberRow("Spacing", "px", nullptr, set.spacing, 0,
+              [](AnimationSet& s, int sp, int) { s.spacing = std::max(0, sp); }, "Empty pixels between neighbouring frames");
+    auto info = [&](const char* label, const std::string& value, const std::string& tip) {
+        auto& r = body.emplace<ui::PropertyField>(label);
+        r.addValue(std::make_unique<ui::ValueBox>(value)).setTooltip(tip);
+    };
+    if (image != nullptr && image->image) {
+        const int cols = set.columns(image->image->width);
+        const int rows = set.rows(image->image->height);
+        info("Frames", std::to_string(cols) + " × " + std::to_string(rows) + " = " + std::to_string(cols * rows),
+             "How many frames the sheet is cut into, numbered from 0 left to right, then top to bottom");
+    }
+    std::string clips;
+    for (const AnimationClip& c : set.clips) {
+        clips += (clips.empty() ? "" : ", ") + c.id;
+    }
+    info("Clips", set.clips.empty() ? "None yet" : clips,
+         "Edit clips in the Animation panel (Edit Clips below). Gameplay code plays them by name.");
+}
+
+void InspectorPanel::showCreateAnimationsDialog(AssetId imageId)
+{
+    AssetDatabase* db = m_editor.assets();
+    const AssetRecord* image = db != nullptr ? db->find(imageId) : nullptr;
+    if (image == nullptr) {
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Create Animations", 400.0f);
+    ui::Column& body = dialog->body();
+    auto& intro = body.emplace<ui::Label>("Animations use " + image->fileName()
+                                              + " as a sprite sheet: it is cut into equal frames, and clips (such as "
+                                                "walk_left) show some of them one after another.",
+                                          ui::Label::Style::Dim);
+    intro.setWrap(true);
+    std::string stem = image->fileName();
+    if (const std::size_t dot = stem.rfind('.'); dot != std::string::npos) {
+        stem.resize(dot);
+    }
+    auto& nameRow = body.emplace<ui::PropertyField>("Name");
+    auto& name = nameRow.addValue(std::make_unique<ui::TextField>(""));
+    name.setStretch(1.0f);
+    name.setFixedSize({0.0f, 24.0f});
+    name.setText(stem);
+    auto size = std::make_shared<Vec2>(16.0f, 16.0f);
+    auto& sizeRow = body.emplace<ui::PropertyField>("Frame Size");
+    for (int axis = 0; axis < 2; ++axis) {
+        auto& f = sizeRow.addValue(std::make_unique<ui::NumberField>());
+        f.setInteger(true);
+        f.setRange(1.0f, 4096.0f);
+        f.setSuffix(axis == 0 ? "W" : "H");
+        f.setValue(16.0f);
+        f.setOnValue([size, axis](float v) { (axis == 0 ? size->x : size->y) = std::round(v); });
+    }
+    auto& note = body.emplace<ui::Label>("Then make clips in the Animation panel, and give objects an Animator.",
+                                         ui::Label::Style::Faint);
+    note.setWrap(true);
+    dialog->addButton("Cancel");
+    dialog->addButton("Create", ui::Button::Style::Primary, [this, imageId, size, &name] {
+        AssetDatabase* assets = m_editor.assets();
+        if (assets == nullptr) {
+            return;
+        }
+        const std::string text = name.text().empty() ? std::string("Animations") : name.text();
+        if (!Project::isValidName(text)) {
+            m_editor.showMessage("Invalid Name", "A file name cannot contain / \\ : * ? \" < > |.");
+            return;
+        }
+        std::string error;
+        if (const auto created = assets->createAnimationSet(imageId, *size, text, &error)) {
+            m_editor.selectAsset(*created);
+            m_editor.showPanel(kAnimationPanel);
+        } else {
+            m_editor.showMessage("Could Not Create the Animations", error);
         }
     });
     ui::showDialog(m_editor.ui(), std::move(dialog));

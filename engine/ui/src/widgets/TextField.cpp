@@ -377,6 +377,11 @@ bool TextField::onKeyDown(Context& ctx, const KeyEvent& event)
         }
         break;
     case Key::Enter:
+        if (!m_onCommit && !m_onSubmit) {
+            // Nothing here uses Enter: let it reach a dialog's main button
+            // (e.g. typing a name, then Enter for "Create").
+            return false;
+        }
         if (m_onCommit) {
             commit(ctx);
             m_state.selectAll();

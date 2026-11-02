@@ -55,6 +55,28 @@ struct Sprite : ComponentBase<Sprite> {
     static const ComponentType& componentType();
 };
 
+/// Plays a flipbook clip (from an animation asset, .lanim) on the object's
+/// Sprite: the Sprite still decides the size, colour and flipping; the
+/// Animator replaces its image with the clip's current frame. Without a
+/// Sprite the frame is drawn at its pixel size.
+///
+/// The frame shown is worked out from a clock: in a game, the game's time
+/// (so pausing freezes animations); in the editor, a clock that always runs,
+/// so clips play in the Scene view while editing. Gameplay changes the clip
+/// with lantern::Game::play().
+struct Animator : ComponentBase<Animator> {
+    AssetId animations;     // the animation set (.lanim)
+    std::string clip;       // the clip playing, e.g. "walk_down"
+    float speed = 1.0f;     // 2 = twice as fast
+    bool playing = true;    // false: shows the clip's first frame
+
+    /// When the clip started, on the animation clock (seconds). Not saved:
+    /// set by the game when it plays a clip.
+    double startTime = 0.0;
+
+    static const ComponentType& componentType();
+};
+
 /// What the player sees: the game view is centred on this entity's position.
 /// The first active Camera in the scene (in hierarchy order) is used; without
 /// one, the view shows the world from (0, 0) to the game's resolution.

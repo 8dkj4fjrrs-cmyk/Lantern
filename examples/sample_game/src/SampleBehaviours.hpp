@@ -10,13 +10,20 @@
 #include "lantern/gameplay/Behaviour.hpp"
 #include "lantern/gameplay/Game.hpp"
 
+#include <string>
+
 namespace sample {
 
 /// Moves its object with the arrow keys or W A S D. Give the object a
 /// Collider (e.g. just around the feet) so walls and solid tiles stop it.
 /// Stands still while a dialogue is shown.
+///
+/// With an Animator, it plays "walk_<facing>" while moving and
+/// "idle_<facing>" while standing, facing down, left, right or up (the
+/// sample hero's clips). Without one, it flips the Sprite to face left/right.
 struct PlayerController : lantern::BehaviourBase<PlayerController> {
     float speed = 120.0f;   // points per second
+    std::string facing = "down";   // not a property: where it looks while playing
 
     void update(lantern::Game& game, float dt) override;
     static const lantern::ComponentType& componentType();

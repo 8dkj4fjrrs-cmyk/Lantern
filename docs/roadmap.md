@@ -14,8 +14,8 @@ so the plan stays in one place.
 | 4 | Sprites, assets, Scene view camera, tilemaps and collision data | Done (0.4) — [ADR 0006](adr/0006-assets-sprites-and-tilemaps.md) |
 | 5 | C++ gameplay behaviours, game modules, play mode, input, collision queries, scene changes | Done (0.5) — [ADR 0007](adr/0007-gameplay-and-play-mode.md) |
 | 6 | RPG content systems: dialogue, quests, conditions, actions, events, content validation, save games | Done (0.6) — [ADR 0008](adr/0008-rpg-content.md) |
-| 6.5 | *Added:* flipbook (sprite-sheet) animation | Next |
-| 7 | Complete sample game: a small top-down RPG built from a fresh project | Planned |
+| 6.5 | *Added:* flipbook (sprite-sheet) animation | Done (0.6.5) — [ADR 0009](adr/0009-flipbook-animation.md) |
+| 7 | Complete sample game: a small top-down RPG built from a fresh project | Next |
 | 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Planned |
 | — | *Added, after the alpha:* timeline animation editor | Later |
 
@@ -41,6 +41,11 @@ Scope:
 
 Out of scope here: keyframing other properties (the timeline editor),
 state machines, and skeletal animation.
+
+Delivered in 0.6.5 as planned. The API names became `game.play(entity,
+clip)`, `game.stopAnimation(entity)`, `game.isAnimationPlaying(entity)` and
+`game.isAnimationFinished(entity)` (on `Game`, like the rest of the gameplay
+API). The sample hero walks in four directions and the elder blinks.
 
 ## After the alpha: timeline animation editor (*added*)
 

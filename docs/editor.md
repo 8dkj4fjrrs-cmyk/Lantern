@@ -30,7 +30,7 @@ The editor uses the classic game-editor arrangement:
 |           |                                     |                |
 +-----------+                                     |                |
 | Assets    +-------------------------------------+                |
-|           | Assets Preview | Console | Tile Palette |              |
+|           | Preview | Console | Tile Palette | Animation |          |
 +-----------+-------------------------------------+----------------+
 | fps                              (i) 12  (!) 0  (x) 0  Version   |  status bar
 +------------------------------------------------------------------+
@@ -43,6 +43,7 @@ The editor uses the classic game-editor arrangement:
 | **Scene** | The scene as you edit it, with a free camera: zoom, pan, and move, rotate, scale or resize objects (see [The Scene view](#the-scene-view)). The white frame shows what the player will see. |
 | **Assets Preview** | The folder chosen in Assets, as thumbnails. Click to inspect, double-click to open, and drag an image or tileset into the Scene view to place it. |
 | **Tile Palette** | The selected tilemap's tileset: click a tile to paint with it. With **Edit solid tiles** on, click tiles to make them block movement. |
+| **Animation** | The selected animation set: its sprite sheet, its clips, the frames of the clip being edited, and a preview playing it (see [Animation](#animation)). |
 | **Console** | Messages from the engine, the runtime and the editor, including any problems found when opening a scene. Filter by level or text, copy, clear. |
 | **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component (your game's behaviours are listed under *Gameplay*); a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file; with an asset selected, its preview and settings (see [Assets](#assets)). |
 
@@ -230,6 +231,40 @@ tilemap is selected:
 
 Each stroke, fill, and layer change is one undo step. So is marking a tile
 solid or changing a tileset's settings.
+
+## Animation
+
+Characters come alive with **flipbook animation**: a sprite sheet (one image
+holding every pose, in a grid of equal frames) and named **clips** such as
+`walk_left` or `idle_down`, each a list of frames with a speed and whether
+it loops.
+
+1. **Make an animation set**: select the sprite sheet image in Assets and
+   click **Create Animations…** in the Inspector. Give it a name and the size
+   of one frame in pixels. The new `.lanim` file opens in the **Animation**
+   panel. Its Inspector page sets the sheet, frame size, margin and spacing.
+2. **Make clips** in the Animation panel: **+** adds a clip (named with
+   letters, digits and `_`), the rename and **×** buttons rename or delete
+   it, and **Clip** chooses which one you edit.
+3. **Choose frames**: click a frame in the sheet to add it to the clip (after
+   the selected frame, or at the end). **Shift-click** adds every frame from
+   the last one up to the one clicked: a whole row in two clicks. The strip
+   below shows the clip's frames in order; click one to select it, then use
+   the arrows (or Alt+Left / Alt+Right) to move it and the eraser (or Delete)
+   to remove it. Frames used by the clip are outlined in the sheet.
+4. **Speed and looping**: *Speed* is frames per second; untick *Loop* for a
+   clip that plays once and stays on its last frame (e.g. an attack). The
+   preview plays the clip as the game will; **Pause** it to see the selected
+   frame.
+5. **Use it**: give an object an **Animator** component (Inspector **Add
+   Component**), choose the animation set in *Animations* and the starting
+   *Clip*. The object's Sprite keeps its size, colour and flipping; choosing
+   the set sizes the Sprite to one frame. The Scene view plays the clip while
+   you edit, and gameplay code switches clips while the game runs
+   ([gameplay guide](gameplay.md#animation)).
+
+Every change is saved to the file at once and is one undo step (typing a
+speed is one step).
 
 ## Editing
 

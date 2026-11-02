@@ -4,6 +4,7 @@
 # No backend and no UI; always built and unit-tested (also in `core`).
 
 add_library(lantern_assets STATIC
+    src/Animation.cpp
     src/AssetDatabase.cpp
     src/Tileset.cpp)
 add_library(lantern::assets ALIAS lantern_assets)

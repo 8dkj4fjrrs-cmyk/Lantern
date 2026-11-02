@@ -59,6 +59,19 @@ ax::Node* makePlaceholder(Vec2 size)
     return node;
 }
 
+// Images cut into frames (tiles, animation frames) are drawn from a hair
+// inside each frame's edges. At some zoom levels a screen pixel falls exactly
+// on the border between two frames of the image; without the inset it may
+// pick up the neighbouring frame's colour, which shows as thin lines
+// ("bleeding"). In image pixels: invisible, but enough.
+constexpr float kInset = 0.02f;
+
+ax::Rect insetRect(const TileRect& r)
+{
+    return ax::Rect(static_cast<float>(r.x) + kInset, static_cast<float>(r.y) + kInset,
+                    static_cast<float>(r.width) - 2.0f * kInset, static_cast<float>(r.height) - 2.0f * kInset);
+}
+
 } // namespace
 
 SceneRenderer::SceneRenderer(ax::Node& root, TextureStore* textures, bool drawContent)
@@ -211,15 +224,11 @@ ax::Node* SceneRenderer::makeTilemapNode(const Tilemap& map)
                 continue; // a tile number the tileset does not have (e.g. after changing the tile size)
             }
             const TileRect r = tileset->tileRect(tile, imageWidth);
-            // Take the tile from a hair inside its edges. At some zoom levels a
-            // screen pixel falls exactly on the border between two tiles of the
-            // image; without the inset it may pick up the neighbouring tile's
-            // colour, which shows as thin lines across the map ("bleeding").
-            constexpr float kInset = 0.02f;   // in image pixels: invisible, but enough
-            const float w = static_cast<float>(r.width) - 2.0f * kInset;
-            const float h = static_cast<float>(r.height) - 2.0f * kInset;
-            auto* sprite = ax::Sprite::createWithTexture(
-                texture, ax::Rect(static_cast<float>(r.x) + kInset, static_cast<float>(r.y) + kInset, w, h));
+            // Taken from a hair inside the tile's edges (see kInset).
+            const ax::Rect rect = insetRect(r);
+            const float w = rect.size.width;
+            const float h = rect.size.height;
+            auto* sprite = ax::Sprite::createWithTexture(texture, rect);
             sprite->setAnchorPoint(ax::Vec2::ZERO);
             sprite->setPosition(static_cast<float>(cell.x) * cw, static_cast<float>(cell.y) * ch);
             sprite->setScale(cw / w, ch / h);
@@ -227,6 +236,68 @@ ax::Node* SceneRenderer::makeTilemapNode(const Tilemap& map)
         }
     }
     return root;
+}
+
+ax::Node* SceneRenderer::makeAnimatedNode(EntityId id, const Animator& animator, const Sprite* sprite)
+{
+    const AssetRecord* asset = m_assets != nullptr ? m_assets->find(animator.animations) : nullptr;
+    const AnimationSet* set = asset != nullptr && asset->animation ? &*asset->animation : nullptr;
+    const AssetRecord* image = set != nullptr && !set->image.isNull() ? m_assets->find(set->image) : nullptr;
+    ax::Texture2D* texture = nullptr;
+    if (image != nullptr && image->isUsable() && image->image && m_textures != nullptr) {
+        texture = m_textures->get(m_assets->absolutePath(*image), image->filter == TextureFilter::Pixel);
+    }
+    // Without a Sprite, a frame is drawn at its size in pixels.
+    const Vec2 size = sprite != nullptr ? sprite->size
+                      : set != nullptr  ? Vec2{static_cast<float>(set->frameWidth), static_cast<float>(set->frameHeight)}
+                                        : Vec2{32.0f, 32.0f};
+    const int frameCount = texture != nullptr ? set->columns(image->image->width) * set->rows(image->image->height) : 0;
+    if (frameCount <= 0) {
+        // A missing set or image, or frames larger than the image.
+        return makePlaceholder(size);
+    }
+    AnimatedSprite animated{id, nullptr, *set, image->image->width, frameCount, -1};
+    const ax::Rect first = insetRect(set->frameRect(0, animated.imageWidth));
+    auto* node = ax::Sprite::createWithTexture(texture, first);
+    // Every frame has the same size, so this scale suits them all.
+    node->setScale(size.x / first.size.width, size.y / first.size.height);
+    if (sprite != nullptr) {
+        node->setFlippedX(sprite->flipX);
+        node->setFlippedY(sprite->flipY);
+        node->setColor(ax::Color3B(sprite->color.r, sprite->color.g, sprite->color.b));
+        node->setOpacity(sprite->color.a);
+    }
+    animated.sprite = node;
+    showFrame(animated, animator);
+    m_animated.push_back(animated);
+    return node;
+}
+
+void SceneRenderer::showFrame(AnimatedSprite& animated, const Animator& animator)
+{
+    int frame = animatorFrame(animated.set, animator, m_clock);
+    if (frame < 0 || frame >= animated.frameCount) {
+        frame = 0;   // a clip the set lacks, or a frame the image lacks: the sheet's first frame
+    }
+    if (frame != animated.shown) {
+        animated.sprite->setTextureRect(insetRect(animated.set.frameRect(frame, animated.imageWidth)));
+        animated.shown = frame;
+    }
+}
+
+void SceneRenderer::animate(double clock)
+{
+    m_clock = clock;
+    if (m_scene == nullptr) {
+        return;
+    }
+    for (AnimatedSprite& animated : m_animated) {
+        const Entity* entity = m_scene->find(animated.id);
+        const Animator* animator = entity != nullptr ? entity->get<Animator>() : nullptr;
+        if (animator != nullptr) {
+            showFrame(animated, *animator);
+        }
+    }
 }
 
 const std::string& SceneRenderer::defaultFontPath()
@@ -302,6 +373,7 @@ void SceneRenderer::rebuild()
         m_container = nullptr;
     }
     m_nodes.clear();
+    m_animated.clear();
     m_builtScene = m_scene.get();
     m_builtRevision = m_scene != nullptr ? m_scene->revision() : 0;
     m_builtContentRevision = m_scene != nullptr ? m_scene->contentRevision() : 0;
@@ -334,7 +406,13 @@ void SceneRenderer::rebuild()
                 drawShape(*draw, *shape);
                 node->addChild(draw, -1);
             }
-            if (const Sprite* sprite = entity.get<Sprite>()) {
+            // An Animator with an animation set draws the Sprite itself (its
+            // frames replace the Sprite's image).
+            const Animator* animator = entity.get<Animator>();
+            const Sprite* sprite = entity.get<Sprite>();
+            if (animator != nullptr && !animator->animations.isNull()) {
+                node->addChild(makeAnimatedNode(entity.id(), *animator, sprite), -1);
+            } else if (sprite != nullptr) {
                 node->addChild(makeSpriteNode(*sprite), -1);
             }
             if (const Tilemap* map = entity.get<Tilemap>()) {

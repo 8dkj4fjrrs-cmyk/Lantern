@@ -13,8 +13,15 @@
 // things moving, is cheaper: if only Transforms changed (the scene's
 // contentRevision() stayed the same), the existing nodes are just moved.
 //
+// Animated objects (an Animator with an animation set) are sprites whose
+// image rectangle changes over time. animate() runs every frame after
+// update(): it works out each Animator's frame from the animation clock and
+// moves the rectangle only when the frame changed. Switching clips needs no
+// rebuild either, because the Animator is read again every frame.
+//
 // Internal to lantern_runtime.
 
+#include "lantern/assets/Animation.hpp"
 #include "lantern/assets/AssetDatabase.hpp"
 #include "lantern/scene/Scene.hpp"
 
@@ -24,6 +31,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace lantern::detail {
 
@@ -59,6 +67,10 @@ public:
     /// images changed.
     void update();
 
+    /// Shows each Animator's frame for the animation clock `clock` (seconds;
+    /// see lantern::Animator). Call every frame, after update().
+    void animate(double clock);
+
     /// The first active Camera in the scene, if there is one.
     std::optional<CameraView> camera() const;
 
@@ -72,6 +84,7 @@ private:
     void moveNodes();
     ax::Node* makeSpriteNode(const Sprite& sprite);
     ax::Node* makeTilemapNode(const Tilemap& map);
+    ax::Node* makeAnimatedNode(EntityId id, const Animator& animator, const Sprite* sprite);
     ax::Node* makeTextNode(const Text& text);
     /// Lantern's built-in font as a file Axmol can load (written once).
     const std::string& defaultFontPath();
@@ -91,6 +104,22 @@ private:
     std::uint64_t m_builtTextures = 0;
     std::uint64_t m_builds = 0;
     std::string m_defaultFont;   // empty until first needed
+
+    // A sprite showing an Animator's frames. It keeps its own copy of the
+    // animation set: the asset database may rebuild its records at any
+    // refresh (pointers into it do not last), and a changed set rebuilds the
+    // scene anyway because the database's revision goes up.
+    struct AnimatedSprite {
+        EntityId id;
+        ax::Sprite* sprite = nullptr;   // owned by the node tree
+        AnimationSet set;
+        int imageWidth = 0;
+        int frameCount = 0;
+        int shown = -1;                 // the frame showing now
+    };
+    void showFrame(AnimatedSprite& animated, const Animator& animator);
+    std::vector<AnimatedSprite> m_animated;
+    double m_clock = 0.0;   // the last clock passed to animate()
 };
 
 } // namespace lantern::detail

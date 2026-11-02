@@ -159,6 +159,9 @@ public:
     /// Called with the files dropped onto the window (e.g. from Finder).
     void setDropHandler(std::function<void(const std::vector<std::filesystem::path>&)> handler);
 
+    /// The animation clock for this frame (see setAnimationTime below).
+    void setAnimationTime(double seconds);
+
     /// Frames per second, smoothed.
     float framesPerSecond() const noexcept;
 
@@ -210,6 +213,13 @@ public:
 
     /// Called once per frame before drawing: run the game here.
     void setFrameCallback(std::function<void(const FrameInfo&)> callback);
+
+    /// Sets the animation clock for the frame being made, in seconds:
+    /// Animators show the frame their clip has at this time (see
+    /// lantern::Animator). Call it every frame with the game's time, from the
+    /// frame callback, so animations pause with the game. In a frame where it
+    /// is not called, a clock that counts real time is used.
+    void setAnimationTime(double seconds);
 
     /// Reports the window's keyboard and mouse to `input` (e.g. a Game's
     /// input), with the pointer in world coordinates. For games (no UI

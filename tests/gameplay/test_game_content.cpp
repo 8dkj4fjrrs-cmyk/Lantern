@@ -1,6 +1,7 @@
 // Game + RPG content: triggers, interaction, the dialogue box, texts,
 // persistence within a playthrough, and saving and loading.
 
+#include "support/TempFolder.hpp"
 #include "../content/ContentFixture.hpp"
 
 #include "lantern/gameplay/Components.hpp"
@@ -106,7 +107,7 @@ struct Run {
         log.addSink([this](const LogMessage& m) { lines.push_back(m.text); });
         lib.addScene(kSceneA, "a.lscene");
         lib.addScene(kSceneB, "b.lscene");
-        saves = std::make_unique<FolderSaveStore>(std::filesystem::temp_directory_path() / "lantern-tests" / "saves");
+        saves = std::make_unique<FolderSaveStore>(lantern::test::uniqueTempFolder("saves"));
         std::filesystem::remove_all(saves->folder());
         GameSetup setup;
         setup.content = &lib;
