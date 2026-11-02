@@ -75,6 +75,31 @@ ParseResult parseCommandLine(std::span<const std::string_view> args)
             opt.showStats = false;
         } else if (arg == "--fixed-step") {
             opt.fixedStep = true;
+        } else if (arg == "--save-dir") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            opt.saveDir = std::string(value);
+        } else if (arg == "--tap") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            // KEY@FRAME (pressed for one frame) or KEY@FROM-TO (held from FROM until TO).
+            const std::size_t at = value.rfind('@');
+            const auto key = at != std::string_view::npos ? keyFromName(value.substr(0, at)) : std::nullopt;
+            const std::string_view frames = at != std::string_view::npos ? value.substr(at + 1) : std::string_view();
+            const std::size_t dash = frames.find('-');
+            constexpr auto kMax = std::numeric_limits<std::uint64_t>::max();
+            const auto from = parseNumber<std::uint64_t>(frames.substr(0, dash), 0, kMax - 1);
+            const auto to = dash == std::string_view::npos
+                                ? (from ? std::optional<std::uint64_t>(*from + 1) : std::nullopt)
+                                : parseNumber<std::uint64_t>(frames.substr(dash + 1), 0, kMax);
+            if (!key || !from || !to || *to <= *from) {
+                result.error = "--tap needs KEY@FRAME or KEY@FROM-TO, e.g. E@120 or Right@10-70, got '"
+                               + std::string(value) + "'.";
+                return result;
+            }
+            opt.tappedKeys.push_back({*key, *from, *to});
         } else if (arg == "--hold") {
             if (!nextValue(value)) {
                 return result;
@@ -156,9 +181,13 @@ std::string helpText()
            "  --frames N         Quit automatically after N frames (used by tests)\n"
            "  --screenshot FILE  Save the last frame as a PNG (needs --frames)\n"
            "  --hold KEY         Hold a key down for the whole run, e.g. Right (tests)\n"
+           "  --tap KEY@FRAME    Press a key at that frame, e.g. E@120; KEY@FROM-TO holds\n"
+           "                     it from one frame to another, e.g. Right@10-70 (tests)\n"
+           "  --save-dir FOLDER  Keep save slots in FOLDER\n"
            "  --fixed-step       Count every frame as 1/60 s, for repeatable runs (tests)\n"
            "\n"
-           "Press Escape or close the window to quit.\n";
+           "In the game: F5 saves to the quick slot, F9 loads it. Escape or closing\n"
+           "the window quits.\n";
 }
 
 } // namespace lantern::player

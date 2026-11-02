@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
 
 namespace lantern::detail {
@@ -71,6 +72,9 @@ private:
     void moveNodes();
     ax::Node* makeSpriteNode(const Sprite& sprite);
     ax::Node* makeTilemapNode(const Tilemap& map);
+    ax::Node* makeTextNode(const Text& text);
+    /// Lantern's built-in font as a file Axmol can load (written once).
+    const std::string& defaultFontPath();
 
     ax::Node& m_root;
     TextureStore* m_textures;
@@ -86,6 +90,7 @@ private:
     std::uint64_t m_builtAssetsRevision = 0;
     std::uint64_t m_builtTextures = 0;
     std::uint64_t m_builds = 0;
+    std::string m_defaultFont;   // empty until first needed
 };
 
 } // namespace lantern::detail

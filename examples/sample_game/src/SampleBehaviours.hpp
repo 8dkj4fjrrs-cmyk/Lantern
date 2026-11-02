@@ -14,6 +14,7 @@ namespace sample {
 
 /// Moves its object with the arrow keys or W A S D. Give the object a
 /// Collider (e.g. just around the feet) so walls and solid tiles stop it.
+/// Stands still while a dialogue is shown.
 struct PlayerController : lantern::BehaviourBase<PlayerController> {
     float speed = 120.0f;   // points per second
 
@@ -31,9 +32,13 @@ struct SceneDoor : lantern::BehaviourBase<SceneDoor> {
 };
 
 /// Put on an object with a Collider: when the player touches it, it is
-/// removed and the pick-up is written to the log (the editor's Console).
+/// removed for good, the pick-up is written to the log (the editor's
+/// Console), and 1 is added to the game variable named `variable` (if any).
+/// The same can be done without code with a Trigger; this shows how C++
+/// and content work together.
 struct Collectible : lantern::BehaviourBase<Collectible> {
     std::string message = "Picked up a gem";
+    std::string variable;
 
     void update(lantern::Game& game, float dt) override;
     static const lantern::ComponentType& componentType();

@@ -1,0 +1,135 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "elder",
+      "name": "Elder Maren",
+      "color": "#c9a6ffff",
+      "portrait": null
+    }
+  ],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "quest",
+            "quest": "5a4d1e0000000012",
+            "state": "completed"
+          },
+          "next": "after"
+        },
+        {
+          "condition": {
+            "type": "all",
+            "conditions": [
+              {
+                "type": "quest",
+                "quest": "5a4d1e0000000012",
+                "state": "active"
+              },
+              {
+                "type": "compare",
+                "variable": "gems",
+                "op": ">=",
+                "value": 3
+              }
+            ]
+          },
+          "next": "done"
+        },
+        {
+          "condition": {
+            "type": "quest",
+            "quest": "5a4d1e0000000012",
+            "state": "active"
+          },
+          "next": "waiting"
+        }
+      ],
+      "next": "greet"
+    },
+    {
+      "id": "greet",
+      "speaker": "elder",
+      "text": "Ah, a traveller! Welcome to the meadow.",
+      "actions": [
+        {
+          "type": "set",
+          "variable": "met_elder",
+          "value": true
+        }
+      ],
+      "next": "ask"
+    },
+    {
+      "id": "ask",
+      "speaker": "elder",
+      "text": "A boulder blocks the old cave to the east. Bring me three gems from the meadow, and their light will move it.",
+      "choices": [
+        {
+          "id": "yes",
+          "text": "I'll find them.",
+          "actions": [
+            {
+              "type": "startQuest",
+              "quest": "5a4d1e0000000012"
+            }
+          ],
+          "next": "thanks"
+        },
+        {
+          "id": "no",
+          "text": "Maybe later.",
+          "next": "later"
+        }
+      ]
+    },
+    {
+      "id": "thanks",
+      "speaker": "elder",
+      "text": "Thank you! Look by the pond, behind the ruin and in the long grass.",
+      "next": null
+    },
+    {
+      "id": "later",
+      "speaker": "elder",
+      "text": "Come back when you are ready.",
+      "next": null
+    },
+    {
+      "id": "waiting",
+      "speaker": "elder",
+      "text": "You have {gems} of 3 gems. Keep looking!",
+      "next": null
+    },
+    {
+      "id": "done",
+      "speaker": "elder",
+      "text": "Three gems! Listen... the boulder is moving.",
+      "actions": [
+        {
+          "type": "completeObjective",
+          "quest": "5a4d1e0000000012",
+          "objective": "return"
+        }
+      ],
+      "next": "opened"
+    },
+    {
+      "id": "opened",
+      "speaker": "elder",
+      "text": "The way to the cave is open. Follow the path east.",
+      "next": null
+    },
+    {
+      "id": "after",
+      "speaker": "elder",
+      "text": "The cave lies east. Take care in there.",
+      "next": null
+    }
+  ]
+}

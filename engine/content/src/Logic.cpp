@@ -566,6 +566,49 @@ std::optional<std::vector<Action>> parseActions(std::string_view json, std::stri
     return result;
 }
 
+std::optional<Reaction> parseReaction(std::string_view json, std::string* error)
+{
+    std::string message;
+    std::optional<Reaction> result;
+    try {
+        const Json j = Json::parse(json.begin(), json.end());
+        if (!j.is_object()) {
+            message = "expected { \"condition\": ..., \"actions\": [...] }";
+        } else {
+            Reaction r;
+            bool ok = true;
+            if (j.contains("condition") && !j["condition"].is_null()) {
+                r.condition = content_detail::conditionFromJson(j["condition"], message);
+                ok = r.condition.has_value();
+            }
+            if (ok && j.contains("actions")) {
+                auto actions = content_detail::actionsFromJson(j["actions"], message);
+                ok = actions.has_value();
+                if (ok) {
+                    r.actions = std::move(*actions);
+                }
+            }
+            if (ok) {
+                result = std::move(r);
+            }
+        }
+    } catch (const nlohmann::json::parse_error&) {
+        message = "not valid JSON";
+    }
+    if (!result && error != nullptr) {
+        *error = message;
+    }
+    return result;
+}
+
+std::string serializeReaction(const Reaction& reaction)
+{
+    Json j;
+    j["condition"] = reaction.condition ? content_detail::toJson(*reaction.condition) : Json();
+    j["actions"] = content_detail::toJson(reaction.actions);
+    return j.dump();
+}
+
 std::string serializeCondition(const Condition& condition)
 {
     return content_detail::toJson(condition).dump();

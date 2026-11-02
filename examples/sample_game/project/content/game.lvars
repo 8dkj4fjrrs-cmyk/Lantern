@@ -1,0 +1,24 @@
+{
+  "format": "lantern.variables",
+  "version": 1,
+  "variables": [
+    {
+      "id": "gems",
+      "type": "int",
+      "initial": 0,
+      "description": "Gems the player carries"
+    },
+    {
+      "id": "met_elder",
+      "type": "bool",
+      "initial": false,
+      "description": "Has talked to the elder"
+    },
+    {
+      "id": "cave_open",
+      "type": "bool",
+      "initial": false,
+      "description": "The boulder before the cave is gone"
+    }
+  ]
+}

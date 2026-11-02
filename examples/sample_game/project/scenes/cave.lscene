@@ -75,7 +75,8 @@
         },
         {
           "type": "sample.Collectible",
-          "message": "Picked up the cave's gem"
+          "message": "Picked up the cave's gem",
+          "variable": "gems"
         },
         {
           "type": "sample.Spinner",
@@ -132,6 +133,10 @@
           "solid": true
         },
         {
+          "type": "lantern.Interactor",
+          "key": "E"
+        },
+        {
           "type": "sample.PlayerController",
           "speed": 140
         }
@@ -147,11 +152,229 @@
           "type": "lantern.Transform",
           "position": [0, 0],
           "rotation": 0,
-          "scale": [1, 1]
+          "scale": [0.5, 0.5]
         },
         {
           "type": "lantern.Camera",
           "zoom": 1
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006a",
+      "parent": "e17e000000000069",
+      "name": "Gem Count",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-620, 345],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Gems: {gems}",
+          "source": "text",
+          "font": null,
+          "size": 22,
+          "color": "#f7d65cff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006b",
+      "parent": "e17e000000000069",
+      "name": "Quest Log",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-620, 312],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "questLog",
+          "font": null,
+          "size": 16,
+          "color": "#e8e8e8ff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006c",
+      "parent": "e17e000000000069",
+      "name": "Help",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [620, 345],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Arrows / WASD walk · E talks · F5 save · F9 load",
+          "source": "text",
+          "font": null,
+          "size": 14,
+          "color": "#ffffffb0",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006d",
+      "parent": "e17e000000000069",
+      "name": "Prompt",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -150],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "interactionPrompt",
+          "font": null,
+          "size": 18,
+          "color": "#f2a93bff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006e",
+      "parent": "e17e000000000069",
+      "name": "Dialogue Box",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -262],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1000, 166],
+          "color": "#101018e8",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.DialogueView",
+          "marker": "> "
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000006f",
+      "parent": "e17e00000000006e",
+      "name": "Speaker",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, 68],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueSpeaker",
+          "font": null,
+          "size": 20,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000070",
+      "parent": "e17e00000000006e",
+      "name": "Line",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, 38],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueLine",
+          "font": null,
+          "size": 18,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 960
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000071",
+      "parent": "e17e00000000006e",
+      "name": "Choices",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueChoices",
+          "font": null,
+          "size": 18,
+          "color": "#c8d2ffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000072",
+      "parent": "e17e00000000006e",
+      "name": "Continue",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [480, -60],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "E / Space",
+          "source": "text",
+          "font": null,
+          "size": 12,
+          "color": "#ffffff80",
+          "align": "right",
+          "width": 0
         }
       ]
     }

@@ -13,6 +13,10 @@
 //         game.move(entity(), direction * (speed * dt));   // stops at walls
 //     }
 //
+// The game also runs the project's RPG content (see lantern/content):
+// Triggers in the scene, dialogues (shown by DialogueView and Text objects),
+// quests, game variables, and saving and loading the player's progress.
+//
 // The game plays a *copy* of the scene it was started with. Whatever the game
 // changes stays in that copy, so stopping it can never leave changes behind
 // in the scene being edited.
@@ -23,15 +27,19 @@
 // a null pointer) cannot be caught this way and ends the program.
 
 #include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/content/ContentRunner.hpp"
 #include "lantern/core/Log.hpp"
 #include "lantern/gameplay/Collision.hpp"
 #include "lantern/gameplay/Input.hpp"
+#include "lantern/gameplay/SaveStore.hpp"
 #include "lantern/scene/Scene.hpp"
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -42,26 +50,37 @@ namespace lantern {
 /// `error`) if it cannot.
 using SceneLoader = std::function<std::optional<Scene>(AssetId scene, std::string& error)>;
 
-class Game {
+/// What a Game needs from the program running it. Everything is optional.
+struct GameSetup {
+    const AssetDatabase* assets = nullptr;   // tilesets (for collision)
+    SceneLoader loadScene;                   // for scene changes and loading saves
+    const ContentLibrary* content = nullptr; // variables, dialogues, quests (none: no content)
+    SaveStore* saves = nullptr;              // where save slots go (none: saving is reported, not done)
+    std::string gameName = "Game";           // written in save files
+};
+
+class Game : private ContentHost {
 public:
     /// The longest frame time a game update uses, in seconds. After a pause
     /// (a slow disk, the debugger) time jumps; without a limit, things would
     /// move so far in one step that they pass through walls.
     static constexpr float kMaxStep = 0.1f;
 
-    /// `assets`: the project's assets (tilesets for collision; may be null).
-    /// `loader`: loads scenes for changeScene() (without one, scene changes
-    /// are reported as errors).
+    /// Nothing in `setup` is owned; it must outlive the game.
+    explicit Game(const Logger& log, GameSetup setup = {});
+    /// Shorthand for a game without content or saves.
     Game(const Logger& log, const AssetDatabase* assets, SceneLoader loader = {});
-    ~Game();
+    ~Game() override;
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
 
     // --- Running the game (the player or the editor) --------------------------------------------
-    /// Starts playing a copy of `scene`.
-    void start(const Scene& scene);
-    /// Runs one frame: behaviours' start() and update(), then removals and
-    /// a requested scene change, then clears this frame's input flags.
+    /// Starts a new game playing a copy of `scene`. `sceneId` is the scene's
+    /// asset ID (null if it has none), used to remember progress per scene.
+    void start(const Scene& scene, AssetId sceneId = {});
+    /// Runs one frame: dialogue input, behaviours, triggers, content (quests,
+    /// waiting actions), the dialogue box and texts, then removals, loading
+    /// and scene changes. Clears this frame's input flags at the end.
     void update(float dt);
     /// Ends the game; its scene copy is dropped.
     void stop();
@@ -70,6 +89,8 @@ public:
     /// The scene being played, for drawing. A different object after a
     /// scene change. Null when not running.
     std::shared_ptr<const Scene> sharedScene() const { return m_scene; }
+    /// The asset ID of the scene being played.
+    AssetId sceneId() const noexcept { return m_sceneId; }
     /// Frames run since start().
     std::uint64_t frameCount() const noexcept { return m_frames; }
     /// Where the program reports keys and the mouse.
@@ -85,7 +106,7 @@ public:
     /// The length of the current frame, in seconds.
     float deltaTime() const noexcept { return m_dt; }
     const Logger& log() const noexcept { return m_log; }
-    const AssetDatabase* assets() const noexcept { return m_assets; }
+    const AssetDatabase* assets() const noexcept { return m_setup.assets; }
 
     /// The first object with this name (in hierarchy order); null ID if none.
     EntityId find(std::string_view name) const;
@@ -106,12 +127,14 @@ public:
     Transform* transform(EntityId id) { return get<Transform>(id); }
     /// An object's position in the world (parents included).
     Vec2 worldPosition(EntityId id) const;
-    /// Removes an object (and its children) at the end of this frame.
-    void destroy(EntityId id);
+    /// Removes an object (and its children) at the end of this frame. An
+    /// object that was part of the scene stays removed for the rest of the
+    /// playthrough (e.g. a collected gem), also in save games.
+    void destroy(EntityId id) override;
     /// Switches to another scene at the end of this frame. The current
     /// scene's objects (and their behaviours) are dropped; the new scene's
     /// behaviours start in the next frame.
-    void changeScene(AssetId scene);
+    void changeScene(AssetId scene) override;
 
     // --- Collision queries (see Collision.hpp) ----------------------------------------------------
     /// The world box of an object's Collider, if it has one.
@@ -127,22 +150,72 @@ public:
     /// collider it simply moves.
     MoveResult move(EntityId id, Vec2 delta);
 
+    // --- Content: variables, quests, dialogue, events, saves ----------------------------------------
+    /// Variables, quests, dialogues and actions (see ContentRunner).
+    ContentRunner& content() noexcept { return *m_runner; }
+    const ContentRunner& content() const noexcept { return *m_runner; }
+    /// True while a dialogue is shown (e.g. to stop the player walking).
+    bool isInDialogue() const noexcept { return m_runner->inDialogue(); }
+    /// Sends a game event; Triggers listening for it run next frame.
+    void emit(std::string_view event) override;
+    /// True if the event was sent in the previous frame (events reach
+    /// triggers and behaviours one frame after they are sent).
+    bool wasEmitted(std::string_view event) const;
+    /// Saves the progress to a slot now. False (with a log message) if it could not.
+    bool save(std::string_view slot);
+    /// Loads a slot at the end of this frame (its scene, progress, player position).
+    void load(std::string_view slot);
+    /// The prompt for what the player can interact with now, e.g. "[E] Talk".
+    const std::string& interactionPrompt() const noexcept { return m_prompt; }
+
 private:
+    struct TriggerState {
+        bool started = false;
+        bool inside = false;
+        bool conditionWas = false;
+        float elapsed = 0.0f;
+        bool fired = false;
+    };
+
+    // ContentHost (changeScene, destroy and emit are public above).
+    void setActive(EntityId entity, bool active) override;
+    void saveGame(std::string_view slot) override { save(slot); }
+    void loadGame(std::string_view slot) override { load(slot); }
+
     std::vector<EntityId> findAllWith(std::string_view typeId) const;
+    void beginScene(Scene scene, AssetId id);
+    void handleDialogueInput();
     void runBehaviours();
+    void runTriggers(bool talkedThisFrame);
+    void updatePresentation();
     void finishFrame();
     bool isActiveInScene(const Entity& entity) const;
+    std::string dialogueChoicesText(std::string_view marker) const;
+    std::string questLogText() const;
 
     const Logger& m_log;
-    const AssetDatabase* m_assets;
-    SceneLoader m_loader;
+    GameSetup m_setup;
+    std::unique_ptr<ContentLibrary> m_ownContent;   // used when the setup has none
+    std::unique_ptr<ContentRunner> m_runner;
     std::shared_ptr<Scene> m_scene;
+    AssetId m_sceneId;
     Input m_input;
     double m_time = 0.0;
     float m_dt = 0.0f;
     std::uint64_t m_frames = 0;
+
     std::vector<EntityId> m_toDestroy;
     std::optional<AssetId> m_nextScene;
+    std::optional<std::string> m_loadSlot;
+    std::optional<Vec2> m_placePlayerAt;             // after loading a save
+    std::set<EntityId> m_sceneObjects;                // objects the scene started with
+    std::map<EntityId, TriggerState> m_triggers;
+    std::map<EntityId, std::string> m_textTemplates;  // each Text's own text, as written
+    std::vector<std::string> m_pendingEvents;         // sent this frame
+    std::vector<std::string> m_events;                // sent last frame: delivered now
+    std::string m_prompt;
+    std::size_t m_choice = 0;                         // the selected dialogue choice
+    std::string m_shownLine;                          // to notice a new line (resets the choice)
 };
 
 } // namespace lantern

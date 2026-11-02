@@ -38,6 +38,7 @@ add_executable(lantern_tests
     gameplay/test_input.cpp
     gameplay/test_collision.cpp
     gameplay/test_game.cpp
+    gameplay/test_game_content.cpp
     content/test_logic.cpp
     content/test_content_files.cpp
     content/test_content_library.cpp
@@ -120,15 +121,16 @@ set_tests_properties(player.screenshot PROPERTIES
     TIMEOUT 60)
 
 if(TARGET sample_game)
-    # Gameplay end to end: the sample's player walks right (Right held, fixed
-    # 1/60 s frames so the run is the same every time) through the meadow's
-    # door into the cave.
+    # Gameplay end to end (fixed 1/60 s frames so every run is the same):
+    # the player walks up and right to the elder, talks (E), goes on, and
+    # accepts the quest. The screenshot shows the dialogue box.
     add_test(NAME player.plays_sample_game
-        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --frames 800
-                --hold Right --fixed-step --no-stats
-                --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_sample_cave.png")
+        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --frames 200
+                --fixed-step --no-stats --save-dir "${CMAKE_CURRENT_BINARY_DIR}/player-test-saves"
+                --tap Up@5-34 --tap Right@40-100 --tap E@120 --tap E@140 --tap E@170
+                --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_sample_dialogue.png")
     set_tests_properties(player.plays_sample_game PROPERTIES
-        PASS_REGULAR_EXPRESSION "Showing scene 'Meadow'.*Changed to scene 'Cave'.*Showing scene 'Cave'.*Screenshot saved"
+        PASS_REGULAR_EXPRESSION "Showing scene 'Meadow'.*Quest started: Gems for the Elder.*Screenshot saved"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
         TIMEOUT 120)
 endif()

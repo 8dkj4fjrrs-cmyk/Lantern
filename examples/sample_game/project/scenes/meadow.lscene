@@ -88,8 +88,30 @@
           "solid": false
         },
         {
-          "type": "sample.Collectible",
-          "message": "Picked up a gem by the pond"
+          "type": "lantern.Trigger",
+          "on": "enterArea",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "add",
+                "variable": "gems",
+                "value": 1
+              },
+              {
+                "type": "log",
+                "text": "Picked up a gem by the pond"
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
         },
         {
           "type": "sample.Spinner",
@@ -123,8 +145,30 @@
           "solid": false
         },
         {
-          "type": "sample.Collectible",
-          "message": "Picked up a gem behind the ruin"
+          "type": "lantern.Trigger",
+          "on": "enterArea",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "add",
+                "variable": "gems",
+                "value": 1
+              },
+              {
+                "type": "log",
+                "text": "Picked up a gem behind the ruin"
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
         },
         {
           "type": "sample.Spinner",
@@ -158,8 +202,30 @@
           "solid": false
         },
         {
-          "type": "sample.Collectible",
-          "message": "Picked up a gem in the long grass"
+          "type": "lantern.Trigger",
+          "on": "enterArea",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "add",
+                "variable": "gems",
+                "value": 1
+              },
+              {
+                "type": "log",
+                "text": "Picked up a gem in the long grass"
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
         },
         {
           "type": "sample.Spinner",
@@ -169,6 +235,123 @@
     },
     {
       "id": "e17e000000000005",
+      "name": "Elder",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [304, 560],
+          "rotation": 0,
+          "scale": [2, 2]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "5a4d1e0000000006",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": true,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 6],
+          "offset": [0, -9],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000006",
+      "parent": "e17e000000000005",
+      "name": "Talk Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -4],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [36, 32],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Talk",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "5a4d1e0000000011"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000007",
+      "name": "Boulder",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1456, 480],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [60, 60],
+          "color": "#8a8478ff",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [60, 64],
+          "offset": [0, 0],
+          "solid": true
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "conditionMet",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": true,
+          "data": {
+            "condition": {
+              "type": "compare",
+              "variable": "cave_open",
+              "op": "==",
+              "value": true
+            },
+            "actions": [
+              {
+                "type": "log",
+                "text": "The boulder rolls aside."
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000008",
       "name": "Door to Cave",
       "active": true,
       "components": [
@@ -191,7 +374,7 @@
       ]
     },
     {
-      "id": "e17e000000000006",
+      "id": "e17e000000000009",
       "name": "Player",
       "active": true,
       "components": [
@@ -216,14 +399,18 @@
           "solid": true
         },
         {
+          "type": "lantern.Interactor",
+          "key": "E"
+        },
+        {
           "type": "sample.PlayerController",
           "speed": 140
         }
       ]
     },
     {
-      "id": "e17e000000000007",
-      "parent": "e17e000000000006",
+      "id": "e17e00000000000a",
+      "parent": "e17e000000000009",
       "name": "Camera",
       "active": true,
       "components": [
@@ -231,11 +418,229 @@
           "type": "lantern.Transform",
           "position": [0, 0],
           "rotation": 0,
-          "scale": [1, 1]
+          "scale": [0.5, 0.5]
         },
         {
           "type": "lantern.Camera",
           "zoom": 1
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000000b",
+      "parent": "e17e00000000000a",
+      "name": "Gem Count",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-620, 345],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Gems: {gems}",
+          "source": "text",
+          "font": null,
+          "size": 22,
+          "color": "#f7d65cff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000000c",
+      "parent": "e17e00000000000a",
+      "name": "Quest Log",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-620, 312],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "questLog",
+          "font": null,
+          "size": 16,
+          "color": "#e8e8e8ff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000000d",
+      "parent": "e17e00000000000a",
+      "name": "Help",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [620, 345],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Arrows / WASD walk · E talks · F5 save · F9 load",
+          "source": "text",
+          "font": null,
+          "size": 14,
+          "color": "#ffffffb0",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000000e",
+      "parent": "e17e00000000000a",
+      "name": "Prompt",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -150],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "interactionPrompt",
+          "font": null,
+          "size": 18,
+          "color": "#f2a93bff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e00000000000f",
+      "parent": "e17e00000000000a",
+      "name": "Dialogue Box",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -262],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1000, 166],
+          "color": "#101018e8",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.DialogueView",
+          "marker": "> "
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000010",
+      "parent": "e17e00000000000f",
+      "name": "Speaker",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, 68],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueSpeaker",
+          "font": null,
+          "size": 20,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000011",
+      "parent": "e17e00000000000f",
+      "name": "Line",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, 38],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueLine",
+          "font": null,
+          "size": 18,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 960
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000012",
+      "parent": "e17e00000000000f",
+      "name": "Choices",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-480, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueChoices",
+          "font": null,
+          "size": 18,
+          "color": "#c8d2ffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "e17e000000000013",
+      "parent": "e17e00000000000f",
+      "name": "Continue",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [480, -60],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "E / Space",
+          "source": "text",
+          "font": null,
+          "size": 12,
+          "color": "#ffffff80",
+          "align": "right",
+          "width": 0
         }
       ]
     }

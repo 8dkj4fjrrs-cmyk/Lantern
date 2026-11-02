@@ -1,5 +1,6 @@
 """Writes the sample game's project files: settings, .meta files, the
-tileset and two scenes (a meadow and a cave).
+tileset, two scenes (a meadow and a cave) and the RPG content (variables,
+the elder's dialogue and the gem quest).
 
     python3 make_project.py <project folder>
 
@@ -21,6 +22,10 @@ IDS = {
     "tiles.ltileset": "5a4d1e0000000003",
     "meadow.lscene": "5a4d1e0000000004",
     "cave.lscene": "5a4d1e0000000005",
+    "elder.png": "5a4d1e0000000006",
+    "game.lvars": "5a4d1e0000000010",
+    "elder.ldialogue": "5a4d1e0000000011",
+    "gems.lquest": "5a4d1e0000000012",
 }
 GRASS, FLOWERS, PATH, WALL, WATER, CAVE_FLOOR, CAVE_WALL, MAT = range(8)
 CELL = 16      # tile size in pixels
@@ -64,6 +69,40 @@ def cell_center(x, y):
     return ((x + 0.5) * STEP, (y + 0.5) * STEP)
 
 
+def text(name, x, y, words, parent, source="text", size=18, color="#ffffffff", align="left", width=0):
+    return entity(name, [
+        transform(x, y),
+        {"type": "lantern.Text", "text": words, "source": source, "font": None, "size": size, "color": color,
+         "align": align, "width": width},
+    ], parent=parent)
+
+
+def interface(camera_id):
+    """What the player sees on screen: children of the camera, so they stay
+    put while the world scrolls. The game view is 1280 x 720, centred on the
+    camera."""
+    items = [
+        text("Gem Count", -620, 345, "Gems: {gems}", camera_id, size=22, color="#f7d65cff"),
+        text("Quest Log", -620, 312, "", camera_id, source="questLog", size=16, color="#e8e8e8ff"),
+        text("Help", 620, 345, "Arrows / WASD walk · E talks · F5 save · F9 load", camera_id, size=14,
+             color="#ffffffb0", align="right"),
+        text("Prompt", 0, -150, "", camera_id, source="interactionPrompt", size=18, color="#f2a93bff",
+             align="center"),
+    ]
+    box = entity("Dialogue Box", [
+        transform(0, -262),
+        {"type": "lantern.Shape", "kind": "rectangle", "size": [1000, 166], "color": "#101018e8", "filled": True,
+         "lineWidth": 2},
+        {"type": "lantern.DialogueView", "marker": "> "},
+    ], parent=camera_id)
+    items += [box,
+              text("Speaker", -480, 68, "", box["id"], source="dialogueSpeaker", size=20),
+              text("Line", -480, 38, "", box["id"], source="dialogueLine", size=18, width=960),
+              text("Choices", -480, -8, "", box["id"], source="dialogueChoices", size=18, color="#c8d2ffff"),
+              text("Continue", 480, -60, "E / Space", box["id"], size=12, color="#ffffff80", align="right")]
+    return items
+
+
 def player(x, y):
     hero = entity("Player", [
         transform(x, y, scale=(SCALE, SCALE)),
@@ -71,10 +110,18 @@ def player(x, y):
          "flipX": False, "flipY": False},
         # Only the feet collide, so the head can overlap a wall's top edge.
         {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
+        {"type": "lantern.Interactor", "key": "E"},
         {"type": "sample.PlayerController", "speed": 140},
     ])
-    camera = entity("Camera", [transform(), {"type": "lantern.Camera", "zoom": 1}], parent=hero["id"])
-    return [hero, camera]
+    # The camera undoes the player's scale, so the interface is drawn 1:1.
+    camera = entity("Camera", [transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "lantern.Camera", "zoom": 1}],
+                    parent=hero["id"])
+    return [hero, camera] + interface(camera["id"])
+
+
+def trigger(on, actions, condition=None, prompt="", event="", delay=1.0, once=False):
+    return {"type": "lantern.Trigger", "on": on, "prompt": prompt, "event": event, "delay": delay, "once": once,
+            "data": {"condition": condition, "actions": actions}}
 
 
 def door(name, x, y, target):
@@ -85,14 +132,47 @@ def door(name, x, y, target):
     ])
 
 
-def gem(name, x, y, message):
+def gem(name, x, y, message, with_code=False):
+    """A spinning gem. In the meadow a Trigger picks it up (no code); in the
+    cave the C++ Collectible behaviour does the same."""
+    pickup = ({"type": "sample.Collectible", "message": message, "variable": "gems"} if with_code else
+              trigger("enterArea", [{"type": "add", "variable": "gems", "value": 1},
+                                    {"type": "log", "text": message},
+                                    {"type": "destroy", "entity": None}]))
     return entity(name, [
         transform(x, y, rotation=45),
         {"type": "lantern.Shape", "kind": "rectangle", "size": [14, 14], "color": "#f7d65cff", "filled": True,
          "lineWidth": 2},
         {"type": "lantern.Collider", "size": [14, 14], "offset": [0, 0], "solid": False},
-        {"type": "sample.Collectible", "message": message},
+        pickup,
         {"type": "sample.Spinner", "speed": 90},
+    ])
+
+
+def elder(x, y):
+    body = entity("Elder", [
+        transform(x, y, scale=(SCALE, SCALE)),
+        {"type": "lantern.Sprite", "image": IDS["elder.png"], "size": [16, 24], "color": "#ffffffff",
+         "flipX": True, "flipY": False},
+        {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
+    ])
+    talk = entity("Talk Area", [
+        transform(0, -4),
+        {"type": "lantern.Collider", "size": [36, 32], "offset": [0, 0], "solid": False},
+        trigger("interact", [{"type": "startDialogue", "dialogue": IDS["elder.ldialogue"]}], prompt="Talk"),
+    ], parent=body["id"])
+    return [body, talk]
+
+
+def boulder(x, y):
+    """Blocks the way to the cave until the gem quest's reward opens it."""
+    return entity("Boulder", [
+        transform(x, y),
+        {"type": "lantern.Shape", "kind": "ellipse", "size": [60, 60], "color": "#8a8478ff", "filled": True,
+         "lineWidth": 2},
+        {"type": "lantern.Collider", "size": [60, 64], "offset": [0, 0], "solid": True},
+        trigger("conditionMet", [{"type": "log", "text": "The boulder rolls aside."}, {"type": "destroy", "entity": None}],
+                condition={"type": "compare", "variable": "cave_open", "op": "==", "value": True}, once=True),
     ])
 
 
@@ -124,6 +204,8 @@ def meadow():
     entities += [gem("Gem 1", *cell_center(20, 22), "Picked up a gem by the pond"),
                  gem("Gem 2", *cell_center(30, 6), "Picked up a gem behind the ruin"),
                  gem("Gem 3", *cell_center(40, 24), "Picked up a gem in the long grass")]
+    entities += elder(*cell_center(9, 17))
+    entities.append(boulder(45.5 * STEP, 15 * STEP))
     entities.append(door("Door to Cave", dx, dy, "cave.lscene"))
     entities += player(px, py + STEP * 0.5)
     return scene("Meadow", entities)
@@ -144,10 +226,77 @@ def cave():
     ground = entity("Ground", [transform(scale=(SCALE, SCALE)), tilemap(w, h, paint)])
     px, py = cell_center(3, 7)
     entities = [ground,
-                gem("Gem 4", *cell_center(22, 12), "Picked up the cave's gem"),
+                gem("Gem 4", *cell_center(22, 12), "Picked up the cave's gem", with_code=True),
                 door("Door to Meadow", 0.5 * STEP, 8 * STEP, "meadow.lscene")]
     entities += player(px, py + STEP * 0.5)
     return scene("Cave", entities)
+
+
+def quest_is(state):
+    return {"type": "quest", "quest": IDS["gems.lquest"], "state": state}
+
+
+def gems_at_least(n):
+    return {"type": "compare", "variable": "gems", "op": ">=", "value": n}
+
+
+def variables():
+    return {"format": "lantern.variables", "version": 1, "variables": [
+        {"id": "gems", "type": "int", "initial": 0, "description": "Gems the player carries"},
+        {"id": "met_elder", "type": "bool", "initial": False, "description": "Has talked to the elder"},
+        {"id": "cave_open", "type": "bool", "initial": False, "description": "The boulder before the cave is gone"},
+    ]}
+
+
+def elder_dialogue():
+    def line(node_id, words, next_node=None, actions=None, choices=None):
+        n = {"id": node_id, "speaker": "elder", "text": words}
+        if actions:
+            n["actions"] = actions
+        if choices:
+            n["choices"] = choices
+        else:
+            n["next"] = next_node
+        return n
+
+    return {"format": "lantern.dialogue", "version": 1,
+            "speakers": [{"id": "elder", "name": "Elder Maren", "color": "#c9a6ffff", "portrait": None}],
+            "start": "begin",
+            "nodes": [
+                # Where the conversation starts depends on the quest.
+                {"id": "begin", "branches": [
+                    {"condition": quest_is("completed"), "next": "after"},
+                    {"condition": {"type": "all", "conditions": [quest_is("active"), gems_at_least(3)]}, "next": "done"},
+                    {"condition": quest_is("active"), "next": "waiting"}],
+                 "next": "greet"},
+                line("greet", "Ah, a traveller! Welcome to the meadow.", "ask",
+                     actions=[{"type": "set", "variable": "met_elder", "value": True}]),
+                line("ask", "A boulder blocks the old cave to the east. Bring me three gems from the meadow, and "
+                            "their light will move it.", choices=[
+                    {"id": "yes", "text": "I'll find them.",
+                     "actions": [{"type": "startQuest", "quest": IDS["gems.lquest"]}], "next": "thanks"},
+                    {"id": "no", "text": "Maybe later.", "next": "later"}]),
+                line("thanks", "Thank you! Look by the pond, behind the ruin and in the long grass."),
+                line("later", "Come back when you are ready."),
+                line("waiting", "You have {gems} of 3 gems. Keep looking!"),
+                line("done", "Three gems! Listen... the boulder is moving.", "opened",
+                     actions=[{"type": "completeObjective", "quest": IDS["gems.lquest"], "objective": "return"}]),
+                line("opened", "The way to the cave is open. Follow the path east."),
+                line("after", "The cave lies east. Take care in there."),
+            ]}
+
+
+def gems_quest():
+    return {"format": "lantern.quest", "version": 1,
+            "name": "Gems for the Elder",
+            "description": "Elder Maren needs three gems to move the boulder before the cave.",
+            "prerequisites": [], "startWhen": None,
+            "objectives": [
+                {"id": "collect", "text": "Find 3 gems ({gems}/3)", "completeWhen": gems_at_least(3), "optional": False},
+                {"id": "return", "text": "Bring them to Elder Maren", "completeWhen": None, "optional": False}],
+            "failWhen": None,
+            "rewards": [{"type": "set", "variable": "cave_open", "value": True},
+                        {"type": "log", "text": "The way to the cave is open."}]}
 
 
 def meta(asset_id, kind, extra=None):
@@ -186,6 +335,13 @@ def main():
                                      "startScene": "scenes/meadow.lscene"})
     write(root / "assets/tiles.png.meta", meta(IDS["tiles.png"], "image", {"filter": "pixel"}))
     write(root / "assets/hero.png.meta", meta(IDS["hero.png"], "image", {"filter": "pixel"}))
+    write(root / "assets/elder.png.meta", meta(IDS["elder.png"], "image", {"filter": "pixel"}))
+    write(root / "content/game.lvars", variables())
+    write(root / "content/game.lvars.meta", meta(IDS["game.lvars"], "variables"))
+    write(root / "content/elder.ldialogue", elder_dialogue())
+    write(root / "content/elder.ldialogue.meta", meta(IDS["elder.ldialogue"], "dialogue"))
+    write(root / "content/gems.lquest", gems_quest())
+    write(root / "content/gems.lquest.meta", meta(IDS["gems.lquest"], "quest"))
     write(root / "assets/tiles.ltileset", {"format": "lantern.tileset", "version": 1, "image": IDS["tiles.png"],
                                            "tileSize": [CELL, CELL], "margin": 0, "spacing": 0,
                                            "solid": [WALL, WATER, CAVE_WALL]})

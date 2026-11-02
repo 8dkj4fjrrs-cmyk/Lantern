@@ -23,6 +23,9 @@ bool containsPlayer(const Game& game, const std::vector<EntityId>& ids)
 
 void PlayerController::update(Game& game, float dt)
 {
+    if (game.isInDialogue()) {
+        return; // the arrow keys choose answers now
+    }
     const Vec2 direction = game.input().moveDirection();
     if (direction.x == 0.0f && direction.y == 0.0f) {
         return;
@@ -83,7 +86,14 @@ void Collectible::update(Game& game, float)
 {
     if (containsPlayer(game, game.overlapping(entity()))) {
         game.log().info("game", message);
-        game.destroy(entity());
+        if (!variable.empty()) {
+            Action add;
+            add.kind = Action::Kind::Add;
+            add.variable = variable;
+            add.value = 1;
+            game.content().run({add});   // the same action content uses
+        }
+        game.destroy(entity());   // stays collected for the rest of the playthrough
     }
 }
 
@@ -94,6 +104,8 @@ const ComponentType& Collectible::componentType()
             .category("Gameplay")
             .description("Disappears when the player touches its Collider, and writes a message to the Console.")
             .property("message", "Message", &Collectible::message, {.help = "Written to the Console when picked up."})
+            .property("variable", "Adds To", &Collectible::variable,
+                      {.help = "A whole-number game variable to add 1 to, e.g. gems. Empty: none."})
             .build();
     return type;
 }

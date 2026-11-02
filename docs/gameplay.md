@@ -123,6 +123,72 @@ one, and their behaviours, are gone.
 **Other:** `game.time()` (seconds of game time), `game.deltaTime()`,
 `game.log().info("game", "...")` (shown in the editor's Console).
 
+## Story content: dialogue, quests and triggers without code
+
+Much of an RPG is content rather than code: who says what, what quests
+there are, what happens when the player walks somewhere. Lantern keeps this
+as data ([content formats](formats/content.md)) and runs it with built-in
+components:
+
+| Component | Put it on | What it does |
+|---|---|---|
+| **Interactor** | the player (with a Collider) | Triggers notice it entering their area and pressing its interact key (E by default). |
+| **Trigger** | anything with a non-solid Collider (or nothing, for scene start, timers, events and conditions) | When something happens, runs actions if its condition is true (below). |
+| **Text** | an object (a child of the Camera stays on screen) | Draws text. `{gems}` shows a variable. Its *Source* can instead show the dialogue's speaker, line or choices, the interaction prompt ("[E] Talk") or the quest log. |
+| **Dialogue View** | the dialogue box | Shown only while a dialogue is going on. |
+
+A Trigger's **When** is one of:
+
+| When | Runs |
+|---|---|
+| Interact | the player presses the interact key inside the area (the prompt, e.g. "Talk", is shown meanwhile) |
+| Enter Area / Leave Area | the player walks in / out |
+| Scene Start | when the scene starts |
+| Timer | *Delay* seconds after the scene starts, and again every *Delay* seconds unless *Once* |
+| Game Event | an `emit` action (or `game.emit()`) sent the event named *Event* |
+| Condition Met | its condition turns true |
+
+*Once* makes it run only once per playthrough (remembered in saves). Its
+actions can start dialogues and quests, set variables, change scene, remove
+objects for good, wait, save and load... (see the [list of actions](formats/content.md#actions)).
+
+While a dialogue is shown, the interact key, Enter or Space go on, and the
+arrow keys (or W/S) pick a choice. Behaviours should usually not move the
+player meanwhile:
+
+```cpp
+if (game.isInDialogue()) {
+    return;
+}
+```
+
+From C++, content is at hand through `game.content()`:
+
+```cpp
+game.content().state().variable("gems");        // a variable's value
+game.content().run({action});                    // run actions, like content does
+game.content().startDialogue(elderDialogueId);
+game.content().state().questState(questId);      // notStarted, active, completed, failed
+game.emit("door_opened");                        // Game Event triggers hear it next frame
+if (game.wasEmitted("door_opened")) { ... }      // sent last frame
+```
+
+### Saving
+
+`game.save("slot")` saves the player's progress (variables, quests, objects
+removed for good, one-time triggers that ran, the scene and where the
+player stands) and `game.load("slot")` brings it back. The `saveGame` and
+`loadGame` actions do the same from content. In the player and in Play
+mode, **F5** saves to the slot "quick" and **F9** loads it.
+
+Saves made by the player go to the user's data folder (macOS
+`~/Library/Application Support/<game>/Saves`, Windows
+`%APPDATA%\<game>\Saves`, Linux `~/.local/share/<game>/saves`); saves made
+in the editor's Play mode go to the editor's settings folder, so testing
+never overwrites a real save. Objects removed with `game.destroy()` (or a
+`destroy` action) stay removed for the rest of the playthrough, also after
+leaving and coming back to a scene.
+
 ## Game modules: joining your code to Lantern
 
 Behaviours live in a **game module**: a static library linked into the
@@ -189,8 +255,11 @@ editor included: save before playing new code.
 
 [`examples/sample_game`](../examples/sample_game) has four behaviours:
 `PlayerController` (walking with collision), `SceneDoor` (changes scene when
-the player walks in), `Collectible` (picked up on touch) and `Spinner`. Its
-project (`examples/sample_game/project`) has a meadow and a cave. It is
+the player walks in), `Collectible` (picked up on touch, adding to a game
+variable) and `Spinner`. Its project (`examples/sample_game/project`) has a
+meadow and a cave, and content: Elder Maren's dialogue, a quest to bring her
+three gems (picked up by Triggers, no code), a boulder that rolls aside as
+the reward, and an on-screen gem count, quest log and dialogue box. It is
 built in by default (`LANTERN_BUILD_SAMPLE_GAME`):
 
 ```sh
@@ -198,4 +267,4 @@ built in by default (`LANTERN_BUILD_SAMPLE_GAME`):
 ```
 
 (On macOS the program is inside `lantern_player.app/Contents/MacOS/`.)
-Arrow keys or W A S D walk; walk right along the path to reach the cave.
+Arrow keys or W A S D walk, E talks, F5 saves, F9 loads.

@@ -173,6 +173,8 @@ private:
 
     // Play mode.
     std::unique_ptr<Game> m_game;   // non-null while playing
+    std::unique_ptr<ContentLibrary> m_playContent;   // the content the game plays
+    std::unique_ptr<FolderSaveStore> m_playSaves;
     bool m_paused = false;
     bool m_stepPending = false;
     bool m_editRefused = false;     // the "stop to edit" message was shown this run

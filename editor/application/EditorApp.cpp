@@ -3,6 +3,7 @@
 #include "../model/EditorPaths.hpp"
 
 #include "lantern/core/Version.hpp"
+#include "lantern/gameplay/Components.hpp"
 #include "lantern/gameplay/GameModule.hpp"
 #include "lantern/scene/SceneFile.hpp"
 #include "lantern/ui/Context.hpp"
@@ -97,6 +98,7 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
 {
     // The game's behaviours (linked game modules) join Lantern's components:
     // the Inspector can add them, scenes using them load, play mode runs them.
+    registerGameplayComponents(m_registry);
     registerGameModules(m_registry, m_engine.logger());
     for (std::string_view module : linkedGameModules()) {
         m_engine.logger().info(kCategory, "Game module: " + std::string(module));
@@ -413,9 +415,45 @@ void EditorApp::play()
         return;
     }
     m_document->history().breakMerge();
-    m_game = std::make_unique<Game>(m_engine.logger(), m_assetDb.get(),
-                                    [this](AssetId id, std::string& error) { return loadSceneForGame(id, error); });
-    m_game->start(m_document->scene());
+
+    // The project's content as it is on disk now, checked: problems go to
+    // the Console but do not stop the game.
+    m_playContent = std::make_unique<ContentLibrary>();
+    if (m_assetDb) {
+        m_assetDb->refresh();
+        std::vector<FileIssue> issues;
+        *m_playContent = ContentLibrary::load(*m_assetDb, &issues);
+        for (FileIssue& issue : m_playContent->check()) {
+            issues.push_back(std::move(issue));
+        }
+        for (const FileIssue& issue : issues) {
+            (issue.isError() ? log().error("content", issue.where + ": " + issue.message)
+                             : log().warning("content", issue.where + ": " + issue.message));
+        }
+    }
+    // Saves made while playing in the editor stay in the editor's settings
+    // folder, apart from the real game's saves.
+    const std::string gameName = m_project ? m_project->settings().name : std::string("Untitled");
+    m_playSaves.reset();
+    if (!m_configDir.empty()) {
+        m_playSaves = std::make_unique<FolderSaveStore>(m_configDir / "play-saves" / gameName);
+    }
+    GameSetup setup;
+    setup.assets = m_assetDb.get();
+    setup.content = m_playContent.get();
+    setup.saves = m_playSaves.get();
+    setup.gameName = gameName;
+    setup.loadScene = [this](AssetId id, std::string& error) { return loadSceneForGame(id, error); };
+    m_game = std::make_unique<Game>(m_engine.logger(), std::move(setup));
+    AssetId sceneId;
+    if (m_assetDb && m_project && !m_document->isUntitled()) {
+        if (const auto relative = m_project->relative(m_document->path())) {
+            if (const AssetRecord* record = m_assetDb->findByPath(*relative)) {
+                sceneId = record->id;
+            }
+        }
+    }
+    m_game->start(m_document->scene(), sceneId);
     m_paused = false;
     m_stepPending = false;
     m_editRefused = false;
@@ -436,6 +474,7 @@ void EditorApp::stopPlaying()
     }
     const std::uint64_t frames = m_game->frameCount();
     m_game.reset();   // the game's copy of the scene goes with it
+    m_playContent.reset();
     m_paused = false;
     log().info(kCategory, "Stopped playing after " + std::to_string(frames)
                               + " frames. The scene is back as it was before playing.");
@@ -465,6 +504,13 @@ void EditorApp::updateGame(UiFrame& frame)
     const double now = frame.ui().time();
     const float dt = m_lastFrameTime < 0.0 ? 1.0f / 60.0f : static_cast<float>(now - m_lastFrameTime);
     m_lastFrameTime = now;
+    // F5 saves to the "quick" slot, F9 loads it (as in the player).
+    if (m_game->input().wasPressed(Key::F5)) {
+        m_game->save("quick");
+    }
+    if (m_game->input().wasPressed(Key::F9)) {
+        m_game->load("quick");
+    }
     if (!m_paused) {
         m_game->update(dt);
     } else if (m_stepPending) {

@@ -64,6 +64,30 @@ struct Camera : ComponentBase<Camera> {
     static const ComponentType& componentType();
 };
 
+enum class TextAlign { Left, Center, Right };
+
+/// What a Text shows while the game runs. "Text" is its own text, with
+/// {variable} filled in; the others are filled by the game (see
+/// docs/gameplay.md): the dialogue being shown, the prompt for what the
+/// player can interact with, and the active quests.
+enum class TextSource { Text, DialogueSpeaker, DialogueLine, DialogueChoices, InteractionPrompt, QuestLog };
+
+/// Text drawn in the world (or, as a child of the camera, on screen). The
+/// entity's position is the top of the text: its left end, middle or right
+/// end, by `align`; lines go downwards. Long text wraps at `width` points
+/// (0: no wrapping).
+struct Text : ComponentBase<Text> {
+    std::string text = "Text";
+    TextSource source = TextSource::Text;
+    AssetId font;                       // a font asset; none: Lantern's built-in font (Inter)
+    float size = 16.0f;                 // in points
+    Color color{255, 255, 255, 255};
+    TextAlign align = TextAlign::Left;
+    float width = 0.0f;
+
+    static const ComponentType& componentType();
+};
+
 /// A box used for collision, centred on the entity (moved by `offset`), in
 /// the entity's own coordinates. Gameplay code asks about colliders through
 /// lantern::Game: solid colliders block movement (Game::move), and every

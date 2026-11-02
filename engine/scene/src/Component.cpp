@@ -141,6 +141,7 @@ ComponentRegistry ComponentRegistry::withBuiltins()
     static_cast<void>(registry.add(Camera::componentType()));
     static_cast<void>(registry.add(Tilemap::componentType()));
     static_cast<void>(registry.add(Collider::componentType()));
+    static_cast<void>(registry.add(Text::componentType()));
     return registry;
 }
 
@@ -238,6 +239,28 @@ const ComponentType& Collider::componentType()
                       {.help = "Moves the box away from the object's centre, e.g. to cover only a character's feet."})
             .property("solid", "Solid", &Collider::solid,
                       {.help = "Solid colliders block movement. Turn off for areas such as doors and triggers."})
+            .build();
+    return type;
+}
+
+const ComponentType& Text::componentType()
+{
+    static const ComponentType type =
+        ComponentTypeBuilder<Text>("lantern.Text", "Text")
+            .description("Text in the world, or on screen as a child of the Camera. {variable} shows a game "
+                         "variable's value while playing. Source fills it from the game instead: the dialogue, "
+                         "the interaction prompt or the quest log.")
+            .property("text", "Text", &Text::text, {.help = "What it says. {gems} shows the variable gems."})
+            .property("source", "Source", &Text::source,
+                      {.choices = {"text", "dialogueSpeaker", "dialogueLine", "dialogueChoices", "interactionPrompt",
+                                   "questLog"},
+                       .help = "Where the words come from while the game runs."})
+            .property("font", "Font", &Text::font, {.help = "A font file (.ttf). None: Lantern's own font.", .assetType = "font"})
+            .property("size", "Size", &Text::size, {.min = 4.0f, .max = 512.0f, .unit = "pt"})
+            .property("color", "Color", &Text::color)
+            .property("align", "Align", &Text::align, {.choices = {"left", "center", "right"}})
+            .property("width", "Wrap Width", &Text::width,
+                      {.min = 0.0f, .help = "Long text wraps onto new lines at this width. 0: no wrapping.", .unit = "pt"})
             .build();
     return type;
 }

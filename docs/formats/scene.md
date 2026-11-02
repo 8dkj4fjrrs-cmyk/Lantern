@@ -169,6 +169,38 @@ gameplay code ([gameplay guide](../gameplay.md)).
 | `offset` | `[x, y]` from the entity's centre | `[0, 0]` |
 | `solid` | `true`: blocks movement; `false`: an area gameplay notices (a door, a pick-up) | `true` |
 
+**`lantern.Text`**: text in the world, or on screen as a child of the Camera.
+The entity's position is the top of the text (its left end, middle or right
+end, by `align`).
+
+| Key | Type | Default |
+|---|---|---|
+| `text` | the words; `{variable}` shows a game variable while playing | `"Text"` |
+| `source` | `"text"`, `"dialogueSpeaker"`, `"dialogueLine"`, `"dialogueChoices"`, `"interactionPrompt"`, `"questLog"` | `"text"` |
+| `font` | a font asset's ID, or `null` for Lantern's built-in font | `null` |
+| `size` | points, 4 to 512 | `16` |
+| `color` | `"#rrggbbaa"` | `"#ffffffff"` |
+| `align` | `"left"`, `"center"`, `"right"` | `"left"` |
+| `width` | wrap long lines at this width in points (0: no wrapping) | `0` |
+
+**`lantern.Interactor`**: marks the player. `key`: `"E"`, `"Space"`, `"Enter"`
+or `"Z"` (default `"E"`).
+
+**`lantern.Trigger`**: runs actions when something happens (see the
+[gameplay guide](../gameplay.md#story-content-dialogue-quests-and-triggers-without-code)).
+
+| Key | Type | Default |
+|---|---|---|
+| `on` | `"interact"`, `"enterArea"`, `"leaveArea"`, `"sceneStart"`, `"timer"`, `"gameEvent"`, `"conditionMet"` | `"interact"` |
+| `prompt` | shown for `interact`, e.g. `"Talk"` | `"Talk"` |
+| `event` | the event name for `gameEvent` | `""` |
+| `delay` | seconds, for `timer` | `1` |
+| `once` | run once per playthrough | `false` |
+| `data` | `{ "condition": <condition or null>, "actions": [<actions>] }` ([conditions and actions](content.md#conditions)) | no condition, no actions |
+
+**`lantern.DialogueView`**: shown only during dialogues. `marker`: written
+before the selected choice (default `"> "`).
+
 **Behaviours** (gameplay code from a game module) are stored like any other
 component: their `type` is the ID their module chose (e.g.
 `"sample.PlayerController"`) and their keys are their properties. A scene

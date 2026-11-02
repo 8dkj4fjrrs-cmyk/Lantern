@@ -106,3 +106,17 @@ TEST_CASE("Held keys and fixed steps for gameplay tests", "[player][cli]")
     CHECK(lantern::player::keyFromName("left shift") == lantern::Key::LeftShift);
     CHECK_FALSE(lantern::player::keyFromName("Unknown"));
 }
+
+TEST_CASE("Tapped keys and the save folder", "[player][cli]")
+{
+    const ParseResult r = parse({"--tap", "E@120", "--tap", "down@5-40", "--save-dir", "saves"});
+    REQUIRE(r.ok());
+    REQUIRE(r.options.tappedKeys.size() == 2);
+    using Tap = lantern::player::PlayerOptions::Tap;
+    CHECK(r.options.tappedKeys[0] == Tap{lantern::Key::E, 120, 121});
+    CHECK(r.options.tappedKeys[1] == Tap{lantern::Key::Down, 5, 40});
+    CHECK_FALSE(parse({"--tap", "E@9-3"}).ok());
+    CHECK(r.options.saveDir == "saves");
+    CHECK_FALSE(parse({"--tap", "E"}).ok());
+    CHECK_FALSE(parse({"--tap", "Nope@3"}).ok());
+}

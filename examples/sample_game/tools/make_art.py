@@ -2,8 +2,8 @@
 
     python3 make_art.py <project folder>
 
-Writes assets/tiles.png (8 tiles of 16 x 16 pixels in one row) and
-assets/hero.png (16 x 24). Run once; the results are committed.
+Writes assets/tiles.png (8 tiles of 16 x 16 pixels in one row),
+assets/hero.png and assets/elder.png (16 x 24 each). Run once; the results are committed.
 """
 import random
 import sys
@@ -91,6 +91,31 @@ def hero():
     return img
 
 
+def elder():
+    """The village elder: grey hair and beard, a purple robe, a staff."""
+    img = Image.new("RGBA", (16, 24), (0, 0, 0, 0))
+    hair, skin, eye = (216, 216, 224, 255), (232, 190, 156, 255), (40, 32, 32, 255)
+    robe, trim, staff = (112, 72, 160, 255), (240, 196, 92, 255), (120, 84, 48, 255)
+    for y in range(24):
+        for x in range(16):
+            c = None
+            if 1 <= y <= 3 and 4 <= x <= 11:
+                c = hair
+            elif 4 <= y <= 7 and 4 <= x <= 11:
+                c = hair if x in (4, 11) else skin
+                if y == 5 and x in (6, 9):
+                    c = eye
+            elif 8 <= y <= 10 and 5 <= x <= 10:
+                c = hair                                     # the beard
+            elif 11 <= y <= 22 and 3 <= x <= 12 - (1 if y < 14 else 0):
+                c = trim if x == 7 or y == 22 else robe
+            if x == 14 and 2 <= y <= 22:
+                c = staff
+            if c:
+                img.putpixel((x, y), c)
+    return img
+
+
 def main():
     folder = Path(sys.argv[1]) / "assets"
     folder.mkdir(parents=True, exist_ok=True)
@@ -99,6 +124,7 @@ def main():
         tile(tiles, i, p)
     tiles.save(folder / "tiles.png")
     hero().save(folder / "hero.png")
+    elder().save(folder / "elder.png")
 
 
 if __name__ == "__main__":

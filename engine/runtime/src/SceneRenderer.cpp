@@ -2,6 +2,10 @@
 
 #include "TextureStore.hpp"
 
+#include "lantern/ui/EmbeddedFonts.hpp"
+
+#include <filesystem>
+#include <fstream>
 #include <unordered_map>
 
 namespace lantern::detail {
@@ -225,6 +229,72 @@ ax::Node* SceneRenderer::makeTilemapNode(const Tilemap& map)
     return root;
 }
 
+const std::string& SceneRenderer::defaultFontPath()
+{
+    if (!m_defaultFont.empty()) {
+        return m_defaultFont;
+    }
+    // Axmol loads fonts from files, so the font compiled into Lantern is
+    // written to the temporary folder once (named by its size, so a changed
+    // font gets a new file).
+    const auto data = ui::fonts::interRegular();
+    std::error_code ec;
+    const std::filesystem::path folder = std::filesystem::temp_directory_path(ec) / "lantern-engine";
+    const std::filesystem::path file = folder / ("Inter-Regular-" + std::to_string(data.size()) + ".ttf");
+    if (!std::filesystem::exists(file, ec) || std::filesystem::file_size(file, ec) != data.size()) {
+        std::filesystem::create_directories(folder, ec);
+        std::ofstream out(file, std::ios::binary | std::ios::trunc);
+        out.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+    }
+    m_defaultFont = file.string();
+    return m_defaultFont;
+}
+
+ax::Node* SceneRenderer::makeTextNode(const Text& text)
+{
+    if (text.text.empty()) {
+        return nullptr;
+    }
+    std::string font;
+    const AssetRecord* asset = m_assets != nullptr && !text.font.isNull() ? m_assets->find(text.font) : nullptr;
+    if (asset != nullptr && asset->type == AssetType::Font && asset->isUsable()) {
+        font = m_assets->absolutePath(*asset).string();
+    } else {
+        font = defaultFontPath();
+    }
+    // Drawn at twice the size and scaled down, so text stays sharp when the
+    // view is zoomed in a little (and on Retina screens).
+    constexpr float kOversample = 2.0f;
+    const ax::TextHAlignment align = text.align == TextAlign::Left    ? ax::TextHAlignment::LEFT
+                                     : text.align == TextAlign::Right ? ax::TextHAlignment::RIGHT
+                                                                      : ax::TextHAlignment::CENTER;
+    const float anchorX = text.align == TextAlign::Left ? 0.0f : text.align == TextAlign::Right ? 1.0f : 0.5f;
+    // One label per line: Axmol handles "\n" itself but warns that the font
+    // has no glyph for it, once for every line break in every text.
+    auto* root = ax::Node::create();
+    root->setScale(1.0f / kOversample);
+    float y = 0.0f;
+    std::size_t start = 0;
+    while (start <= text.text.size()) {
+        const std::size_t end = std::min(text.text.find('\n', start), text.text.size());
+        const std::string line = text.text.substr(start, end - start);
+        auto* label = ax::Label::createWithTTF(line.empty() ? std::string(" ") : line, font,
+                                               std::max(1.0f, text.size * kOversample),
+                                               ax::Size(std::max(0.0f, text.width) * kOversample, 0.0f), align);
+        if (label == nullptr) {
+            return root;
+        }
+        label->setTextColor(ax::Color4B(text.color.r, text.color.g, text.color.b, text.color.a));
+        label->setAnchorPoint(ax::Vec2(anchorX, 1.0f));
+        label->setPositionY(y);
+        root->addChild(label);
+        // A wrapped line can take several rows: continue below all of them.
+        y -= std::max(label->getContentSize().height, label->getLineHeight());
+        start = end + 1;
+    }
+    return root;
+}
+
 void SceneRenderer::rebuild()
 {
     if (m_container != nullptr) {
@@ -269,6 +339,11 @@ void SceneRenderer::rebuild()
             }
             if (const Tilemap* map = entity.get<Tilemap>()) {
                 node->addChild(makeTilemapNode(*map), -1);
+            }
+            if (const Text* text = entity.get<Text>()) {
+                if (ax::Node* label = makeTextNode(*text)) {
+                    node->addChild(label, -1);
+                }
             }
         }
 

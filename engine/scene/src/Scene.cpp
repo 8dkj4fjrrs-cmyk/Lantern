@@ -485,6 +485,13 @@ std::optional<LocalBounds> localBounds(const Entity& entity)
             return LocalBounds{{(lo.x + hi.x) * 0.5f, (lo.y + hi.y) * 0.5f}, hi - lo, false};
         }
     }
+    if (const Text* text = entity.get<Text>()) {
+        // Roughly the first line, so text can be clicked in the editor.
+        const float w = text->width > 0.0f ? text->width
+                                           : std::max(text->size, static_cast<float>(text->text.size()) * text->size * 0.55f);
+        const float x = text->align == TextAlign::Left ? w * 0.5f : text->align == TextAlign::Right ? -w * 0.5f : 0.0f;
+        return LocalBounds{{x, -text->size * 0.6f}, {w, text->size * 1.2f}, false};
+    }
     if (const Collider* collider = entity.get<Collider>()) {
         // An object with only a collider (e.g. a door area) can still be
         // clicked and outlined in the editor.

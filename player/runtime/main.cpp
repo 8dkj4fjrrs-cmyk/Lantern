@@ -9,6 +9,8 @@
 
 #include "lantern/core/Engine.hpp"
 #include "lantern/core/Version.hpp"
+#include "lantern/content/ContentLibrary.hpp"
+#include "lantern/gameplay/Components.hpp"
 #include "lantern/gameplay/Game.hpp"
 #include "lantern/gameplay/GameModule.hpp"
 #include "lantern/runtime/Application.hpp"
@@ -93,6 +95,7 @@ int main(int argc, char** argv)
     // The component types this game can use: Lantern's own, plus the
     // behaviours of the game modules linked into the player.
     lantern::ComponentRegistry registry = lantern::ComponentRegistry::withBuiltins();
+    lantern::registerGameplayComponents(registry);
     lantern::registerGameModules(registry, engine.logger());
 
     std::optional<lantern::Scene> firstScene;
@@ -134,24 +137,62 @@ int main(int argc, char** argv)
         }
     }
 
+    // The project's RPG content (variables, dialogues, quests), checked.
+    lantern::ContentLibrary content;
+    if (assets) {
+        std::vector<lantern::FileIssue> issues;
+        content = lantern::ContentLibrary::load(*assets, &issues);
+        for (lantern::FileIssue& issue : content.check()) {
+            issues.push_back(std::move(issue));
+        }
+        for (const lantern::FileIssue& issue : issues) {
+            if (issue.isError()) {
+                engine.logger().error("content", issue.where + ": " + issue.message);
+            } else {
+                engine.logger().warning("content", issue.where + ": " + issue.message);
+            }
+        }
+    }
+
+    // Save slots: in the user's application data folder (or --save-dir).
+    std::filesystem::path saveFolder = opt.saveDir;
+    if (saveFolder.empty()) {
+        saveFolder = lantern::FolderSaveStore::userFolder(title);
+    }
+    lantern::FolderSaveStore saves(saveFolder);
+
     // The game: plays the scene, loading other scenes of the project when
     // gameplay asks for them.
-    lantern::Game game(engine.logger(), assets.get(),
-                       [&](lantern::AssetId id, std::string& error) -> std::optional<lantern::Scene> {
-                           const lantern::AssetRecord* record = assets != nullptr ? assets->find(id) : nullptr;
-                           if (record == nullptr || record->type != lantern::AssetType::Scene) {
-                               error = "it is not a scene of this project";
-                               return std::nullopt;
-                           }
-                           auto scene = loadScene(assets->absolutePath(*record), registry, engine.logger());
-                           if (!scene) {
-                               error = record->path + " could not be read";
-                           }
-                           return scene;
-                       });
+    lantern::GameSetup setup;
+    setup.assets = assets.get();
+    setup.content = &content;
+    setup.saves = saveFolder.empty() ? nullptr : &saves;
+    setup.gameName = title;
+    setup.loadScene = [&](lantern::AssetId id, std::string& error) -> std::optional<lantern::Scene> {
+        const lantern::AssetRecord* record = assets != nullptr ? assets->find(id) : nullptr;
+        if (record == nullptr || record->type != lantern::AssetType::Scene) {
+            error = "it is not a scene of this project";
+            return std::nullopt;
+        }
+        auto scene = loadScene(assets->absolutePath(*record), registry, engine.logger());
+        if (!scene) {
+            error = record->path + " could not be read";
+        }
+        return scene;
+    };
+    lantern::Game game(engine.logger(), std::move(setup));
     lantern::PresentationSettings presentation;
     if (firstScene) {
-        game.start(*firstScene);
+        // The scene's asset ID lets the game remember progress per scene.
+        lantern::AssetId sceneId;
+        if (assets) {
+            std::error_code ec;
+            const auto relative = std::filesystem::relative(std::filesystem::absolute(scenePath, ec), projectFolder, ec);
+            if (const lantern::AssetRecord* record = assets->findByPath(relative.generic_string())) {
+                sceneId = record->id;
+            }
+        }
+        game.start(*firstScene, sceneId);
         presentation.scene = game.sharedScene();
         for (const lantern::Key key : opt.heldKeys) {
             game.input().press(key);
@@ -165,6 +206,21 @@ int main(int argc, char** argv)
         app.setGameInput(&game.input());
         std::shared_ptr<const lantern::Scene> shown = game.sharedScene();
         app.setFrameCallback([&, shown](const lantern::FrameInfo& frame) mutable {
+            // Keys pressed by tests (--tap KEY@FROM-TO).
+            for (const auto& tap : opt.tappedKeys) {
+                if (frame.frameIndex == tap.from) {
+                    game.input().press(tap.key);
+                } else if (frame.frameIndex == tap.to) {
+                    game.input().release(tap.key);
+                }
+            }
+            // F5 saves to the "quick" slot, F9 loads it.
+            if (game.input().wasPressed(lantern::Key::F5)) {
+                game.save("quick");
+            }
+            if (game.input().wasPressed(lantern::Key::F9)) {
+                game.load("quick");
+            }
             const float dt = opt.fixedStep ? 1.0f / 60.0f : static_cast<float>(frame.deltaSeconds);
             game.update(dt);
             if (game.sharedScene() != shown) {   // the game changed scene

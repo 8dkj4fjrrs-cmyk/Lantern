@@ -1,0 +1,39 @@
+{
+  "format": "lantern.quest",
+  "version": 1,
+  "name": "Gems for the Elder",
+  "description": "Elder Maren needs three gems to move the boulder before the cave.",
+  "prerequisites": [],
+  "startWhen": null,
+  "objectives": [
+    {
+      "id": "collect",
+      "text": "Find 3 gems ({gems}/3)",
+      "completeWhen": {
+        "type": "compare",
+        "variable": "gems",
+        "op": ">=",
+        "value": 3
+      },
+      "optional": false
+    },
+    {
+      "id": "return",
+      "text": "Bring them to Elder Maren",
+      "completeWhen": null,
+      "optional": false
+    }
+  ],
+  "failWhen": null,
+  "rewards": [
+    {
+      "type": "set",
+      "variable": "cave_open",
+      "value": true
+    },
+    {
+      "type": "log",
+      "text": "The way to the cave is open."
+    }
+  ]
+}

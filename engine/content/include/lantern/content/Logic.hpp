@@ -113,6 +113,17 @@ std::optional<std::vector<Action>> parseActions(std::string_view json, std::stri
 std::string serializeCondition(const Condition& condition);
 std::string serializeActions(const std::vector<Action>& actions);
 
+/// What something does when it happens: actions, run only if the
+/// condition (when there is one) is true. Triggers in scenes store one.
+struct Reaction {
+    std::optional<Condition> condition;
+    std::vector<Action> actions;
+    friend bool operator==(const Reaction&, const Reaction&) = default;
+};
+/// { "condition": {...} or null, "actions": [...] }
+std::optional<Reaction> parseReaction(std::string_view json, std::string* error = nullptr);
+std::string serializeReaction(const Reaction& reaction);
+
 /// One line describing a condition or action for people, e.g.
 /// "gems >= 3", "start quest 5a4d1e0000000010".
 std::string describe(const Condition& condition);

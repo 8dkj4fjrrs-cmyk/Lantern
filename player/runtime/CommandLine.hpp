@@ -12,6 +12,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace lantern::player {
@@ -37,7 +38,15 @@ struct PlayerOptions {
 
     // For automated tests of gameplay.
     std::vector<Key> heldKeys;    // --hold: keys held down for the whole run
+    struct Tap {
+        Key key = Key::Unknown;
+        std::uint64_t from = 0;   // pressed at this frame
+        std::uint64_t to = 1;     // released at this frame
+        friend bool operator==(const Tap&, const Tap&) = default;
+    };
+    std::vector<Tap> tappedKeys;  // --tap KEY@FRAME or KEY@FROM-TO
     bool fixedStep = false;       // --fixed-step: every frame counts as 1/60 s
+    std::string saveDir;          // --save-dir: where save slots go (default: the user's data folder)
 };
 
 /// A key by its name ("Right", "space", "W"; see lantern::keyName), ignoring case.
