@@ -1,0 +1,21 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "biscuit",
+      "name": "Biscuit",
+      "color": "#f0a060ff",
+      "portrait": null
+    }
+  ],
+  "start": "purr",
+  "nodes": [
+    {
+      "id": "purr",
+      "speaker": "biscuit",
+      "text": "Prrrrrr.",
+      "next": null
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "format": "lantern.quest",
+  "version": 1,
+  "name": "The Dark Lantern",
+  "description": "The storm blew out Emberwick's great lantern and scattered its three flames.",
+  "prerequisites": [],
+  "startWhen": {
+    "type": "any",
+    "conditions": [
+      {
+        "type": "compare",
+        "variable": "met_maren",
+        "op": "==",
+        "value": true
+      },
+      {
+        "type": "compare",
+        "variable": "flames",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "id": "find",
+      "text": "Find the lost flames ({flames}/3)",
+      "completeWhen": {
+        "type": "compare",
+        "variable": "flames",
+        "op": ">=",
+        "value": 3
+      },
+      "optional": false
+    },
+    {
+      "id": "light",
+      "text": "Light the great lantern",
+      "completeWhen": {
+        "type": "compare",
+        "variable": "lantern_lit",
+        "op": "==",
+        "value": true
+      },
+      "optional": false
+    }
+  ],
+  "failWhen": null,
+  "rewards": [
+    {
+      "type": "log",
+      "text": "Emberwick is safe: the great lantern burns again."
+    }
+  ]
+}

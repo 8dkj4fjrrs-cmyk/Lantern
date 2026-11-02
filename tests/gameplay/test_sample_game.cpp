@@ -129,8 +129,9 @@ TEST_CASE("The sample game module is linked and registers its behaviours", "[gam
     Logger log;
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     registerGameModules(registry, log);
-    CHECK(linkedGameModules().size() == 1);
+    REQUIRE(linkedGameModules().size() == 2);   // with The Lantern Keeper's
     CHECK(linkedGameModules()[0] == "sample_game");
+    CHECK(linkedGameModules()[1] == "keeper");
     for (const char* id : {"sample.PlayerController", "sample.SceneDoor", "sample.Collectible", "sample.Spinner"}) {
         const ComponentType* type = registry.find(id);
         REQUIRE(type != nullptr);

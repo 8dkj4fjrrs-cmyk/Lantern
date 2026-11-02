@@ -1,0 +1,130 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "maren",
+      "name": "Keeper Maren",
+      "color": "#ffd27aff",
+      "portrait": null
+    }
+  ],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "lantern_lit",
+            "op": "==",
+            "value": true
+          },
+          "next": "after"
+        },
+        {
+          "condition": {
+            "type": "all",
+            "conditions": [
+              {
+                "type": "quest",
+                "quest": "4b45455000000019",
+                "state": "active"
+              },
+              {
+                "type": "compare",
+                "variable": "flames",
+                "op": ">=",
+                "value": 3
+              }
+            ]
+          },
+          "next": "ready"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "met_maren",
+            "op": "==",
+            "value": true
+          },
+          "next": "waiting"
+        }
+      ],
+      "next": "greet"
+    },
+    {
+      "id": "greet",
+      "speaker": "maren",
+      "text": "Pip! There you are. Did you see? The storm blew out the great lantern.",
+      "next": "scattered"
+    },
+    {
+      "id": "scattered",
+      "speaker": "maren",
+      "text": "Its three flames were scattered on the wind. Without them the night-mist will roll in, and nothing grows in the mist.",
+      "next": "ask"
+    },
+    {
+      "id": "ask",
+      "speaker": "maren",
+      "text": "You're my apprentice. Will you find the lost flames and bring them home?",
+      "choices": [
+        {
+          "id": "yes",
+          "text": "I'll find them, Keeper.",
+          "actions": [
+            {
+              "type": "set",
+              "variable": "met_maren",
+              "value": true
+            }
+          ],
+          "next": "accepted"
+        },
+        {
+          "id": "where",
+          "text": "Where did they go?",
+          "next": "where"
+        }
+      ]
+    },
+    {
+      "id": "where",
+      "speaker": "maren",
+      "text": "I saw one fall into Whisperwood, east of the village. Two more flew on, toward the old mine.",
+      "next": "ask"
+    },
+    {
+      "id": "accepted",
+      "speaker": "maren",
+      "text": "Bless you. Whisperwood is along the east road. The old mine is locked, mind: Wren the baker keeps its key.",
+      "next": "tip"
+    },
+    {
+      "id": "tip",
+      "speaker": "maren",
+      "text": "When you have all three, set them in the lantern up in the square.",
+      "next": null
+    },
+    {
+      "id": "waiting",
+      "speaker": "maren",
+      "text": "{flames} of 3 flames so far. One fell in Whisperwood, two near the old mine. Wren keeps the mine key.",
+      "next": null
+    },
+    {
+      "id": "ready",
+      "speaker": "maren",
+      "text": "You found all three! Quickly, Pip: up to the lantern in the square.",
+      "next": null
+    },
+    {
+      "id": "after",
+      "speaker": "maren",
+      "text": "Look at it burn. You're a true lantern keeper now, Pip.",
+      "next": null
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "biscuit",
+      "name": "Biscuit",
+      "color": "#f0a060ff",
+      "portrait": null
+    }
+  ],
+  "start": "see",
+  "nodes": [
+    {
+      "id": "see",
+      "text": "A ginger cat is curled up in the sunny grass. It's Biscuit!",
+      "next": "mrrp"
+    },
+    {
+      "id": "mrrp",
+      "speaker": "biscuit",
+      "text": "Mrrp?",
+      "next": "off"
+    },
+    {
+      "id": "off",
+      "text": "Biscuit stretches, mews at you, and darts off toward the village.",
+      "actions": [
+        {
+          "type": "set",
+          "variable": "cat_found",
+          "value": true
+        }
+      ],
+      "next": null
+    }
+  ]
+}

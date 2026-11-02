@@ -274,16 +274,29 @@ for the rest of the run, and the rest of the game keeps going. A crash, such
 as using a null pointer, cannot be caught this way and closes the program,
 editor included: save before playing new code.
 
-## The sample game
+## The example games
 
-[`examples/sample_game`](../examples/sample_game) has four behaviours:
+**The Lantern Keeper** ([`examples/lantern_keeper`](../examples/lantern_keeper))
+is a small, complete RPG: three scenes, four characters, a cat, two quests,
+saving and an ending, with only four short behaviours in C++
+(`PlayerController` with walk animations, `SceneDoor` and `SpawnPoint` for
+arriving in the right place, `CameraLimits`). Everything else is content.
+[Making The Lantern Keeper](making-the-lantern-keeper.md) rebuilds it step by
+step.
+
+```sh
+./build/dev/bin/lantern_player/lantern_player --project examples/lantern_keeper/project
+```
+
+**The sample game** [`examples/sample_game`](../examples/sample_game) has four behaviours:
 `PlayerController` (walking with collision), `SceneDoor` (changes scene when
 the player walks in), `Collectible` (picked up on touch, adding to a game
 variable) and `Spinner`. Its project (`examples/sample_game/project`) has a
 meadow and a cave, and content: Elder Maren's dialogue, a quest to bring her
 three gems (picked up by Triggers, no code), a boulder that rolls aside as
 the reward, and an on-screen gem count, quest log and dialogue box. It is
-built in by default (`LANTERN_BUILD_SAMPLE_GAME`):
+the engine's test bed. Both modules are built in by default
+(`LANTERN_BUILD_SAMPLE_GAME`):
 
 ```sh
 ./build/dev/bin/lantern_player/lantern_player --project examples/sample_game/project

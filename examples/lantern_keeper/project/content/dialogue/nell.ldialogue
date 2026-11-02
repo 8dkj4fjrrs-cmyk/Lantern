@@ -1,0 +1,78 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "nell",
+      "name": "Nell",
+      "color": "#ffe06aff",
+      "portrait": null
+    }
+  ],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "lantern_lit",
+            "op": "==",
+            "value": true
+          },
+          "next": "lit"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "has_key",
+            "op": "==",
+            "value": true
+          },
+          "next": "mine"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "cat_found",
+            "op": "==",
+            "value": true
+          },
+          "next": "cat"
+        }
+      ],
+      "next": "hello"
+    },
+    {
+      "id": "hello",
+      "speaker": "nell",
+      "text": "Is the lantern going to stay dark forever? Mum says the mist comes when it's dark.",
+      "next": "biscuit"
+    },
+    {
+      "id": "biscuit",
+      "speaker": "nell",
+      "text": "And Biscuit ran into the woods! I saw her go past the well.",
+      "next": null
+    },
+    {
+      "id": "cat",
+      "speaker": "nell",
+      "text": "You found Biscuit! I knew you would.",
+      "next": null
+    },
+    {
+      "id": "mine",
+      "speaker": "nell",
+      "text": "You've got the mine key! Be careful, the tunnels go round and round.",
+      "next": null
+    },
+    {
+      "id": "lit",
+      "speaker": "nell",
+      "text": "The lantern's back! I can see my shadow again!",
+      "next": null
+    }
+  ]
+}

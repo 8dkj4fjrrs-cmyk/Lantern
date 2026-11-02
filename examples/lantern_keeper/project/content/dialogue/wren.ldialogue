@@ -1,0 +1,125 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "wren",
+      "name": "Wren",
+      "color": "#9ee0a8ff",
+      "portrait": null
+    }
+  ],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "quest",
+            "quest": "4b4545500000001a",
+            "state": "completed"
+          },
+          "next": "after"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "cat_found",
+            "op": "==",
+            "value": true
+          },
+          "next": "found"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "met_wren",
+            "op": "==",
+            "value": true
+          },
+          "next": "waiting"
+        }
+      ],
+      "next": "greet"
+    },
+    {
+      "id": "greet",
+      "speaker": "wren",
+      "text": "Oh, Pip... Have you seen Biscuit? My cat bolted when the lantern went out.",
+      "actions": [
+        {
+          "type": "set",
+          "variable": "met_wren",
+          "value": true
+        }
+      ],
+      "next": "woods"
+    },
+    {
+      "id": "woods",
+      "speaker": "wren",
+      "text": "She ran off into Whisperwood. She's never been out alone at night.",
+      "choices": [
+        {
+          "id": "look",
+          "text": "I'll look for her.",
+          "next": "thanks"
+        },
+        {
+          "id": "flames",
+          "text": "I'm looking for the lost flames.",
+          "next": "key"
+        }
+      ]
+    },
+    {
+      "id": "key",
+      "speaker": "wren",
+      "text": "The flames? Then you'll be wanting the old mine, and I have its key. Bring Biscuit home and it's yours.",
+      "next": "thanks"
+    },
+    {
+      "id": "thanks",
+      "speaker": "wren",
+      "text": "Thank you! She loves sunny clearings. Try the north of the wood.",
+      "next": null
+    },
+    {
+      "id": "waiting",
+      "speaker": "wren",
+      "text": "Any sign of Biscuit? She loves sunny clearings, north in Whisperwood.",
+      "next": null
+    },
+    {
+      "id": "found",
+      "speaker": "wren",
+      "text": "Biscuit came running home! You found her!",
+      "next": "gift"
+    },
+    {
+      "id": "gift",
+      "speaker": "wren",
+      "text": "Here, take this: the key to the old mine. It was my father's.",
+      "actions": [
+        {
+          "type": "completeObjective",
+          "quest": "4b4545500000001a",
+          "objective": "tell"
+        }
+      ],
+      "next": "got"
+    },
+    {
+      "id": "got",
+      "text": "(You got the Old Mine Key.)",
+      "next": null
+    },
+    {
+      "id": "after",
+      "speaker": "wren",
+      "text": "Biscuit hasn't left the warm oven all day. Thank you, Pip.",
+      "next": null
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "lantern_lit",
+            "op": "==",
+            "value": true
+          },
+          "next": "burning"
+        },
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "flames",
+            "op": ">=",
+            "value": 3
+          },
+          "next": "light"
+        }
+      ],
+      "next": "dark"
+    },
+    {
+      "id": "dark",
+      "text": "The great lantern is cold and dark. It needs its three flames. ({flames}/3)",
+      "next": null
+    },
+    {
+      "id": "light",
+      "text": "You set the three flames inside the great lantern...",
+      "next": "whoosh"
+    },
+    {
+      "id": "whoosh",
+      "text": "For a moment, nothing. Then, with a soft whoosh, warm light spills across Emberwick.",
+      "actions": [
+        {
+          "type": "set",
+          "variable": "lantern_lit",
+          "value": true
+        }
+      ],
+      "next": "mist"
+    },
+    {
+      "id": "mist",
+      "text": "The night-mist melts away. The great lantern burns again.",
+      "next": null
+    },
+    {
+      "id": "burning",
+      "text": "The great lantern burns bright and steady.",
+      "next": null
+    }
+  ]
+}

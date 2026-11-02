@@ -1,0 +1,16 @@
+{
+  "format": "lantern.animations",
+  "version": 1,
+  "image": "4b45455000000004",
+  "frameSize": [16, 24],
+  "margin": 0,
+  "spacing": 0,
+  "clips": [
+    {
+      "id": "idle",
+      "frames": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      "fps": 6,
+      "loop": true
+    }
+  ]
+}

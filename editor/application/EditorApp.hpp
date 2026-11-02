@@ -160,6 +160,8 @@ private:
     std::filesystem::path m_configDir;   // empty = do not persist anything
 
     std::optional<Project> m_project;
+    std::filesystem::file_time_type m_projectStamp;   // project.lantern when last read
+    void syncProjectSettings();
     std::unique_ptr<AssetDatabase> m_assetDb;                       // the project's assets
     std::vector<std::unique_ptr<AssetDatabase>> m_retiredAssetDbs;  // kept until the runtime lets go
     const AssetDatabase* m_runtimeAssets = nullptr;                 // what the runtime draws from

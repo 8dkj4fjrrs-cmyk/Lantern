@@ -723,4 +723,33 @@ void ChangeImageFilter::revert(Scene&)
     }
 }
 
+// --- SetStartScene ---------------------------------------------------------------------------------
+
+bool SetStartScene::write(const std::string& path) const
+{
+    auto project = m_assets != nullptr ? Project::open(m_assets->projectFolder()) : std::nullopt;
+    if (!project || !Project::isValidRelativePath(path)) {
+        return false;
+    }
+    ProjectSettings settings = project->settings();
+    settings.startScene = path;
+    project->setSettings(std::move(settings));
+    return static_cast<bool>(project->save());
+}
+
+bool SetStartScene::apply(Scene&)
+{
+    const auto project = m_assets != nullptr ? Project::open(m_assets->projectFolder()) : std::nullopt;
+    if (!project || project->settings().startScene == m_after) {
+        return false;
+    }
+    m_before = project->settings().startScene;
+    return write(m_after);
+}
+
+void SetStartScene::revert(Scene&)
+{
+    static_cast<void>(write(m_before));
+}
+
 } // namespace lantern::editor

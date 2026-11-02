@@ -6,6 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
+#include <fstream>
 
 using namespace lantern;
 using namespace lantern::editor;
@@ -441,6 +442,26 @@ TEST_CASE("Animation edits are undoable and read again at once", "[editor][comma
     CHECK(a.db->find(*id)->animation->findClip("walk") == nullptr);
     REQUIRE(f.doc.redo());
     CHECK(a.db->find(*id)->animation->findClip("walk")->fps == 12.0f);
+}
+
+TEST_CASE("The start scene is changed as an undoable step", "[editor][commands]")
+{
+    AssetFixture a;
+    Fixture f;
+    f.doc.history().setAssets(a.db.get());
+    std::ofstream(a.folder / "project.lantern")
+        << R"({"format": "lantern.project", "version": 1, "name": "T", "startScene": "scenes/main.lscene"})";
+    const auto startScene = [&] { return Project::open(a.folder)->settings().startScene; };
+    REQUIRE(f.doc.execute(std::make_unique<SetStartScene>("scenes/village.lscene")));
+    CHECK(startScene() == "scenes/village.lscene");
+    CHECK(Project::open(a.folder)->settings().name == "T");   // the rest is kept
+    CHECK_FALSE(f.doc.isDirty());                              // a project change, not a scene change
+    REQUIRE(f.doc.undo());
+    CHECK(startScene() == "scenes/main.lscene");
+    REQUIRE(f.doc.redo());
+    CHECK(startScene() == "scenes/village.lscene");
+    CHECK_FALSE(f.doc.execute(std::make_unique<SetStartScene>("scenes/village.lscene")));   // already
+    CHECK_FALSE(f.doc.execute(std::make_unique<SetStartScene>("../outside.lscene")));       // not in the project
 }
 
 TEST_CASE("Content files are edited through undoable steps", "[editor][commands][assets]")

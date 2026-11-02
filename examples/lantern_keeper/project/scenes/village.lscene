@@ -1,0 +1,1188 @@
+{
+  "format": "lantern.scene",
+  "version": 1,
+  "name": "Village",
+  "entities": [
+    {
+      "id": "4b45010000000001",
+      "name": "Ground",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Tilemap",
+          "tileset": "4b4545500000000c",
+          "cellSize": [16, 16],
+          "data": {
+            "layers": [
+              {
+                "name": "Ground",
+                "visible": true,
+                "rows": [
+                  [23, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+                  [22, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5],
+                  [21, 0, 5, 5, 7, 7, 7, 7, 7, 7, 0, 0, 1, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 0, 1, 5],
+                  [20, 0, 5, 5, 7, 7, 7, 7, 7, 7, 0, 11, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 1, 7, 7, 7, 7, 7, 7, 11, 0, 5],
+                  [19, 0, 5, 5, 6, 15, 6, 6, 15, 6, 1, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 6, 15, 6, 6, 15, 6, 0, 0, 5],
+                  [18, 0, 5, 5, 6, 6, 8, 6, 6, 6, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 6, 6, 6, 8, 6, 6, 0, 0, 5],
+                  [17, 0, 5, 5, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5],
+                  [16, 0, 5, 5, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5],
+                  [15, 0, 5, 5, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                  [14, 0, 5, 5, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                  [13, 0, 5, 5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [12, 0, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 20, 2, 2, 0, 9, 9, 9, 1, 9, 9, 9, 0, 0, 11, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 5],
+                  [11, 0, 5, 5, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 9, 1, 1, 1, 1, 1, 9, 0, 0, 7, 7, 7, 7, 7, 7, 0, 0, 0, 1, 0, 5],
+                  [10, 0, 5, 5, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 2, 0, 9, 1, 1, 1, 1, 1, 9, 0, 0, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 5],
+                  [9, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 9, 1, 1, 1, 1, 1, 9, 0, 0, 6, 15, 6, 6, 15, 6, 0, 0, 0, 11, 0, 5],
+                  [8, 0, 5, 5, 0, 0, 0, 23, 23, 3, 3, 23, 0, 0, 2, 2, 0, 9, 1, 1, 1, 1, 1, 9, 0, 1, 6, 6, 8, 6, 6, 6, 0, 0, 0, 0, 0, 5],
+                  [7, 0, 5, 5, 0, 0, 3, 3, 3, 3, 3, 3, 3, 1, 2, 2, 0, 9, 9, 9, 9, 9, 9, 9, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [6, 0, 5, 5, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 1, 0, 5],
+                  [5, 0, 5, 5, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 11, 0, 0, 0, 5],
+                  [4, 0, 5, 5, 0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [3, 0, 5, 5, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [2, 0, 5, 5, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 5],
+                  [1, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+                ]
+              }
+            ],
+            "solid": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000002",
+      "name": "Lantern",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [864, 984],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000008",
+          "size": [32, 64],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000013",
+          "clip": "dark",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 4],
+          "offset": [0, -30],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000003",
+      "parent": "4b45010000000002",
+      "name": "Look Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -28],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [26, 14],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Look",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000022"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000004",
+      "name": "Lantern Light",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [864, 984],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000008",
+          "size": [32, 64],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000013",
+          "clip": "lit",
+          "speed": 1,
+          "playing": true
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000005",
+      "parent": "4b45010000000004",
+      "name": "Glow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 9],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [64, 48],
+          "color": "#ffd86a30",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000006",
+      "name": "Keeper Maren",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [216, 792],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000003",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b4545500000000e",
+          "clip": "idle",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 6],
+          "offset": [0, -8],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000007",
+      "parent": "4b45010000000006",
+      "name": "Talk Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [26, 24],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Talk",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b4545500000001c"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000008",
+      "name": "Wren",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1536, 792],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000004",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": true,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b4545500000000f",
+          "clip": "idle",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 6],
+          "offset": [0, -8],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000009",
+      "parent": "4b45010000000008",
+      "name": "Talk Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [26, 24],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Talk",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b4545500000001d"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000a",
+      "name": "Nell",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1128, 312],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000005",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000010",
+          "clip": "idle",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 6],
+          "offset": [0, -8],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000b",
+      "parent": "4b4501000000000a",
+      "name": "Talk Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [26, 24],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Talk",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b4545500000001e"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000c",
+      "name": "Biscuit",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1392, 792],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000006",
+          "size": [16, 16],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000011",
+          "clip": "idle",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 4],
+          "offset": [0, -5],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000d",
+      "parent": "4b4501000000000c",
+      "name": "Talk Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -4],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [24, 18],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Pet",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000020"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000e",
+      "name": "Wayshrine",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1104, 840],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000009",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000014",
+          "clip": "idle",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 4],
+          "offset": [0, -10],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000000f",
+      "parent": "4b4501000000000e",
+      "name": "Rest Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [24, 18],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Rest (save)",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "saveGame",
+                "slot": "quick"
+              },
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000024"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000010",
+      "name": "Signpost",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1608, 816],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b4545500000000b",
+          "size": [16, 16],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 4],
+          "offset": [0, -6],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000011",
+      "parent": "4b45010000000010",
+      "name": "Read Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -6],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [22, 18],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Read",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000025"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000012",
+      "name": "From Woods",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1584, 720],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "keeper.SpawnPoint"
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000013",
+      "name": "Road to Whisperwood",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1728, 720],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [48, 96],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "keeper.SceneDoor",
+          "scene": "4b45455000000016",
+          "arriveAt": "From Village"
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000014",
+      "name": "Story Start",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "sceneStart",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": true,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b4545500000001b"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000015",
+      "name": "Biscuit Comes Home",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "conditionMet",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": {
+              "type": "compare",
+              "variable": "cat_found",
+              "op": "==",
+              "value": true
+            },
+            "actions": [
+              {
+                "type": "setActive",
+                "entity": "4b4501000000000c",
+                "active": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000016",
+      "name": "Lantern Lights Up",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "conditionMet",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": {
+              "type": "compare",
+              "variable": "lantern_lit",
+              "op": "==",
+              "value": true
+            },
+            "actions": [
+              {
+                "type": "setActive",
+                "entity": "4b45010000000004",
+                "active": true
+              },
+              {
+                "type": "setActive",
+                "entity": "4b4501000000001a",
+                "active": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000017",
+      "name": "Ending",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "conditionMet",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": true,
+          "data": {
+            "condition": {
+              "type": "compare",
+              "variable": "lantern_lit",
+              "op": "==",
+              "value": true
+            },
+            "actions": [
+              {
+                "type": "wait",
+                "seconds": 1.5
+              },
+              {
+                "type": "setActive",
+                "entity": "4b45010000000025",
+                "active": true
+              },
+              {
+                "type": "wait",
+                "seconds": 12
+              },
+              {
+                "type": "setActive",
+                "entity": "4b45010000000025",
+                "active": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000018",
+      "name": "Player",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [360, 720],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000002",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b4545500000000d",
+          "clip": "idle_down",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 5],
+          "offset": [0, -9.5],
+          "solid": true
+        },
+        {
+          "type": "lantern.Interactor",
+          "key": "E"
+        },
+        {
+          "type": "keeper.PlayerController",
+          "speed": 170
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000019",
+      "parent": "4b45010000000018",
+      "name": "Camera",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [0.333333, 0.333333]
+        },
+        {
+          "type": "lantern.Camera",
+          "zoom": 1
+        },
+        {
+          "type": "keeper.CameraLimits",
+          "min": [0, 0],
+          "max": [1728, 1152],
+          "view": [1280, 720]
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001a",
+      "parent": "4b45010000000019",
+      "name": "Night",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1280, 720],
+          "color": "#0a1430a0",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001b",
+      "parent": "4b45010000000019",
+      "name": "Flame Count",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Flames  {flames} / 3",
+          "source": "text",
+          "font": null,
+          "size": 24,
+          "color": "#ffc84aff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001c",
+      "parent": "4b45010000000019",
+      "name": "Quest Log",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-616, 302],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "questLog",
+          "font": null,
+          "size": 16,
+          "color": "#ecececff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001d",
+      "parent": "4b45010000000019",
+      "name": "Help",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Arrows / WASD walk · E talk · F5 save · F9 load",
+          "source": "text",
+          "font": null,
+          "size": 14,
+          "color": "#ffffffb0",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001e",
+      "parent": "4b45010000000019",
+      "name": "Prompt",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -120],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "interactionPrompt",
+          "font": null,
+          "size": 20,
+          "color": "#ffc84aff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4501000000001f",
+      "parent": "4b45010000000019",
+      "name": "Dialogue Box",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -260],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1040, 168],
+          "color": "#120e1aee",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.DialogueView",
+          "marker": "> "
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000020",
+      "parent": "4b4501000000001f",
+      "name": "Speaker",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 68],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueSpeaker",
+          "font": null,
+          "size": 20,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000021",
+      "parent": "4b4501000000001f",
+      "name": "Line",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 38],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueLine",
+          "font": null,
+          "size": 19,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 990
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000022",
+      "parent": "4b4501000000001f",
+      "name": "Choices",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, -14],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueChoices",
+          "font": null,
+          "size": 19,
+          "color": "#ffd88aff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000023",
+      "parent": "4b4501000000001f",
+      "name": "Continue",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [500, -62],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "E / Space",
+          "source": "text",
+          "font": null,
+          "size": 12,
+          "color": "#ffffff80",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000024",
+      "name": "Nightfall",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "sceneStart",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": {
+              "type": "compare",
+              "variable": "lantern_lit",
+              "op": "==",
+              "value": false
+            },
+            "actions": [
+              {
+                "type": "setActive",
+                "entity": "4b4501000000001a",
+                "active": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000025",
+      "parent": "4b45010000000019",
+      "name": "The End",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -40],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [760, 112],
+          "color": "#120e1ae0",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "4b45010000000026",
+      "parent": "4b45010000000025",
+      "name": "Words",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 40],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "The lantern of Emberwick burns again.\nThank you for playing!",
+          "source": "text",
+          "font": null,
+          "size": 28,
+          "color": "#ffe08aff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    }
+  ]
+}

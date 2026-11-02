@@ -1,0 +1,16 @@
+{
+  "format": "lantern.animations",
+  "version": 1,
+  "image": "4b45455000000007",
+  "frameSize": [16, 16],
+  "margin": 0,
+  "spacing": 0,
+  "clips": [
+    {
+      "id": "flicker",
+      "frames": [0, 1, 2, 3],
+      "fps": 8,
+      "loop": true
+    }
+  ]
+}

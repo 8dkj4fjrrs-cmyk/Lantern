@@ -177,6 +177,31 @@ void InspectorPanel::buildScene(ui::Column& content)
 
     auto& objects = readOnlyRow(section, "Objects", "How many objects the scene contains");
     auto& file = readOnlyRow(section, "File", "Where the scene is saved, inside the project");
+    auto& start = readOnlyRow(section, "Start Scene", "The scene the game begins with when it is played");
+    auto& makeStart = section.body().emplace<ui::Button>("Make Start Scene");
+    makeStart.setTooltip("The game will begin with this scene (saved in the project's settings; undo with Edit > Undo)");
+    makeStart.setOnClick([this] {
+        const Project* project = m_editor.project();
+        const SceneDocument& doc = m_editor.document();
+        const auto rel = project != nullptr && !doc.isUntitled() ? project->relative(doc.path()) : std::nullopt;
+        if (!rel) {
+            return;
+        }
+        m_editor.endEdit();
+        if (!m_editor.execute(std::make_unique<SetStartScene>(*rel))) {
+            m_editor.showMessage("Could Not Change the Start Scene",
+                                 "Lantern could not write project.lantern. Check that it is not read-only.");
+        }
+        m_editor.endEdit();
+    });
+    m_refresh.push_back([this, &start, &makeStart] {
+        const Project* project = m_editor.project();
+        const SceneDocument& doc = m_editor.document();
+        const auto rel = project != nullptr && !doc.isUntitled() ? project->relative(doc.path()) : std::nullopt;
+        const bool isStart = rel && project->settings().startScene == *rel;
+        start.setText(project == nullptr ? "No project open" : isStart ? "Yes" : project->settings().startScene);
+        makeStart.setEnabled(rel.has_value() && !isStart);
+    });
     m_refresh.push_back([this, &name, &objects, &file] {
         const SceneDocument& doc = m_editor.document();
         if (!name.isEditing() && name.text() != doc.scene().name()) {

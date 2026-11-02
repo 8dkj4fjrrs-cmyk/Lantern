@@ -1,0 +1,44 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "has_key",
+            "op": "==",
+            "value": true
+          },
+          "next": "open"
+        }
+      ],
+      "next": "locked"
+    },
+    {
+      "id": "locked",
+      "text": "An iron gate, locked tight. A rusty sign reads: OLD MINE. KEEP OUT.",
+      "next": "who"
+    },
+    {
+      "id": "who",
+      "text": "Maren said Wren the baker keeps the key to the old mine.",
+      "next": null
+    },
+    {
+      "id": "open",
+      "text": "You turn Wren's old key in the lock. The gate creaks open.",
+      "actions": [
+        {
+          "type": "emit",
+          "event": "gate_open"
+        }
+      ],
+      "next": null
+    }
+  ]
+}

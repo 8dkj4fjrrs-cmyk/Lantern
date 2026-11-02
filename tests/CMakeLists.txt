@@ -49,9 +49,11 @@ add_executable(lantern_tests
     content/test_notation.cpp)
 target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::content lantern::gameplay lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 if(TARGET sample_game)
-    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp)
-    lantern_link_game_modules(lantern_tests MODULES sample_game)
-    target_compile_definitions(lantern_tests PRIVATE LANTERN_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project")
+    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp gameplay/test_lantern_keeper.cpp)
+    lantern_link_game_modules(lantern_tests MODULES sample_game keeper)
+    target_compile_definitions(lantern_tests PRIVATE
+        LANTERN_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project"
+        LANTERN_KEEPER_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project")
 else()
     lantern_link_game_modules(lantern_tests MODULES)
 endif()
@@ -137,6 +139,19 @@ if(TARGET sample_game)
         PASS_REGULAR_EXPRESSION "Showing scene 'Meadow'.*Quest started: Gems for the Elder.*Screenshot saved"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
         TIMEOUT 120)
+
+    # The Lantern Keeper, with keys only: read the opening (five lines), walk
+    # left and up to Keeper Maren, talk, and accept her request.
+    add_test(NAME player.plays_lantern_keeper
+        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --frames 240
+                --fixed-step --no-stats --save-dir "${CMAKE_CURRENT_BINARY_DIR}/player-test-keeper-saves"
+                --tap E@10 --tap E@20 --tap E@30 --tap E@40 --tap E@50 --tap Left@60-120 --tap Up@125-140
+                --tap E@150 --tap E@170 --tap E@190 --tap E@210
+                --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_lantern_keeper.png")
+    set_tests_properties(player.plays_lantern_keeper PROPERTIES
+        PASS_REGULAR_EXPRESSION "Showing scene 'Village'.*Quest started: The Dark Lantern.*Screenshot saved"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        TIMEOUT 120)
 endif()
 
 if(TARGET lantern_editor)
@@ -197,6 +212,14 @@ if(TARGET lantern_editor)
                     --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_playing.png")
         set_tests_properties(editor.plays_sample_game PROPERTIES
             PASS_REGULAR_EXPRESSION "Game module: sample_game.*Playing 'Meadow'.*Screenshot saved.*Stopped playing after [0-9]+ frames"
+            FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+            TIMEOUT 60)
+        add_test(NAME editor.plays_lantern_keeper
+            COMMAND lantern_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-keeper-settings"
+                    --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --play --frames 60
+                    --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_playing_keeper.png")
+        set_tests_properties(editor.plays_lantern_keeper PROPERTIES
+            PASS_REGULAR_EXPRESSION "Game module: keeper.*Playing 'Village'.*Screenshot saved.*Stopped playing after [0-9]+ frames"
             FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
             TIMEOUT 60)
     endif()

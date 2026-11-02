@@ -67,6 +67,10 @@ a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
 - **File > New Scene**, **Save Scene**, **Save Scene As…** (also how you
   duplicate a scene) and **Revert to Saved**. The scene selector in the
   toolbar switches between the project's scenes.
+- **The start scene** (where the game begins): select the scene row at the
+  top of the Hierarchy; the Inspector shows whether this is the start scene,
+  and **Make Start Scene** makes it so (undoable, saved in
+  `project.lantern`).
 
 A "•" after the scene's name (in the toolbar and the window title) means it
 has unsaved changes. If you quit, close the window or open another scene

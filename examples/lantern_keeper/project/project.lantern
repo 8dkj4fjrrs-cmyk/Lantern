@@ -1,0 +1,6 @@
+{
+  "format": "lantern.project",
+  "version": 1,
+  "name": "The Lantern Keeper",
+  "startScene": "scenes/village.lscene"
+}

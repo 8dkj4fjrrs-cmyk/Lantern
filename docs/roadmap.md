@@ -15,8 +15,8 @@ so the plan stays in one place.
 | 5 | C++ gameplay behaviours, game modules, play mode, input, collision queries, scene changes | Done (0.5) — [ADR 0007](adr/0007-gameplay-and-play-mode.md) |
 | 6 | RPG content systems: dialogue, quests, conditions, actions, events, content validation, save games | Done (0.6) — [ADR 0008](adr/0008-rpg-content.md) |
 | 6.5 | *Added:* flipbook (sprite-sheet) animation | Done (0.6.5) — [ADR 0009](adr/0009-flipbook-animation.md) |
-| 7 | Complete sample game: a small top-down RPG built from a fresh project | Next |
-| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Planned |
+| 7 | Complete sample game: a small top-down RPG built from a fresh project | Done (0.7) — [ADR 0010](adr/0010-demo-game.md), [the game](../examples/lantern_keeper) |
+| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Next |
 | — | *Added, after the alpha:* timeline animation editor | Later |
 
 ## Milestone 6.5 — Flipbook animation (*added*)
@@ -46,6 +46,25 @@ Delivered in 0.6.5 as planned. The API names became `game.play(entity,
 clip)`, `game.stopAnimation(entity)`, `game.isAnimationPlaying(entity)` and
 `game.isAnimationFinished(entity)` (on `Game`, like the rest of the gameplay
 API). The sample hero walks in four directions and the elder blinks.
+
+## Milestone 7 — The Lantern Keeper
+
+Delivered in 0.7: [The Lantern Keeper](../examples/lantern_keeper), an
+original ten-minute RPG (a village, a wood and an old mine; a main quest and
+a side quest; four characters; saving; an ending), built from a fresh
+project and documented step by step in
+[Making The Lantern Keeper](making-the-lantern-keeper.md). An automated test
+plays it from the first line to the ending.
+
+Gaps found while building it, and what happened to them:
+- The editor could not choose a project's start scene: added (**Make Start
+  Scene** in the scene's Inspector page).
+- Scenes cannot be renamed in the editor, and folders cannot be created in
+  the Assets panel. Noted for Milestone 8's onboarding work.
+- Arriving at the right place after a scene change, and keeping the camera
+  inside the map, are written as small behaviours in the game's module.
+  They are common needs, so they are candidates for built-in components.
+- The game uses a dark overlay for night. Real lighting is not planned.
 
 ## After the alpha: timeline animation editor (*added*)
 

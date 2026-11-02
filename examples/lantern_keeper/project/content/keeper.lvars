@@ -1,0 +1,48 @@
+{
+  "format": "lantern.variables",
+  "version": 1,
+  "variables": [
+    {
+      "id": "flames",
+      "type": "int",
+      "initial": 0,
+      "description": "Lost flames found"
+    },
+    {
+      "id": "met_maren",
+      "type": "bool",
+      "initial": false,
+      "description": "Maren asked Pip to find the flames"
+    },
+    {
+      "id": "met_wren",
+      "type": "bool",
+      "initial": false,
+      "description": "Wren asked about Biscuit"
+    },
+    {
+      "id": "cat_found",
+      "type": "bool",
+      "initial": false,
+      "description": "Biscuit was found in the woods"
+    },
+    {
+      "id": "has_key",
+      "type": "bool",
+      "initial": false,
+      "description": "Pip has the old mine's key"
+    },
+    {
+      "id": "lantern_lit",
+      "type": "bool",
+      "initial": false,
+      "description": "The great lantern burns again"
+    },
+    {
+      "id": "arrival",
+      "type": "text",
+      "initial": "",
+      "description": "Where the player arrives in the next scene (set by Scene Doors)"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "text": "East: Whisperwood.   North: the lantern square.",
+      "next": null
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "text": "Miners' rule: follow the rails, and they'll bring you home.",
+      "next": null
+    }
+  ]
+}

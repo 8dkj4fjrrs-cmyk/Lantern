@@ -1,0 +1,33 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "begin",
+  "nodes": [
+    {
+      "id": "begin",
+      "branches": [
+        {
+          "condition": {
+            "type": "compare",
+            "variable": "flames",
+            "op": ">=",
+            "value": 3
+          },
+          "next": "all"
+        }
+      ],
+      "next": "one"
+    },
+    {
+      "id": "one",
+      "text": "You found a lost flame! It's warm, like holding a summer afternoon. ({flames}/3)",
+      "next": null
+    },
+    {
+      "id": "all",
+      "text": "That's the third flame! ({flames}/3) Time to bring them home to the great lantern.",
+      "next": null
+    }
+  ]
+}

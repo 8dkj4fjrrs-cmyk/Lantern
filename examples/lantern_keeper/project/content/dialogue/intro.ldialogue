@@ -1,0 +1,33 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "storm",
+  "nodes": [
+    {
+      "id": "storm",
+      "text": "Emberwick, the night after the great storm.",
+      "next": "lantern"
+    },
+    {
+      "id": "lantern",
+      "text": "For a hundred years the great lantern has burned above the village square, keeping the night-mist away.",
+      "next": "dark"
+    },
+    {
+      "id": "dark",
+      "text": "Tonight, for the first time, it is dark.",
+      "next": "help"
+    },
+    {
+      "id": "help",
+      "text": "(Walk with the arrow keys or W A S D. Press E to talk, and to read.)",
+      "next": "maren"
+    },
+    {
+      "id": "maren",
+      "text": "Keeper Maren will know what to do. Her house is just along the road.",
+      "next": null
+    }
+  ]
+}

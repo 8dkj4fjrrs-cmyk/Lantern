@@ -1,0 +1,18 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "rest",
+  "nodes": [
+    {
+      "id": "rest",
+      "text": "The wayshrine's rune glows softly. You rest a moment. Your journey is saved.",
+      "next": "how"
+    },
+    {
+      "id": "how",
+      "text": "(Press F9 at any time to come back to this moment. F5 saves too.)",
+      "next": null
+    }
+  ]
+}

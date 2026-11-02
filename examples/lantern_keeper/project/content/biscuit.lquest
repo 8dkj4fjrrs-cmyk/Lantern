@@ -1,0 +1,55 @@
+{
+  "format": "lantern.quest",
+  "version": 1,
+  "name": "Where Is Biscuit?",
+  "description": "Wren's cat Biscuit ran into Whisperwood when the lantern went dark.",
+  "prerequisites": [],
+  "startWhen": {
+    "type": "any",
+    "conditions": [
+      {
+        "type": "compare",
+        "variable": "met_wren",
+        "op": "==",
+        "value": true
+      },
+      {
+        "type": "compare",
+        "variable": "cat_found",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "id": "find",
+      "text": "Find Biscuit in Whisperwood",
+      "completeWhen": {
+        "type": "compare",
+        "variable": "cat_found",
+        "op": "==",
+        "value": true
+      },
+      "optional": false
+    },
+    {
+      "id": "tell",
+      "text": "Tell Wren",
+      "completeWhen": null,
+      "optional": false
+    }
+  ],
+  "failWhen": null,
+  "rewards": [
+    {
+      "type": "set",
+      "variable": "has_key",
+      "value": true
+    },
+    {
+      "type": "log",
+      "text": "Wren gave Pip the old mine's key."
+    }
+  ]
+}

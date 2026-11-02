@@ -21,6 +21,7 @@
 // another project opens and a command must never keep a stale pointer.
 
 #include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/scene/Project.hpp"
 #include "lantern/scene/Scene.hpp"
 
 #include <cstddef>
@@ -313,6 +314,27 @@ private:
     std::string m_label;
     std::vector<std::unique_ptr<Command>> m_commands;
     std::vector<bool> m_applied;
+};
+
+/// Makes another scene the one the game starts with (project.lantern's
+/// startScene, a project-relative path). Saved straight away.
+class SetStartScene final : public Command {
+public:
+    explicit SetStartScene(std::string relativePath)
+        : m_after(std::move(relativePath))
+    {
+    }
+    std::string label() const override { return "Set Start Scene"; }
+    bool apply(Scene& scene) override;
+    void revert(Scene& scene) override;
+    bool changesScene() const override { return false; }
+    void useAssets(AssetDatabase* assets) override { m_assets = assets; }
+
+private:
+    bool write(const std::string& path) const;
+    std::string m_after;
+    std::string m_before;
+    AssetDatabase* m_assets = nullptr;   // the project's folder comes from here; not owned
 };
 
 class RenameScene final : public Command {

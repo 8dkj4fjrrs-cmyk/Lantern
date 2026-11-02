@@ -1587,8 +1587,27 @@ bool EditorApp::closeRequested()
     return false;
 }
 
+// project.lantern can change under us (Set Start Scene, its undo, or another
+// program): read the settings again when the file's time stamp changes.
+void EditorApp::syncProjectSettings()
+{
+    if (!m_project) {
+        return;
+    }
+    std::error_code ec;
+    const auto stamp = std::filesystem::last_write_time(m_project->folder() / ProjectFormat::kFileName, ec);
+    if (ec || stamp == m_projectStamp) {
+        return;
+    }
+    m_projectStamp = stamp;
+    if (auto fresh = Project::open(m_project->folder())) {
+        m_project->setSettings(fresh->settings());
+    }
+}
+
 void EditorApp::updateUi(UiFrame& frame)
 {
+    syncProjectSettings();
     if (m_quitRequested) {
         frame.requestQuit();
     }

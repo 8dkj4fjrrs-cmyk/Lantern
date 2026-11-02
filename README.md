@@ -3,7 +3,12 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 6.5 (flipbook animation).** `lantern_editor` creates and opens
+> **Status: Milestone 7 (a complete demo game).** Play **The Lantern
+> Keeper**, a small top-down RPG made with Lantern:
+> `lantern_player --project examples/lantern_keeper/project`
+> ([how it was made](docs/making-the-lantern-keeper.md)).
+>
+> `lantern_editor` creates and opens
 > projects, imports assets with permanent IDs, and edits scenes with
 > sprites, shapes, text, cameras, colliders, tilemaps and sprite-sheet
 > animations (made in its Animation panel), all with undo, saved as
@@ -12,7 +17,7 @@ RPGs, pixel-art adventures, tile-based and story-driven games.
 > triggers in scenes) is data, edited in the editor and checked as you go.
 > Play mode runs the game in the Scene view on a copy of the scene;
 > `lantern_player` plays a project with input, collision, scene changes,
-> dialogue and save games. Try the sample: `examples/sample_game`.
+> dialogue and save games.
 
 ## Quick start
 
@@ -38,7 +43,7 @@ engine/gameplay/ Behaviours, game modules, input, collision queries, scene chang
 engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
-examples/        The sample game: a game module and its project
+examples/        The Lantern Keeper (the demo RPG) and the sample game: game modules and projects
 editor/model/    Editor logic without UI code (console, preferences, state, undo commands)
 editor/panels/   Editor panels (built with Lantern UI)
 editor/application/  Editor window, menus, docking layout

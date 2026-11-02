@@ -10,6 +10,7 @@
 #   lantern_gameplay static library: behaviours, input, collision queries,
 #                    scene changes (no backend; always built and tested).
 #   sample_game      the sample game module (examples/sample_game).
+#   keeper           The Lantern Keeper, the complete demo game (examples/lantern_keeper).
 #   lantern_runtime  static library: window, main loop, rendering backend.
 #                    Wraps Axmol privately (only with LANTERN_RUNTIME_BACKEND=axmol).
 #   lantern_player   the game runtime application (opens a window).
@@ -22,7 +23,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.6.5
+    VERSION 0.7.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
 
@@ -53,7 +54,7 @@ option(LANTERN_BUILD_TESTS "Build unit tests" ON)
 option(LANTERN_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(LANTERN_ENABLE_SANITIZERS "Build with AddressSanitizer + UBSan (Clang/GCC)" OFF)
 option(LANTERN_WINDOW_TESTS "Register tests that open a real window (needs a display)" ON)
-option(LANTERN_BUILD_SAMPLE_GAME "Build the sample game module and link it into the editor and player" ON)
+option(LANTERN_BUILD_SAMPLE_GAME "Build the example game modules (sample_game, keeper) and link them into the editor and player" ON)
 # Folders with your own game modules (each has a CMakeLists.txt calling
 # lantern_add_game_module); they are linked into the editor and the player.
 set(LANTERN_GAME_MODULE_DIRS "" CACHE STRING "Folders containing game modules to build in (separated by ;)")
@@ -98,6 +99,7 @@ add_subdirectory(engine/ui)
 # Game modules come before the programs that link them.
 if(LANTERN_BUILD_SAMPLE_GAME)
     add_subdirectory(examples/sample_game)
+    add_subdirectory(examples/lantern_keeper)
 endif()
 foreach(dir IN LISTS LANTERN_GAME_MODULE_DIRS)
     get_filename_component(_name "${dir}" NAME)

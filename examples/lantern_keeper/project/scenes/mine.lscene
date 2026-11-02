@@ -1,0 +1,627 @@
+{
+  "format": "lantern.scene",
+  "version": 1,
+  "name": "Old Mine",
+  "entities": [
+    {
+      "id": "4b45030000000001",
+      "name": "Ground",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Tilemap",
+          "tileset": "4b4545500000000c",
+          "cellSize": [16, 16],
+          "data": {
+            "layers": [
+              {
+                "name": "Ground",
+                "visible": true,
+                "rows": [
+                  [21, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [20, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [19, 0, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 18, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [18, 0, 13, 13, 13, 13, 12, 18, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [17, 0, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [16, 0, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 22, 22, 12, 22, 13, 13],
+                  [15, 0, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 18, 12, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 12, 18, 12, 12, 18, 12, 13, 13],
+                  [14, 0, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 13, 13],
+                  [13, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 13, 13],
+                  [12, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 18, 13, 13],
+                  [11, 0, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 21, 12, 12, 12, 12, 12, 12, 12, 12, 22, 12, 12, 12, 12, 12, 13, 13],
+                  [10, 0, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 21, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13],
+                  [9, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [8, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [7, 0, 13, 13, 13, 12, 12, 12, 12, 12, 18, 12, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 12, 12, 12, 22, 12, 12, 12, 18, 12, 13, 13, 13],
+                  [6, 0, 13, 13, 13, 12, 18, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13],
+                  [5, 0, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13],
+                  [4, 0, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 21, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13],
+                  [3, 0, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 21, 21, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13],
+                  [2, 0, 13, 13, 13, 18, 12, 12, 12, 12, 12, 22, 13, 13, 13, 13, 13, 13, 21, 21, 13, 13, 13, 13, 12, 18, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13],
+                  [1, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13],
+                  [0, 0, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13]
+                ]
+              }
+            ],
+            "solid": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000002",
+      "name": "Lost Flame North",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [312, 888],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000007",
+          "size": [16, 16],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000012",
+          "clip": "flicker",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 12],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "enterArea",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "add",
+                "variable": "flames",
+                "value": 1
+              },
+              {
+                "type": "log",
+                "text": "Found a lost flame ({flames}/3)"
+              },
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000021"
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000003",
+      "name": "Lost Flame East",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [1368, 168],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000007",
+          "size": [16, 16],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b45455000000012",
+          "clip": "flicker",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [12, 12],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "enterArea",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "add",
+                "variable": "flames",
+                "value": 1
+              },
+              {
+                "type": "log",
+                "text": "Found a lost flame ({flames}/3)"
+              },
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000021"
+              },
+              {
+                "type": "destroy",
+                "entity": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000004",
+      "name": "Miners' Sign",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [168, 600],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b4545500000000b",
+          "size": [16, 16],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 4],
+          "offset": [0, -6],
+          "solid": true
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000005",
+      "parent": "4b45030000000004",
+      "name": "Read Area",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -6],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [22, 18],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "interact",
+          "prompt": "Read",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "startDialogue",
+                "dialogue": "4b45455000000026"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000006",
+      "name": "From Woods",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [144, 528],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "keeper.SpawnPoint"
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000007",
+      "name": "Way Out",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 528],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [48, 96],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "keeper.SceneDoor",
+          "scene": "4b45455000000016",
+          "arriveAt": "From Mine"
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000008",
+      "name": "Player",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [144, 528],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "4b45455000000002",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "4b4545500000000d",
+          "clip": "idle_down",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 5],
+          "offset": [0, -9.5],
+          "solid": true
+        },
+        {
+          "type": "lantern.Interactor",
+          "key": "E"
+        },
+        {
+          "type": "keeper.PlayerController",
+          "speed": 170
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000009",
+      "parent": "4b45030000000008",
+      "name": "Camera",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [0.333333, 0.333333]
+        },
+        {
+          "type": "lantern.Camera",
+          "zoom": 1
+        },
+        {
+          "type": "keeper.CameraLimits",
+          "min": [0, 0],
+          "max": [1632, 1056],
+          "view": [1280, 720]
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000a",
+      "parent": "4b45030000000009",
+      "name": "Night",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1280, 720],
+          "color": "#00000080",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000b",
+      "parent": "4b45030000000009",
+      "name": "Flame Count",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Flames  {flames} / 3",
+          "source": "text",
+          "font": null,
+          "size": 24,
+          "color": "#ffc84aff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000c",
+      "parent": "4b45030000000009",
+      "name": "Quest Log",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-616, 302],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "questLog",
+          "font": null,
+          "size": 16,
+          "color": "#ecececff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000d",
+      "parent": "4b45030000000009",
+      "name": "Help",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Arrows / WASD walk · E talk · F5 save · F9 load",
+          "source": "text",
+          "font": null,
+          "size": 14,
+          "color": "#ffffffb0",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000e",
+      "parent": "4b45030000000009",
+      "name": "Prompt",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -120],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "interactionPrompt",
+          "font": null,
+          "size": 20,
+          "color": "#ffc84aff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b4503000000000f",
+      "parent": "4b45030000000009",
+      "name": "Dialogue Box",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -260],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1040, 168],
+          "color": "#120e1aee",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.DialogueView",
+          "marker": "> "
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000010",
+      "parent": "4b4503000000000f",
+      "name": "Speaker",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 68],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueSpeaker",
+          "font": null,
+          "size": 20,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000011",
+      "parent": "4b4503000000000f",
+      "name": "Line",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 38],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueLine",
+          "font": null,
+          "size": 19,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 990
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000012",
+      "parent": "4b4503000000000f",
+      "name": "Choices",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, -14],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueChoices",
+          "font": null,
+          "size": 19,
+          "color": "#ffd88aff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000013",
+      "parent": "4b4503000000000f",
+      "name": "Continue",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [500, -62],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "E / Space",
+          "source": "text",
+          "font": null,
+          "size": 12,
+          "color": "#ffffff80",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "4b45030000000014",
+      "name": "Nightfall",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Trigger",
+          "on": "sceneStart",
+          "prompt": "",
+          "event": "",
+          "delay": 1,
+          "once": false,
+          "data": {
+            "condition": null,
+            "actions": [
+              {
+                "type": "setActive",
+                "entity": "4b4503000000000a",
+                "active": true
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

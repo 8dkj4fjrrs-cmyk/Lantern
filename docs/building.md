@@ -96,7 +96,7 @@ Gameplay is C++ in *game modules* built into the editor and the player
 
 | Option | Default | Meaning |
 |---|---|---|
-| `LANTERN_BUILD_SAMPLE_GAME` | `ON` | Build the sample game's module (`examples/sample_game`). |
+| `LANTERN_BUILD_SAMPLE_GAME` | `ON` | Build the example games' modules (`examples/sample_game`, `examples/lantern_keeper`). |
 | `LANTERN_GAME_MODULE_DIRS` | empty | Folders with your own modules, separated by `;`. |
 
 ```sh
