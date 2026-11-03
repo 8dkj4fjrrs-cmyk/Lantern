@@ -1,0 +1,30 @@
+{
+  "format": "lantern.quest",
+  "version": 1,
+  "name": "Say Hello",
+  "description": "A first quest: it starts by itself and is done when you talk to your friend.",
+  "prerequisites": [],
+  "startWhen": {
+    "type": "always"
+  },
+  "objectives": [
+    {
+      "id": "talk",
+      "text": "Talk to your friend in the meadow",
+      "completeWhen": {
+        "type": "compare",
+        "variable": "said_hello",
+        "op": "==",
+        "value": true
+      },
+      "optional": false
+    }
+  ],
+  "failWhen": null,
+  "rewards": [
+    {
+      "type": "log",
+      "text": "Quest done: Say Hello"
+    }
+  ]
+}

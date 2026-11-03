@@ -135,6 +135,10 @@ public:
     /// scene's objects (and their behaviours) are dropped; the new scene's
     /// behaviours start in the next frame.
     void changeScene(AssetId scene) override;
+    /// The same, and the player (the object with the Interactor) arrives at
+    /// the object named `arriveAt` in the new scene, e.g. the other end of
+    /// a road. Empty: wherever the new scene puts the player.
+    void changeScene(AssetId scene, std::string arriveAt);
 
     // --- Collision queries (see Collision.hpp) ----------------------------------------------------
     /// The world box of an object's Collider, if it has one.
@@ -223,6 +227,7 @@ private:
     std::vector<EntityId> m_toDestroy;
     std::optional<AssetId> m_nextScene;
     std::optional<std::string> m_loadSlot;
+    std::string m_arriveAt;                          // with m_nextScene: an object's name
     std::optional<Vec2> m_placePlayerAt;             // after loading a save
     std::set<EntityId> m_sceneObjects;                // objects the scene started with
     std::map<EntityId, TriggerState> m_triggers;

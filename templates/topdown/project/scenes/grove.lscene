@@ -1,0 +1,349 @@
+{
+  "format": "lantern.scene",
+  "version": 1,
+  "name": "Grove",
+  "entities": [
+    {
+      "id": "5354020000000001",
+      "name": "Ground",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Tilemap",
+          "tileset": "5354415254000005",
+          "cellSize": [16, 16],
+          "data": {
+            "layers": [
+              {
+                "name": "Ground",
+                "visible": true,
+                "rows": [
+                  [15, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+                  [14, 0, 5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [13, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [12, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [11, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 5],
+                  [10, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [9, 0, 5, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [8, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [7, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [6, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 5],
+                  [4, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 5],
+                  [3, 0, 5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [2, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                  [1, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 5],
+                  [0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+                ]
+              }
+            ],
+            "solid": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "5354020000000002",
+      "name": "Path to the Meadow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 384],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [48, 96],
+          "offset": [0, 0],
+          "solid": false
+        },
+        {
+          "type": "lantern.SceneDoor",
+          "scene": "5354415254000008",
+          "arriveAt": "From Grove"
+        }
+      ]
+    },
+    {
+      "id": "5354020000000003",
+      "name": "From Meadow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [144, 384],
+          "rotation": 0,
+          "scale": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "5354020000000004",
+      "name": "Player",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [168, 384],
+          "rotation": 0,
+          "scale": [3, 3]
+        },
+        {
+          "type": "lantern.Sprite",
+          "image": "5354415254000002",
+          "size": [16, 24],
+          "color": "#ffffffff",
+          "flipX": false,
+          "flipY": false
+        },
+        {
+          "type": "lantern.Animator",
+          "animations": "5354415254000006",
+          "clip": "idle_down",
+          "speed": 1,
+          "playing": true
+        },
+        {
+          "type": "lantern.Collider",
+          "size": [10, 5],
+          "offset": [0, -9.5],
+          "solid": true
+        },
+        {
+          "type": "lantern.Interactor",
+          "key": "E"
+        },
+        {
+          "type": "lantern.TopDownController",
+          "speed": 170
+        }
+      ]
+    },
+    {
+      "id": "5354020000000005",
+      "parent": "5354020000000004",
+      "name": "Camera",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [0.333333, 0.333333]
+        },
+        {
+          "type": "lantern.Camera",
+          "zoom": 1
+        },
+        {
+          "type": "lantern.CameraBounds",
+          "min": [0, 0],
+          "max": [1152, 768],
+          "view": [1280, 720]
+        }
+      ]
+    },
+    {
+      "id": "5354020000000006",
+      "parent": "5354020000000005",
+      "name": "Quest Log",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "questLog",
+          "font": null,
+          "size": 16,
+          "color": "#ecececff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "5354020000000007",
+      "parent": "5354020000000005",
+      "name": "Help",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [616, 340],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "Arrows / WASD walk · E talk · F5 save · F9 load",
+          "source": "text",
+          "font": null,
+          "size": 14,
+          "color": "#ffffffb0",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "5354020000000008",
+      "parent": "5354020000000005",
+      "name": "Prompt",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -120],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "interactionPrompt",
+          "font": null,
+          "size": 20,
+          "color": "#ffc84aff",
+          "align": "center",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "5354020000000009",
+      "parent": "5354020000000005",
+      "name": "Dialogue Box",
+      "active": false,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -260],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1040, 168],
+          "color": "#120e1aee",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.DialogueView",
+          "marker": "> "
+        }
+      ]
+    },
+    {
+      "id": "535402000000000a",
+      "parent": "5354020000000009",
+      "name": "Speaker",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 68],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueSpeaker",
+          "font": null,
+          "size": 20,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "535402000000000b",
+      "parent": "5354020000000009",
+      "name": "Line",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, 38],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueLine",
+          "font": null,
+          "size": 19,
+          "color": "#ffffffff",
+          "align": "left",
+          "width": 990
+        }
+      ]
+    },
+    {
+      "id": "535402000000000c",
+      "parent": "5354020000000009",
+      "name": "Choices",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-496, -14],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "",
+          "source": "dialogueChoices",
+          "font": null,
+          "size": 19,
+          "color": "#ffd88aff",
+          "align": "left",
+          "width": 0
+        }
+      ]
+    },
+    {
+      "id": "535402000000000d",
+      "parent": "5354020000000009",
+      "name": "Continue",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [500, -62],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Text",
+          "text": "E / Space",
+          "source": "text",
+          "font": null,
+          "size": 12,
+          "color": "#ffffff80",
+          "align": "right",
+          "width": 0
+        }
+      ]
+    }
+  ]
+}

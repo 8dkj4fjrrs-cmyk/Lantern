@@ -214,6 +214,18 @@ or `"Z"` (default `"E"`).
 **`lantern.DialogueView`**: shown only during dialogues. `marker`: written
 before the selected choice (default `"> "`).
 
+**`lantern.TopDownController`**, **`lantern.SceneDoor`**, **`lantern.CameraBounds`**:
+Lantern's built-in behaviours (added in 0.8; see the
+[gameplay guide](../gameplay.md#built-in-behaviours-games-without-c)).
+
+| Type | Key | Type | Default |
+|---|---|---|---|
+| `lantern.TopDownController` | `speed` | points per second, not negative | `150` |
+| `lantern.SceneDoor` | `scene` | a scene asset's ID, or `null` | `null` |
+| | `arriveAt` | the name of an object in that scene (empty: where the scene puts the player) | `""` |
+| `lantern.CameraBounds` | `min`, `max` | `[x, y]` corners of the area the view stays in, world points | `[0, 0]`, `[1920, 1080]` |
+| | `view` | `[width, height]` of the game's view, points | `[1280, 720]` |
+
 **Behaviours** (gameplay code from a game module) are stored like any other
 component: their `type` is the ID their module chose (e.g.
 `"sample.PlayerController"`) and their keys are their properties. A scene

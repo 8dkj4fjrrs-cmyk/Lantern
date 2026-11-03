@@ -1,146 +1,176 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 25,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "dev",
-      "displayName": "Development (Debug, Ninja, Axmol runtime)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/dev",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "LANTERN_RUNTIME_BACKEND": "axmol",
-        "LANTERN_WARNINGS_AS_ERRORS": "ON"
-      },
-      "warnings": {
-        "dev": false
-      }
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
     },
-    {
-      "name": "release",
-      "displayName": "Release (Ninja, Axmol runtime)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "LANTERN_RUNTIME_BACKEND": "axmol"
-      },
-      "warnings": {
-        "dev": false
-      }
-    },
-    {
-      "name": "core",
-      "displayName": "Core only (no window, no Axmol; builds in seconds)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/core",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "LANTERN_RUNTIME_BACKEND": "none",
-        "LANTERN_WARNINGS_AS_ERRORS": "ON"
-      },
-      "warnings": {
-        "dev": false
-      }
-    },
-    {
-      "name": "asan",
-      "displayName": "Core only + Address/UB sanitizers",
-      "inherits": "core",
-      "binaryDir": "${sourceDir}/build/asan",
-      "cacheVariables": {
-        "LANTERN_ENABLE_SANITIZERS": "ON"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "dev",
-      "configurePreset": "dev"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    },
-    {
-      "name": "core",
-      "configurePreset": "core"
-    },
-    {
-      "name": "asan",
-      "configurePreset": "asan"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "dev",
-      "configurePreset": "dev",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "release",
-      "configurePreset": "release",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "core",
-      "configurePreset": "core",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "asan",
-      "configurePreset": "asan",
-      "output": {
-        "outputOnFailure": true
-      }
-    }
-  ],
-  "workflowPresets": [
-    {
-      "name": "dev",
-      "displayName": "Configure, build and test (Debug, with window)",
-      "steps": [
+    "configurePresets": [
         {
-          "type": "configure",
-          "name": "dev"
+            "name": "dev",
+            "displayName": "Development (Debug, Ninja, Axmol runtime)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/dev",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LANTERN_RUNTIME_BACKEND": "axmol",
+                "LANTERN_WARNINGS_AS_ERRORS": "ON"
+            },
+            "warnings": {
+                "dev": false
+            }
         },
         {
-          "type": "build",
-          "name": "dev"
+            "name": "release",
+            "displayName": "Release (Ninja, Axmol runtime)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "LANTERN_RUNTIME_BACKEND": "axmol"
+            },
+            "warnings": {
+                "dev": false
+            }
         },
         {
-          "type": "test",
-          "name": "dev"
+            "name": "core",
+            "displayName": "Core only (no window, no Axmol; builds in seconds)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/core",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LANTERN_RUNTIME_BACKEND": "none",
+                "LANTERN_WARNINGS_AS_ERRORS": "ON"
+            },
+            "warnings": {
+                "dev": false
+            }
+        },
+        {
+            "name": "asan",
+            "displayName": "Core only + Address/UB sanitizers",
+            "inherits": "core",
+            "binaryDir": "${sourceDir}/build/asan",
+            "cacheVariables": {
+                "LANTERN_ENABLE_SANITIZERS": "ON"
+            }
         }
-      ]
-    },
-    {
-      "name": "core",
-      "displayName": "Configure, build and test (core only)",
-      "steps": [
+    ],
+    "buildPresets": [
         {
-          "type": "configure",
-          "name": "core"
+            "name": "dev",
+            "configurePreset": "dev"
         },
         {
-          "type": "build",
-          "name": "core"
+            "name": "release",
+            "configurePreset": "release"
         },
         {
-          "type": "test",
-          "name": "core"
+            "name": "core",
+            "configurePreset": "core"
+        },
+        {
+            "name": "asan",
+            "configurePreset": "asan"
+        },
+        {
+            "name": "package",
+            "displayName": "Package Lantern (dist/)",
+            "configurePreset": "release",
+            "targets": [
+                "lantern_package"
+            ]
         }
-      ]
-    }
-  ]
+    ],
+    "testPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "core",
+            "configurePreset": "core",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "asan",
+            "configurePreset": "asan",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "dev",
+            "displayName": "Configure, build and test (Debug, with window)",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "dev"
+                },
+                {
+                    "type": "build",
+                    "name": "dev"
+                },
+                {
+                    "type": "test",
+                    "name": "dev"
+                }
+            ]
+        },
+        {
+            "name": "core",
+            "displayName": "Configure, build and test (core only)",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "core"
+                },
+                {
+                    "type": "build",
+                    "name": "core"
+                },
+                {
+                    "type": "test",
+                    "name": "core"
+                }
+            ]
+        },
+        {
+            "name": "release",
+            "displayName": "Release: configure, build, test and package into dist/",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "release"
+                },
+                {
+                    "type": "build",
+                    "name": "release"
+                },
+                {
+                    "type": "test",
+                    "name": "release"
+                },
+                {
+                    "type": "build",
+                    "name": "package"
+                }
+            ]
+        }
+    ]
 }

@@ -1,0 +1,62 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [
+    {
+      "id": "friend",
+      "name": "Friend",
+      "color": "#9ee0a8ff",
+      "portrait": null
+    }
+  ],
+  "start": "hello",
+  "nodes": [
+    {
+      "id": "hello",
+      "speaker": "friend",
+      "text": "Hello! This is your game. Everything here can be changed in the editor.",
+      "actions": [
+        {
+          "type": "set",
+          "variable": "said_hello",
+          "value": true
+        }
+      ],
+      "next": "ask"
+    },
+    {
+      "id": "ask",
+      "speaker": "friend",
+      "text": "What would you like to know?",
+      "choices": [
+        {
+          "id": "move",
+          "text": "How do I walk?",
+          "next": "move"
+        },
+        {
+          "id": "make",
+          "text": "How do I make it my own?",
+          "next": "make"
+        },
+        {
+          "id": "bye",
+          "text": "Bye!",
+          "next": null
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "speaker": "friend",
+      "text": "The Top-Down Controller on the Player walks with the arrow keys or W A S D, and plays the walk_ clips of its Animator.",
+      "next": "ask"
+    },
+    {
+      "id": "make",
+      "speaker": "friend",
+      "text": "Paint the Ground tilemap, import your own art, write dialogues in the Game menu, and press the Build button to export.",
+      "next": "ask"
+    }
+  ]
+}

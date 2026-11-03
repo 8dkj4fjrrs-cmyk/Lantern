@@ -8,6 +8,7 @@
 #include "lantern/gameplay/Input.hpp"
 
 #include <cstdint>
+#include <filesystem>
 #include <optional>
 #include <span>
 #include <string>
@@ -35,6 +36,7 @@ struct PlayerOptions {
     std::uint64_t maxFrames = 0;  // 0 = until closed
     std::string screenshotPath;   // empty = none
     bool showStats = true;
+    bool statsChosen = false;     // --stats or --no-stats was given (exported games hide them by default)
 
     // For automated tests of gameplay.
     std::vector<Key> heldKeys;    // --hold: keys held down for the whole run
@@ -61,6 +63,11 @@ struct ParseResult {
 
 /// Parses arguments *after* the program name.
 ParseResult parseCommandLine(std::span<const std::string_view> args);
+
+/// The game bundled with an exported copy of the player, if there is one:
+/// the folder `game` beside the program, or (macOS) in the app's Resources.
+/// See editor/model/GameExport.hpp.
+std::optional<std::filesystem::path> bundledGameFolder(const std::filesystem::path& executable);
 
 /// Text printed by --help.
 std::string helpText();

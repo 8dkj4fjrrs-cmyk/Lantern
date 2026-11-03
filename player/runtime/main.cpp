@@ -8,6 +8,7 @@
 #include "CommandLine.hpp"
 
 #include "lantern/core/Engine.hpp"
+#include "lantern/core/Files.hpp"
 #include "lantern/core/Version.hpp"
 #include "lantern/content/ContentLibrary.hpp"
 #include "lantern/gameplay/Components.hpp"
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
         std::cerr << "Error: " << parsed.error << "\n\n" << lantern::player::helpText();
         return 2;
     }
-    const lantern::player::PlayerOptions& opt = parsed.options;
+    lantern::player::PlayerOptions opt = parsed.options;
     if (opt.showHelp) {
         std::cout << lantern::player::helpText();
         return 0;
@@ -77,6 +78,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // An exported game: the player was copied beside the game's files, and
+    // started without saying what to play.
+    if (opt.projectPath.empty() && opt.scenePath.empty()) {
+        if (const auto bundled = lantern::player::bundledGameFolder(lantern::executablePath())) {
+            opt.projectPath = bundled->string();
+            if (!opt.statsChosen) {
+                opt.showStats = false;
+            }
+            engine.logger().info("player", "Playing the game bundled with this program (" + bundled->string() + ").");
+        }
+    }
+
     // Find the scene to play.
     std::filesystem::path scenePath = opt.scenePath;
     std::string title = opt.title;
@@ -88,6 +101,13 @@ int main(int argc, char** argv)
             return 1;
         }
         scenePath = project->absolute(project->settings().startScene);
+        std::error_code missing;
+        if (!std::filesystem::exists(scenePath, missing)) {
+            engine.logger().error("player", "The project's start scene " + project->settings().startScene
+                                                + " does not exist. Open the project in the editor, open the scene "
+                                                  "the game should begin with, and choose Make Start Scene.");
+            return 1;
+        }
         if (title == lantern::player::PlayerOptions{}.title) {
             title = project->settings().name;
         }

@@ -1,11 +1,15 @@
 #include "CommandLine.hpp"
+#include "support/TempFolder.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
+#include <fstream>
 #include <initializer_list>
 #include <string_view>
 #include <vector>
 
+using lantern::player::bundledGameFolder;
 using lantern::player::parseCommandLine;
 using lantern::player::ParseResult;
 
@@ -119,4 +123,26 @@ TEST_CASE("Tapped keys and the save folder", "[player][cli]")
     CHECK(r.options.saveDir == "saves");
     CHECK_FALSE(parse({"--tap", "E"}).ok());
     CHECK_FALSE(parse({"--tap", "Nope@3"}).ok());
+}
+
+TEST_CASE("An exported game is found beside the player", "[player][cli]")
+{
+    const auto root = lantern::test::uniqueTempFolder("bundled");
+    std::filesystem::create_directories(root / "My Game/game");
+    std::ofstream(root / "My Game/game/project.lantern") << "{}";
+    CHECK(bundledGameFolder(root / "My Game/My Game") == root / "My Game/game");
+    // macOS: inside the app's Resources.
+    std::filesystem::create_directories(root / "My Game.app/Contents/Resources/game");
+    std::filesystem::create_directories(root / "My Game.app/Contents/MacOS");
+    std::ofstream(root / "My Game.app/Contents/Resources/game/project.lantern") << "{}";
+    CHECK(bundledGameFolder(root / "My Game.app/Contents/MacOS/lantern_player")
+          == root / "My Game.app/Contents/Resources/game");
+    // A player on its own (a build folder): nothing bundled.
+    CHECK_FALSE(bundledGameFolder(root / "bin/lantern_player").has_value());
+    std::filesystem::remove_all(root);
+
+    const auto stats = parse({"--stats"});
+    CHECK(stats.options.showStats);
+    CHECK(stats.options.statsChosen);
+    CHECK_FALSE(parse({}).options.statsChosen);
 }

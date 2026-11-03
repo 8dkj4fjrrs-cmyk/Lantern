@@ -1,7 +1,18 @@
 #include "lantern/core/Files.hpp"
 
+#include <cstdint>
 #include <fstream>
 #include <sstream>
+#include <string>
+
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace lantern {
 
@@ -45,6 +56,33 @@ Status writeTextFileAtomically(const std::filesystem::path& path, std::string_vi
         return Status::failure("Could not replace " + path.string());
     }
     return Status::success();
+}
+
+std::filesystem::path executablePath()
+{
+    std::error_code ec;
+#if defined(__APPLE__)
+    std::uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);   // asks for the size
+    std::string buffer(size, '\0');
+    if (_NSGetExecutablePath(buffer.data(), &size) != 0) {
+        return {};
+    }
+    buffer.resize(std::char_traits<char>::length(buffer.c_str()));
+    return std::filesystem::weakly_canonical(std::filesystem::path(buffer), ec);
+#elif defined(_WIN32)
+    static_cast<void>(ec);
+    std::wstring buffer(32768, L'\0');
+    const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length == 0 || length >= buffer.size()) {
+        return {};
+    }
+    buffer.resize(length);
+    return std::filesystem::path(buffer);
+#else
+    const std::filesystem::path self = std::filesystem::read_symlink("/proc/self/exe", ec);
+    return ec ? std::filesystem::path() : self;
+#endif
 }
 
 } // namespace lantern

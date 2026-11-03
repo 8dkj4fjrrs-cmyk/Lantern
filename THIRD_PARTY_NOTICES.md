@@ -19,16 +19,25 @@ Inter fonts in `assets/fonts/`.
 
 ### Libraries bundled by Axmol and linked into `lantern_player`
 
-Taken from the Linux link line of the Milestone 1 build and Axmol's
+Taken from the Linux build: the libraries on `lantern_player`'s link line,
+plus the header-only libraries whose headers the compiled sources include
+(checked with `ninja -t deps` for Milestone 8). Versions are from Axmol's
 `3rdparty/README.md`. The macOS set is similar but uses Apple's Metal instead
-of Glad/GLFW-on-X11; it will be re-checked from a macOS build.
+of Glad/GLFW-on-X11; it is re-checked when a macOS build runs in CI.
+
+**The full license texts are in [`licenses/`](licenses/README.md)**, collected
+from each project's repository at these versions by
+`tools/release/fetch_licenses.py`. Every exported game, and every installed
+copy of Lantern, carries that folder.
 
 | Library | Version | License |
 |---|---|---|
 | astcenc | 5.3.0 | Apache-2.0 |
 | Clipper2 | 2.0.1 | BSL-1.0 |
+| moodycamel::ConcurrentQueue (header-only) | 1.0.4 | BSL-1.0 or Simplified BSD |
 | ConvertUTF | git 20451cb | Apache-2.0 WITH LLVM-exception |
 | curl | 8.17.0 | curl (MIT/X-style) |
+| doctest (linked by Axmol's core; no tests run in games) | 2.4.12 | MIT |
 | FastLZ | git 344eb40 | MIT |
 | {fmt} | 11.2.0 | MIT |
 | FreeType | 2.14.1 | FreeType License (BSD-style) |
@@ -36,17 +45,21 @@ of Glad/GLFW-on-X11; it will be re-checked from a macOS build.
 | GLFW (modified by Axmol) | 3.4 | zlib |
 | libjpeg-turbo | 3.1.3 | IJG / BSD-3-Clause / zlib |
 | llhttp | 9.3.0 | MIT |
+| mio (header-only) | git 8b6b7d8 | MIT |
 | OpenSSL | 3.0.18 | Apache-2.0 |
 | libpng | 1.6.53 | PNG Reference Library License v2 |
 | poly2tri | git 81612cb | BSD-3-Clause |
 | pugixml | 1.13 | MIT |
+| RapidJSON (header-only) | 1.1.0-24b5e7a | MIT |
+| robin-map (header-only, modified by Axmol) | 1.4.0 | MIT |
 | simdjson | 3.10.1 | Apache-2.0 |
 | stb_image (Axmol's copy) | 2.30 | MIT or public domain |
 | minizip (unzip) | 1.2 (modified) | zlib |
 | libwebp | 1.6.0 | BSD-3-Clause (Google) |
-| websocket-parser | (bundled) | MIT upstream — no license file in Axmol's copy; to verify |
+| websocket-parser | (bundled) | BSD-3-Clause (upstream php-ion/websocket-parser; Axmol's copy has no notice) |
+| xsxml (header-only) | 1.1 | MIT |
 | xxHash | 0.8.3 | BSD-2-Clause |
-| yasio | 4.3.2 | MIT WITH Anti-996 — **review before public release** |
+| yasio | 4.3.2 | MIT, plus the "Anti 996" License 1.0 (see below) |
 | zlib | 1.3.1 | zlib |
 
 **Not included** in Lantern builds: Axmol's optional extensions (its Dear ImGui
@@ -55,14 +68,25 @@ integration, inspector, SDF generator, and so on) are switched off.
 Axmol audio is switched off. It must be dynamically linked or replaced when
 audio is enabled.
 
-**Open items before a public release**
-- yasio's "Anti-996" addition is not a standard OSI license term; confirm it
-  is acceptable, or disable the Axmol networking features that pull it in.
-- curl, OpenSSL, llhttp, websocket-parser and yasio are networking libraries
-  Lantern does not use yet; investigate switching them off to shrink games
-  and the notice list.
-- Shipped games must include these notices; the packaging step (Milestone 8)
-  will generate them automatically.
+**yasio's "Anti 996" License (reviewed for the alpha, Milestone 8).**
+Upstream yasio's license file adds the "Anti 996" License 1.0 to MIT.
+Axmol's copy only carries the MIT header. The Anti 996 terms require you to:
+- display the license with every copy (exported games include `licenses/`, so they do);
+- comply with the labour and employment laws where you live or operate;
+- not restrict employees' labour rights.
+
+This is not an OSI-approved license. Some distributors, Linux distributions
+and companies' legal teams treat non-standard licenses cautiously.
+Lantern's own code stays MIT. Anyone shipping a game should know the terms
+apply to the yasio code inside it. Removing yasio would mean changing
+Axmol's core, which includes it (and OpenSSL) unconditionally; that is
+recorded as a known limitation, not attempted for the alpha.
+(Not legal advice.)
+
+**Networking libraries.** curl, OpenSSL, llhttp, websocket-parser and yasio
+are networking code Lantern does not use. Axmol builds them into its core
+regardless. They add size and notices, not behaviour: no Lantern game opens
+network connections.
 
 ## Lantern UI (the editor's interface toolkit, `engine/ui`)
 
@@ -93,7 +117,7 @@ Name only if the font itself is modified — we do not modify it.
 
 Downloaded by CMake at configure time (`engine/scene/CMakeLists.txt`), not
 copied into this repository. It is a header-only library; its MIT notice
-must accompany shipped games (handled by the packaging step, Milestone 8).
+must accompany shipped games: it is in `licenses/`, which exports include.
 
 ## Assets (`engine/assets`)
 

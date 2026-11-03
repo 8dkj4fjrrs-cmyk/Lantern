@@ -1,6 +1,8 @@
 #include "EditorPaths.hpp"
 
+#include <cstdint>
 #include <cstdlib>
+#include <string>
 
 namespace lantern::editor {
 

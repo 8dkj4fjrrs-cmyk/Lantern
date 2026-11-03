@@ -40,6 +40,7 @@ void Game::start(const Scene& scene, AssetId sceneId)
     m_frames = 0;
     m_toDestroy.clear();
     m_nextScene.reset();
+    m_arriveAt.clear();
     m_loadSlot.reset();
     m_placePlayerAt.reset();
     m_pendingEvents.clear();
@@ -55,6 +56,7 @@ void Game::stop()
     m_scene.reset();
     m_toDestroy.clear();
     m_nextScene.reset();
+    m_arriveAt.clear();
     m_loadSlot.reset();
     m_input.releaseAll();
     m_input.endFrame();
@@ -87,7 +89,18 @@ void Game::beginScene(Scene scene, AssetId id)
     });
     m_scene = std::make_shared<Scene>(std::move(scene));
 
-    // After loading a save: put the player where they stood.
+    // After loading a save, the player stands where they stood; after a
+    // door, at the object they arrive at.
+    if (!m_arriveAt.empty()) {
+        const EntityId target = find(m_arriveAt);
+        if (target.isNull()) {
+            m_log.warning(kCategory, "Scene '" + m_scene->name() + "' has no object named '" + m_arriveAt
+                                         + "' to arrive at; the player starts where the scene puts them.");
+        } else {
+            m_placePlayerAt = worldPosition(target);
+        }
+        m_arriveAt.clear();
+    }
     if (m_placePlayerAt) {
         for (const EntityId player : findAll<Interactor>()) {
             Vec2 local = *m_placePlayerAt;
@@ -431,6 +444,7 @@ void Game::finishFrame()
         const std::string slot = *m_loadSlot;
         m_loadSlot.reset();
         m_nextScene.reset();
+        m_arriveAt.clear();
         const auto text = m_setup.saves != nullptr ? m_setup.saves->read(slot) : std::nullopt;
         if (!text) {
             m_log.error(kCategory, "There is no save in slot '" + slot + "'.");
@@ -516,7 +530,13 @@ void Game::destroy(EntityId id)
 
 void Game::changeScene(AssetId scene)
 {
+    changeScene(scene, {});
+}
+
+void Game::changeScene(AssetId scene, std::string arriveAt)
+{
     m_nextScene = scene;
+    m_arriveAt = std::move(arriveAt);
 }
 
 void Game::setActive(EntityId entity, bool active)

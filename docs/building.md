@@ -81,13 +81,27 @@ the window. A guide to the panels is in [editor.md](editor.md).
 | Preset | Purpose |
 |---|---|
 | `dev` | Debug build with the Axmol runtime; warnings are errors. Use this day to day. |
-| `release` | Optimised build with the Axmol runtime. |
+| `release` | Optimised build with the Axmol runtime. `cmake --workflow --preset release` also tests and packages it (below). |
 | `core` | Core library, editor logic and their tests only — no Axmol, no window. Builds in seconds. |
 | `asan` | `core` + AddressSanitizer/UBSan, for hunting memory bugs. |
 
 Each preset builds into its own folder under `build/`. Downloaded Axmol lives
 in `external/` and is shared by all presets. To start completely fresh,
 delete `build/` (and `external/` to re-download Axmol).
+
+### Packaging Lantern
+
+```sh
+cmake --workflow --preset release      # configure, build, test, package
+# or, after a release build:
+cmake --build --preset package
+```
+
+This makes `dist/Lantern-<version>-<system>-<processor>/` and a `.zip` of
+it: the editor, the game runtime used for exports, templates, examples,
+licenses and docs, laid out as the editor expects (see
+[releasing](releasing.md)). On a headless Linux machine, run the test step
+under a virtual display: `xvfb-run -a ctest --preset release`.
 
 ### Your game's code
 

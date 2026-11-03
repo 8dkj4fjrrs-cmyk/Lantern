@@ -38,6 +38,9 @@ and AI assistants.
 - Ownership: RAII and `std::unique_ptr` by default; raw pointers only as non-owning observers.
 - Errors: return `lantern::Status` (or a richer result type later) with a user-actionable message. No exceptions across module boundaries.
 - Stable IDs, not names or addresses, for anything saved to disk.
+- The editor finds its templates, examples, licenses, docs and the game runtime through
+  `LanternResources` (beside the program when installed, the source tree when built); never
+  hard-code paths to them. Anything a game contains must have its license text in `licenses/`.
 - Saved files use project-relative paths and an explicit format version.
 
 ## Code style
@@ -54,4 +57,8 @@ cmake --workflow --preset dev   # configure + build + test (window tests need a 
                                 # on headless Linux: xvfb-run -a ctest --preset dev)
 cmake --workflow --preset core  # fast: no Axmol, no window
 cmake --build --preset asan && ctest --preset asan   # memory-error check
+cmake --workflow --preset release                     # release build, tests, and the package in dist/
 ```
+
+Releases: see `docs/releasing.md`. When a dependency changes, refresh
+`licenses/` with `python3 tools/release/fetch_licenses.py`.

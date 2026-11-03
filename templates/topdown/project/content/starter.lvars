@@ -1,0 +1,12 @@
+{
+  "format": "lantern.variables",
+  "version": 1,
+  "variables": [
+    {
+      "id": "said_hello",
+      "type": "bool",
+      "initial": false,
+      "description": "Talked to the friend"
+    }
+  ]
+}

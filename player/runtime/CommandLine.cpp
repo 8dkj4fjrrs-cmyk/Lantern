@@ -71,8 +71,9 @@ ParseResult parseCommandLine(std::span<const std::string_view> args)
             opt.showHelp = true;
         } else if (arg == "--version") {
             opt.showVersion = true;
-        } else if (arg == "--no-stats") {
-            opt.showStats = false;
+        } else if (arg == "--no-stats" || arg == "--stats") {
+            opt.showStats = arg == "--stats";
+            opt.statsChosen = true;
         } else if (arg == "--fixed-step") {
             opt.fixedStep = true;
         } else if (arg == "--save-dir") {
@@ -167,7 +168,8 @@ std::string helpText()
 {
     return "Usage: lantern_player [options]\n"
            "\n"
-           "Without --project or --scene, the player shows Lantern's start scene.\n"
+           "Without --project or --scene, the player plays the game exported with it\n"
+           "(a game folder beside it), or else shows Lantern's start scene.\n"
            "\n"
            "Options:\n"
            "  --help             Show this message\n"
@@ -178,6 +180,7 @@ std::string helpText()
            "  --width N          Window width in points (default: 1280)\n"
            "  --height N         Window height in points (default: 720)\n"
            "  --no-stats         Hide the frame-rate overlay\n"
+           "  --stats            Show it (exported games hide it by default)\n"
            "  --frames N         Quit automatically after N frames (used by tests)\n"
            "  --screenshot FILE  Save the last frame as a PNG (needs --frames)\n"
            "  --hold KEY         Hold a key down for the whole run, e.g. Right (tests)\n"
@@ -188,6 +191,18 @@ std::string helpText()
            "\n"
            "In the game: F5 saves to the quick slot, F9 loads it. Escape or closing\n"
            "the window quits.\n";
+}
+
+std::optional<std::filesystem::path> bundledGameFolder(const std::filesystem::path& executable)
+{
+    const std::filesystem::path dir = executable.parent_path();
+    for (const std::filesystem::path& candidate : {dir / "game", dir.parent_path() / "Resources" / "game"}) {
+        std::error_code ec;
+        if (std::filesystem::exists(candidate / "project.lantern", ec)) {
+            return candidate;
+        }
+    }
+    return std::nullopt;
 }
 
 } // namespace lantern::player

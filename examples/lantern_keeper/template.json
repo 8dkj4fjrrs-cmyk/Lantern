@@ -1,0 +1,5 @@
+{
+  "name": "Example: The Lantern Keeper",
+  "description": "The complete demo RPG: three scenes, two quests, saving and an ending. Uses its own C++ game module (built into this editor).",
+  "order": 1
+}

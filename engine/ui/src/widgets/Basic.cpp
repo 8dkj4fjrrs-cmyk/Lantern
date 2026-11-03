@@ -220,7 +220,9 @@ void Button::paint(Context& ctx, DrawList& draw)
     if (!m_text.empty()) {
         contentWidth += (m_icon ? 6.0f : 0.0f) + textWidth;
     }
-    float x = b.x + std::round((b.width - contentWidth) * 0.5f);
+    float x = m_align == TextAlign::Start ? b.x + 8.0f
+              : m_align == TextAlign::End ? b.right() - 8.0f - contentWidth
+                                          : b.x + std::round((b.width - contentWidth) * 0.5f);
     if (m_icon) {
         drawIcon(draw, *m_icon, Rect{x, b.center().y - 8.0f, 16.0f, 16.0f}, ink);
         x += 22.0f;

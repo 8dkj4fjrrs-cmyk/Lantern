@@ -1,0 +1,13 @@
+{
+  "format": "lantern.dialogue",
+  "version": 1,
+  "speakers": [],
+  "start": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "text": "East: the grove. (Walk into the path at the edge of the map.)",
+      "next": null
+    }
+  ]
+}

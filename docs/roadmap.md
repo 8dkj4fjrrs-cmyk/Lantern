@@ -16,7 +16,7 @@ so the plan stays in one place.
 | 6 | RPG content systems: dialogue, quests, conditions, actions, events, content validation, save games | Done (0.6) — [ADR 0008](adr/0008-rpg-content.md) |
 | 6.5 | *Added:* flipbook (sprite-sheet) animation | Done (0.6.5) — [ADR 0009](adr/0009-flipbook-animation.md) |
 | 7 | Complete sample game: a small top-down RPG built from a fresh project | Done (0.7) — [ADR 0010](adr/0010-demo-game.md), [the game](../examples/lantern_keeper) |
-| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Next |
+| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Done (0.8.0-alpha) — [ADR 0011](adr/0011-public-alpha.md); Linux verified, macOS and Windows not yet ([known limitations](known-limitations.md)) |
 | — | *Added, after the alpha:* timeline animation editor | Later |
 
 ## Milestone 6.5 — Flipbook animation (*added*)
@@ -65,6 +65,39 @@ Gaps found while building it, and what happened to them:
   inside the map, are written as small behaviours in the game's module.
   They are common needs, so they are candidates for built-in components.
 - The game uses a dark overlay for night. Real lighting is not planned.
+
+## Milestone 8 — Public alpha
+
+Delivered in 0.8.0-alpha:
+- the New Project wizard (Empty, Top-Down Starter, the example game);
+- built-in behaviours for code-free top-down games;
+- exporting stand-alone games (in the editor and from the command line);
+- the installable package and release workflow;
+- license texts shipped with every game;
+- a welcome window and folder browser;
+- guides for getting started, exporting and releasing;
+- the [known limitations](known-limitations.md).
+
+## After the alpha
+
+In rough order of importance:
+
+1. **Verify macOS and Windows.** Put the repository on GitHub, let CI build
+   and test all three systems, and fix what they reveal. Until then the
+   alpha is "tested on Linux".
+2. **Custom C++ without building Lantern**: games' own modules loaded by a
+   downloaded editor and player, or a supported way to build only the game.
+3. **Sound** (Axmol audio with OpenAL Soft linked dynamically, LGPL), and
+   gamepad input.
+4. **Signing** of macOS apps and Windows programs, and installers.
+5. Smaller gaps:
+   - renaming scenes and creating folders in the editor;
+   - multi-selection;
+   - prefabs;
+   - fullscreen and window settings for games;
+   - removing Axmol's unused networking libraries (and yasio's Anti 996
+     terms with them).
+6. The timeline animation editor (below) and a visual dialogue graph.
 
 ## After the alpha: timeline animation editor (*added*)
 

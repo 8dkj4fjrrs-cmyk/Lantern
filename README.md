@@ -3,23 +3,40 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: Milestone 7 (a complete demo game).** Play **The Lantern
-> Keeper**, a small top-down RPG made with Lantern:
-> `lantern_player --project examples/lantern_keeper/project`
-> ([how it was made](docs/making-the-lantern-keeper.md)).
->
-> `lantern_editor` creates and opens
-> projects, imports assets with permanent IDs, and edits scenes with
-> sprites, shapes, text, cameras, colliders, tilemaps and sprite-sheet
-> animations (made in its Animation panel), all with undo, saved as
-> versioned JSON. Gameplay is written in C++ as **behaviours** in
-> game modules; story content (game variables, dialogues, quests, and
-> triggers in scenes) is data, edited in the editor and checked as you go.
-> Play mode runs the game in the Scene view on a copy of the scene;
-> `lantern_player` plays a project with input, collision, scene changes,
-> dialogue and save games.
+> **Status: 0.8.0-alpha, the first public alpha.** Make a project from a
+> template, build a small game in the editor without writing code, and
+> export it as a program players run without Lantern. It has been built and
+> tested on Linux only so far; read the
+> **[known limitations](docs/known-limitations.md)** before relying on it.
 
-## Quick start
+What is in it:
+
+- **An editor** with:
+  - scenes, sprites, tilemaps, colliders, text and cameras;
+  - flipbook animation;
+  - dialogue, quests and triggers;
+  - play mode;
+  - full undo.
+
+  It is built with Lantern's own UI toolkit.
+- **A New Project wizard**: Empty, a **Top-Down Starter** that plays at once,
+  or a copy of the demo game.
+- **Exporting**: **Build** checks the project and makes a stand-alone game
+  with the license texts it must carry.
+- **Gameplay** without code (built-in behaviours, triggers, dialogue, quests,
+  saves), and C++ behaviours in game modules when you want more.
+- **[The Lantern Keeper](examples/lantern_keeper)**, a small finished RPG
+  ([how it was made](docs/making-the-lantern-keeper.md)).
+
+## Start here
+
+- **[Getting started](docs/getting-started.md)**: from a new project to a
+  game you can share, in half an hour.
+- [Editor guide](docs/editor.md) · [Gameplay guide](docs/gameplay.md) ·
+  [Exporting](docs/exporting.md) · [File formats](docs/formats/scene.md) ·
+  [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
+
+## Building from source
 
 ```sh
 brew install cmake ninja git && brew install powershell   # macOS, once
@@ -44,6 +61,9 @@ engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, dockin
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
 examples/        The Lantern Keeper (the demo RPG) and the sample game: game modules and projects
+templates/       New Project templates (Empty, Top-Down Starter)
+licenses/        License texts of everything inside an exported game
+tools/release/   Release helpers (collecting license texts)
 editor/model/    Editor logic without UI code (console, preferences, state, undo commands)
 editor/panels/   Editor panels (built with Lantern UI)
 editor/application/  Editor window, menus, docking layout
@@ -53,8 +73,8 @@ docs/            Build guide and architecture decision records (ADRs)
 external/        Downloaded Axmol + tools (created by CMake, not in git)
 ```
 
-Further modules (renderer, scene, serialization, dialogue, quests, …) are
-added by the milestone that needs them, not as empty placeholders.
+Contributing: [CONTRIBUTING.md](CONTRIBUTING.md). Releasing:
+[docs/releasing.md](docs/releasing.md).
 
 ## Architecture rules
 
@@ -79,4 +99,6 @@ Lantern Engine is released under the [MIT License](LICENSE).
 Copyright (c) 2026 Oscar Hird.
 
 Third-party components keep their own licenses; see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [licenses/](licenses/README.md).
+Games exported with Lantern carry those license texts. Note yasio's
+"Anti 996" terms, described in the notices.

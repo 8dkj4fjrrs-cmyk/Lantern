@@ -1,10 +1,13 @@
 # Continuous integration.
 # NOTE: not yet run — the repository is not on GitHub yet. Treat the first
-# run as the real verification.
+# run as the real verification (docs/known-limitations.md says so too).
 #
-#   core     core library + editor shell + tests, all three desktop OSes (fast)
-#   runtime  full build with the Axmol window/runtime, macOS and Linux
-#            (Linux runs the window tests on a virtual display)
+#   core     core library + editor logic + tests, all three desktop OSes (fast)
+#   runtime  full build with the Axmol window/runtime on all three OSes.
+#            Linux runs every test, window tests on a virtual display (they
+#            include exporting a game and starting the exported program);
+#            macOS runs every test; Windows runs all but the window tests
+#            until they are known to work on Windows CI machines.
 name: CI
 
 on:
@@ -43,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, ubuntu-24.04]
+        os: [macos-14, ubuntu-24.04, windows-2022]
     steps:
       - uses: actions/checkout@v4
 
@@ -56,6 +59,10 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install ninja   # pwsh is preinstalled on GitHub runners
+
+      - name: Set up MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -78,3 +85,7 @@ jobs:
       - name: Test (Linux, virtual display)
         if: runner.os == 'Linux'
         run: xvfb-run -a ctest --preset dev
+
+      - name: Test (Windows, without window tests)
+        if: runner.os == 'Windows'
+        run: ctest --preset dev -E "^(editor|player|exported_game)\\."

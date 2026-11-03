@@ -1,0 +1,77 @@
+# Release: on a version tag (v0.8.0-alpha...), build, test and package
+# Lantern on each system, and attach the zips to a draft GitHub release.
+# See docs/releasing.md. Not yet run: the repository is not on GitHub yet.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: package / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-24.04, windows-2022]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build pkg-config xvfb \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+            libgl1-mesa-dev libglu1-mesa-dev libgl1-mesa-dri libfontconfig1-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev libwayland-dev libxkbcommon-dev
+
+      - name: Set up MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure and build (release)
+        run: |
+          cmake --preset release
+          cmake --build --preset release
+
+      - name: Test (Linux, virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a ctest --preset release
+
+      - name: Test (macOS)
+        if: runner.os == 'macOS'
+        run: ctest --preset release
+
+      - name: Test (Windows, without window tests)
+        if: runner.os == 'Windows'
+        run: ctest --preset release -E "^(editor|player|exported_game)\\."
+
+      - name: Package
+        run: cmake --build --preset package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lantern-${{ runner.os }}
+          path: dist/*.zip
+
+  publish:
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Draft release with the packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/*.zip --draft --repo "${{ github.repository }}" --title "Lantern ${{ github.ref_name }}" --notes "See CHANGELOG.md."

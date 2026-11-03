@@ -1,0 +1,6 @@
+{
+  "format": "lantern.project",
+  "version": 1,
+  "name": "Empty Project",
+  "startScene": "scenes/main.lscene"
+}

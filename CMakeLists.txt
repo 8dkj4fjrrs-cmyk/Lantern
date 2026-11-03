@@ -23,9 +23,11 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.7.0
+    VERSION 0.8.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
+# Pre-release label shown after the version ("0.8.0-alpha"); empty for a release.
+set(LANTERN_VERSION_SUFFIX "-alpha")
 
 # ---------------------------------------------------------------------------
 # Global settings
@@ -119,6 +121,8 @@ if(LANTERN_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+include(LanternInstall)   # install rules and the lantern_package target
 
 message(STATUS "Lantern ${PROJECT_VERSION}: backend=${LANTERN_BACKEND_DISPLAY_NAME} "
                "editor=${LANTERN_BUILD_EDITOR} tests=${LANTERN_BUILD_TESTS}")

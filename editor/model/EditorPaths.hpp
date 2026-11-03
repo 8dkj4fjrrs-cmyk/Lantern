@@ -3,6 +3,8 @@
 // Where the editor keeps per-user files.
 // Operating-system differences live here and nowhere else in the editor.
 
+#include "lantern/core/Files.hpp"   // executablePath
+
 #include <filesystem>
 #include <functional>
 #include <optional>

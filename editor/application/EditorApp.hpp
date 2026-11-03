@@ -55,6 +55,7 @@ public:
     std::uint64_t documentGeneration() const override { return m_documentGeneration; }
     const ComponentRegistry& registry() const override { return m_registry; }
     const Project* project() const override { return m_project ? &*m_project : nullptr; }
+    const LanternResources& resources() const override { return m_resources; }
     ui::Context& ui() override { return *m_ui; }
     EntityId selection() const override;
     bool isSceneSelected() const override { return m_state.selectedNodeId == EditorState::kSceneSelected; }
@@ -138,6 +139,12 @@ private:
     void confirmDiscard(const std::string& action, std::function<void()> then);
     void showNewProjectDialog(bool keepCurrentScene, std::function<void()> then = {});
     void showOpenProjectDialog();
+    void showExportDialog();
+    void showWelcome();
+    void showGuide(const std::string& file);
+    void openExampleCopy();
+    static constexpr const char* kShowWelcomeKey = "welcome.show";
+    void exportNow(const std::string& name, const std::filesystem::path& folder);
     void reportIssues(const std::filesystem::path& file, const std::vector<FileIssue>& issues);
     /// Re-reads the project's assets (also every few seconds) and reports problems.
     void refreshAssets();
@@ -153,6 +160,7 @@ private:
     Engine& m_engine;
     ConsoleLog& m_console;
     EditorOptions m_options;
+    LanternResources m_resources;   // templates, examples, licenses, the game runtime
     ComponentRegistry m_registry = ComponentRegistry::withBuiltins();
 
     EditorState m_state;

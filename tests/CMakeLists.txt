@@ -30,6 +30,8 @@ add_executable(lantern_tests
     ui/test_ui_widgets.cpp
     ui/test_ui_inspector.cpp
     editor/test_commands.cpp
+    editor/test_resources.cpp
+    editor/test_export.cpp
     scene/test_scene.cpp
     scene/test_scene_file.cpp
     scene/test_project.cpp
@@ -40,6 +42,7 @@ add_executable(lantern_tests
     gameplay/test_collision.cpp
     gameplay/test_game.cpp
     gameplay/test_animation_play.cpp
+    gameplay/test_builtin_behaviours.cpp
     gameplay/test_game_content.cpp
     content/test_logic.cpp
     content/test_content_files.cpp
@@ -49,7 +52,8 @@ add_executable(lantern_tests
     content/test_notation.cpp)
 target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::content lantern::gameplay lantern::ui lantern_editor_core Catch2::Catch2WithMain)
 if(TARGET sample_game)
-    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp gameplay/test_lantern_keeper.cpp)
+    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp gameplay/test_lantern_keeper.cpp
+        gameplay/test_templates.cpp)
     lantern_link_game_modules(lantern_tests MODULES sample_game keeper)
     target_compile_definitions(lantern_tests PRIVATE
         LANTERN_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project"
@@ -57,7 +61,8 @@ if(TARGET sample_game)
 else()
     lantern_link_game_modules(lantern_tests MODULES)
 endif()
-target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    LANTERN_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 target_include_directories(lantern_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 lantern_set_warnings(lantern_tests)
 catch_discover_tests(lantern_tests)
@@ -101,7 +106,7 @@ set_tests_properties(player.rejects_missing_scene PROPERTIES WILL_FAIL TRUE)
 if(TARGET lantern_editor)
     add_test(NAME editor.version COMMAND lantern_editor --version)
     set_tests_properties(editor.version PROPERTIES
-        PASS_REGULAR_EXPRESSION "Lantern Editor [0-9]+\\.[0-9]+\\.[0-9]+ \\(backend: Axmol")
+        PASS_REGULAR_EXPRESSION "Lantern Editor [0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)? \\(backend: Axmol")
 
     add_test(NAME editor.rejects_unknown_option COMMAND lantern_editor --no-such-flag)
     set_tests_properties(editor.rejects_unknown_option PROPERTIES WILL_FAIL TRUE)
@@ -183,7 +188,8 @@ if(TARGET lantern_editor)
     set(_project "${CMAKE_CURRENT_BINARY_DIR}/test-projects/Window Test Game")
     set(_project_cfg "${CMAKE_CURRENT_BINARY_DIR}/editor-test-project-settings")
     add_test(NAME editor.project_cleanup
-        COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/test-projects" "${_project_cfg}")
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/test-projects" "${_project_cfg}"
+                "${_project_cfg}-starter")
     set_tests_properties(editor.project_cleanup PROPERTIES FIXTURES_SETUP editor_project_clean)
 
     add_test(NAME editor.creates_project
@@ -193,6 +199,19 @@ if(TARGET lantern_editor)
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
         FIXTURES_REQUIRED editor_project_clean
         FIXTURES_SETUP editor_project
+        TIMEOUT 60)
+
+    # A project from the Top-Down Starter template plays at once, with only
+    # built-in components (no game module needed).
+    set(_starter "${CMAKE_CURRENT_BINARY_DIR}/test-projects/Starter Game")
+    add_test(NAME editor.creates_project_from_template
+        COMMAND lantern_editor --config-dir "${_project_cfg}-starter" --new-project "${_starter}" --template topdown
+                --play --frames 60)
+    set_tests_properties(editor.creates_project_from_template PROPERTIES
+        PASS_REGULAR_EXPRESSION "Created project in.*Playing 'Meadow'.*Quest started: Say Hello.*Stopped playing after"
+        FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+        FIXTURES_REQUIRED editor_project_clean
+        FIXTURES_SETUP starter_project
         TIMEOUT 60)
 
     add_test(NAME editor.reopens_last_project
@@ -214,6 +233,30 @@ if(TARGET lantern_editor)
             PASS_REGULAR_EXPRESSION "Game module: sample_game.*Playing 'Meadow'.*Screenshot saved.*Stopped playing after [0-9]+ frames"
             FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
             TIMEOUT 60)
+        # Exporting: the editor checks and exports The Lantern Keeper without a
+        # window; the exported program, started with no arguments, plays it.
+        set(_exports "${CMAKE_CURRENT_BINARY_DIR}/test-exports")
+        add_test(NAME editor.export_cleanup COMMAND ${CMAKE_COMMAND} -E rm -rf "${_exports}")
+        set_tests_properties(editor.export_cleanup PROPERTIES FIXTURES_SETUP export_clean)
+        add_test(NAME editor.exports_game
+            COMMAND lantern_editor --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project"
+                    --export "${_exports}")
+        set_tests_properties(editor.exports_game PROPERTIES
+            PASS_REGULAR_EXPRESSION "Exported The Lantern Keeper \\([0-9]+ files"
+            FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+            FIXTURES_REQUIRED export_clean
+            FIXTURES_SETUP exported_game
+            TIMEOUT 120)
+        add_test(NAME exported_game.plays
+            COMMAND "${_exports}/The Lantern Keeper/The Lantern Keeper" --frames 30
+                    --save-dir "${CMAKE_CURRENT_BINARY_DIR}/exported-game-saves"
+                    --screenshot "${CMAKE_CURRENT_BINARY_DIR}/exported_game.png")
+        set_tests_properties(exported_game.plays PROPERTIES
+            PASS_REGULAR_EXPRESSION "Playing the game bundled with this program.*Window: 'The Lantern Keeper'.*Showing scene 'Village'.*Screenshot saved"
+            FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+            FIXTURES_REQUIRED exported_game
+            TIMEOUT 60)
+
         add_test(NAME editor.plays_lantern_keeper
             COMMAND lantern_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-keeper-settings"
                     --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --play --frames 60

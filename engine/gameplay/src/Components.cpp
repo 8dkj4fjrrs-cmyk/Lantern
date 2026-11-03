@@ -1,5 +1,7 @@
 #include "lantern/gameplay/Components.hpp"
 
+#include "lantern/gameplay/BuiltinBehaviours.hpp"
+
 namespace lantern {
 
 Key toKey(InteractKey key)
@@ -81,6 +83,7 @@ void registerGameplayComponents(ComponentRegistry& registry)
     static_cast<void>(registry.add(Interactor::componentType()));
     static_cast<void>(registry.add(Trigger::componentType()));
     static_cast<void>(registry.add(DialogueView::componentType()));
+    registerBuiltinBehaviours(registry);
 }
 
 } // namespace lantern

@@ -42,6 +42,15 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
                 return result;
             }
             (arg == "--project" ? opt.projectPath : opt.newProjectPath) = std::string(value);
+        } else if (arg == "--template" || arg == "--export") {
+            if (!nextValue(value)) {
+                return result;
+            }
+            if (value.empty()) {
+                result.error = std::string(arg) + (arg == "--export" ? " needs a folder path." : " needs a template name.");
+                return result;
+            }
+            (arg == "--template" ? opt.templateId : opt.exportPath) = std::string(value);
         } else if (arg == "--config-dir") {
             if (!nextValue(value)) {
                 return result;
@@ -82,6 +91,12 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
     if (projectOptions > 1) {
         result.error = "Use only one of --project, --new-project and --no-project.";
     }
+    if (!opt.templateId.empty() && opt.newProjectPath.empty()) {
+        result.error = "--template goes with --new-project FOLDER.";
+    }
+    if (!opt.exportPath.empty() && opt.projectPath.empty()) {
+        result.error = "--export needs the project to export: --project FOLDER --export OUTPUT.";
+    }
     return result;
 }
 
@@ -94,6 +109,8 @@ std::string editorHelpText()
            "  --version           Print version information and exit\n"
            "  --project FOLDER    Open the Lantern project in FOLDER\n"
            "  --new-project FOLDER  Create a new project in FOLDER and open it\n"
+           "  --template NAME     With --new-project: start from a template, e.g. topdown\n"
+           "  --export OUTPUT     With --project: export the game into OUTPUT and quit\n"
            "  --no-project        Start without opening the last project\n"
            "  --reset-layout      Start with the default panel layout\n"
            "  --play              Start playing the scene at once (tests)\n"

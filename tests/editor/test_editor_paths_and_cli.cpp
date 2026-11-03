@@ -100,3 +100,16 @@ TEST_CASE("Editor command line: play straight away", "[editor][cli]")
     REQUIRE(r.ok());
     CHECK(r.options.play);
 }
+
+TEST_CASE("Editor command line: templates and exporting", "[editor][cli]")
+{
+    const auto made = parse({"--new-project", "/tmp/x", "--template", "topdown"});
+    REQUIRE(made.ok());
+    CHECK(made.options.templateId == "topdown");
+    CHECK_FALSE(parse({"--template", "topdown"}).ok());   // needs --new-project
+    const auto exported = parse({"--project", "Game", "--export", "/tmp/out"});
+    REQUIRE(exported.ok());
+    CHECK(exported.options.exportPath == "/tmp/out");
+    CHECK(parse({"--export", "/tmp/out"}).error.find("--project") != std::string::npos);
+    CHECK_FALSE(parse({"--project", "Game", "--export", ""}).ok());
+}

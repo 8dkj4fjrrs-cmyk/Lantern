@@ -17,11 +17,21 @@ add_library(lantern_editor_core STATIC
     model/ConsoleLog.cpp
     model/EditorPaths.cpp
     model/EditorState.cpp
+    model/GameExport.cpp
+    model/LanternResources.cpp
     model/Preferences.cpp
     model/SceneDocument.cpp)
 target_include_directories(lantern_editor_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/model")
-target_link_libraries(lantern_editor_core PUBLIC lantern::core lantern::scene lantern::assets)
+target_link_libraries(lantern_editor_core PUBLIC lantern::core lantern::scene lantern::assets
+    PRIVATE nlohmann_json::nlohmann_json)
 lantern_set_warnings(lantern_editor_core)
+# Only LanternResources.cpp reads JSON (template.json); nlohmann/json needs
+# char8_t in C++20 mode (see engine/scene/CMakeLists.txt).
+if(MSVC)
+    set_source_files_properties(model/LanternResources.cpp PROPERTIES COMPILE_OPTIONS /Zc:char8_t)
+else()
+    set_source_files_properties(model/LanternResources.cpp PROPERTIES COMPILE_OPTIONS -fchar8_t)
+endif()
 
 if(NOT TARGET lantern_runtime)
     message(STATUS "lantern_editor (the window) needs LANTERN_RUNTIME_BACKEND=axmol; building editor logic only.")
@@ -31,8 +41,10 @@ endif()
 add_executable(lantern_editor
     application/main.cpp
     application/EditorApp.cpp
+    application/Exporting.cpp
     panels/AssetsPanel.cpp
     panels/ConsolePanel.cpp
+    panels/FolderPicker.cpp
     panels/HierarchyPanel.cpp
     panels/PanelCommon.cpp
     panels/TilePalettePanel.cpp
@@ -46,6 +58,18 @@ add_executable(lantern_editor
 target_link_libraries(lantern_editor PRIVATE lantern_editor_core lantern::runtime)
 lantern_set_warnings(lantern_editor)
 lantern_link_game_modules(lantern_editor)   # behaviours for the Inspector and play mode
+# Where a build of the editor (not an installed copy) finds templates,
+# examples and licenses (the source tree) and the game runtime it exports
+# games with (the player built beside it). See model/LanternResources.hpp.
+if(APPLE)
+    set(_lantern_dev_player "$<TARGET_BUNDLE_DIR:lantern_player>")
+else()
+    set(_lantern_dev_player "$<TARGET_FILE:lantern_player>")
+endif()
+target_compile_definitions(lantern_editor PRIVATE
+    LANTERN_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    LANTERN_DEV_PLAYER="${_lantern_dev_player}")
+add_dependencies(lantern_editor lantern_player)   # exports need it
 
 # Before Milestone 2 the editor was a single file at bin/lantern_editor; it is
 # now a folder (program + shaders). Remove the old file from existing builds.

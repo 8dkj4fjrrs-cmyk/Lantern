@@ -67,6 +67,8 @@ public:
     /// Shows the button as switched on (e.g. the active tool in a toolbar).
     void setToggled(bool toggled) { m_toggled = toggled; }
     bool isToggled() const noexcept { return m_toggled; }
+    /// Where the icon and text sit (default: centred), e.g. Start for list rows.
+    void setAlign(TextAlign align) { m_align = align; }
 
     Size measure(Context& ctx, Size available) override;
     void paint(Context& ctx, DrawList& draw) override;
@@ -83,6 +85,7 @@ private:
     Style m_style = Style::Normal;
     std::function<void()> m_onClick;
     bool m_toggled = false;
+    TextAlign m_align = TextAlign::Center;
 };
 
 /// A box that can be ticked, with a label.

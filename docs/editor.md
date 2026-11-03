@@ -47,8 +47,9 @@ The editor uses the classic game-editor arrangement:
 | **Console** | Messages from the engine, the runtime and the editor, including any problems found when opening a scene. Filter by level or text, copy, clear. |
 | **Inspector** | The selected object: its on/off switch and name, then one folding section per component with fields you can edit. **Add Component** adds a component (your game's behaviours are listed under *Gameplay*); a section's **⋮** menu removes or resets it; **(?)** explains it. With the scene row selected it shows the scene's name and file; with an asset selected, its preview and settings (see [Assets](#assets)). |
 
-The toolbar's **Build** button is greyed out: hover over it to see which
-milestone brings it. ▶ ⏸ ⏭ play the game (see [Playing the game](#playing-the-game)).
+The toolbar's **Build** button exports the game for players (see
+[Exporting](#exporting-a-game)). ▶ ⏸ ⏭ play the game (see
+[Playing the game](#playing-the-game)).
 
 The status bar shows the frame rate, how many messages, warnings and errors
 the Console holds, and the Lantern version.
@@ -58,10 +59,25 @@ the Console holds, and the Lantern version.
 A project is a folder holding your game: a `project.lantern` settings file,
 a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
 
-- **File > New Project…** asks for a name and a location (by default
-  `Documents/Lantern Projects`) and creates the folder with a first scene.
-- **File > Open Project…** lists recently opened projects, or takes a
-  project folder's path. The editor reopens the last project at start.
+- **File > New Project…** asks what to start from, a name and a location
+  (by default `Documents/Lantern Projects`; **Browse…** to choose), and
+  creates the project's folder. To start from:
+  - **Empty Project**: one empty scene.
+  - **Top-Down Starter**: a small game that plays at once. Its parts:
+    - two scenes joined by a path;
+    - a hero who walks in four directions;
+    - a friend to talk to and a first quest;
+    - the dialogue box.
+
+    It uses only built-in components, so no C++ is needed.
+  - **Example: The Lantern Keeper**: a copy of the demo RPG to study and
+    change.
+- **File > Open Project…** lists recently opened projects. **Browse…**
+  finds a project's folder (projects are marked with Lantern's flame), or
+  type or paste its path. The editor reopens the last project at start.
+- **Welcome**: when the editor starts without a project, it offers to start a
+  new project, open the example, or open a project (**Help > Welcome…**
+  shows it again).
 - Without a project, the editor shows the start scene; you can edit it and
   save it into a new project.
 - **File > New Scene**, **Save Scene**, **Save Scene As…** (also how you
@@ -344,6 +360,24 @@ builds, are no longer used and can be deleted.)
 
 On Windows and Linux, read Ctrl for ⌘ and Alt for ⌥.
 
+## Exporting a game
+
+**Build** (or **File > Export Game…**) makes a copy of the game that runs
+without the editor, for the system the editor runs on. Choose:
+- the game's name;
+- the folder to export into (**Browse…**).
+
+Lantern checks the project first: errors stop the export and are listed in
+the Console. It then makes a folder (on macOS, an app) holding:
+- the game's program;
+- its files;
+- the license texts that must go with it.
+
+Zip it to share. Details: [exporting](exporting.md).
+
+**Help** has the welcome window, the getting-started and exporting guides
+(their folder opens), and About.
+
 ## Command-line options
 
 ```
@@ -351,6 +385,8 @@ On Windows and Linux, read Ctrl for ⌘ and Alt for ⌥.
 --version             Print version information
 --project FOLDER      Open the Lantern project in FOLDER
 --new-project FOLDER  Create a new project in FOLDER and open it
+--template NAME       With --new-project: start from a template (empty, topdown, lantern_keeper)
+--export OUTPUT       With --project: check and export the game into OUTPUT, then quit (no window)
 --no-project          Start without opening the last project
 --reset-layout        Start with the default panel layout
 --play                Start playing the opened scene at once (used by tests)

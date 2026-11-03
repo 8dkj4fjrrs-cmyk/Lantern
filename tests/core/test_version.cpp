@@ -8,7 +8,7 @@ TEST_CASE("Version string matches the numeric version", "[core][version]")
 {
     const std::string expected = std::to_string(lantern::kVersionMajor) + "."
                                  + std::to_string(lantern::kVersionMinor) + "."
-                                 + std::to_string(lantern::kVersionPatch);
+                                 + std::to_string(lantern::kVersionPatch) + std::string(lantern::kVersionSuffix);
     CHECK(lantern::versionString() == expected);
 }
 

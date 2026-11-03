@@ -23,6 +23,13 @@ struct EditorOptions {
     bool noProject = false;
     /// Create a new project in this folder (named after the folder) and open it.
     std::string newProjectPath;
+    /// With newProjectPath: the template to start from (its folder name, e.g.
+    /// "topdown"). Empty: an empty project.
+    std::string templateId;
+
+    /// Export the project (--project) as a playable game into this folder,
+    /// then quit without opening a window. See docs/exporting.md.
+    std::string exportPath;
 
     /// Ignore the saved panel layout and start with the default one.
     bool resetLayout = false;

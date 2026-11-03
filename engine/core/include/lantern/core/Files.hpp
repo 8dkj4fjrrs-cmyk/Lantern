@@ -1,6 +1,6 @@
 #pragma once
 
-// Reading and safely writing whole text files.
+// Reading and safely writing whole text files, and finding the program's own file.
 
 #include "lantern/core/Engine.hpp" // Status
 
@@ -18,5 +18,9 @@ std::optional<std::string> readTextFile(const std::filesystem::path& path);
 /// a crash or full disk never leaves a half-written file behind. Creates the
 /// folder if needed.
 Status writeTextFileAtomically(const std::filesystem::path& path, std::string_view contents);
+
+/// The running program's own file (empty if the system cannot tell). Used to
+/// find files that ship beside it, e.g. an exported game's data.
+std::filesystem::path executablePath();
 
 } // namespace lantern

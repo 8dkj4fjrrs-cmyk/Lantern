@@ -1,5 +1,7 @@
 #include "EditorApp.hpp"
 
+#include "Exporting.hpp"
+
 #include "../model/EditorPaths.hpp"
 
 #include "lantern/core/Version.hpp"
@@ -95,6 +97,7 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
     : m_engine(engine)
     , m_console(console)
     , m_options(std::move(options))
+    , m_resources(findLanternResources(executablePath(), currentOs(), LANTERN_SOURCE_DIR, LANTERN_DEV_PLAYER))
     , m_document(std::make_unique<SceneDocument>(makeStartScene()))
 {
     // The game's behaviours (linked game modules) join Lantern's components:
@@ -1020,7 +1023,24 @@ void EditorApp::openInitialContent()
     if (!m_options.newProjectPath.empty()) {
         const std::filesystem::path folder = m_options.newProjectPath;
         std::string error;
-        if (Project::create(folder, folder.filename().string(), &error)) {
+        bool made = false;
+        if (!m_options.templateId.empty()) {
+            const auto templates = listProjectTemplates(m_resources);
+            const auto it = std::find_if(templates.begin(), templates.end(),
+                                         [&](const ProjectTemplate& t) { return t.id == m_options.templateId; });
+            if (it == templates.end()) {
+                std::string names;
+                for (const ProjectTemplate& t : templates) {
+                    names += (names.empty() ? "" : ", ") + t.id;
+                }
+                error = "There is no template called '" + m_options.templateId + "'. Templates: " + names + ".";
+            } else {
+                made = createProjectFromTemplate(*it, folder, folder.filename().string(), &error);
+            }
+        } else {
+            made = Project::create(folder, folder.filename().string(), &error).has_value();
+        }
+        if (made) {
             log().info(kCategory, "Created project in " + folder.string());
             openProjectFolder(folder, false);
         } else {
@@ -1051,7 +1071,7 @@ void EditorApp::newProject()
 
 void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()> then)
 {
-    auto dialog = std::make_unique<ui::Dialog>("New Project", 460.0f);
+    auto dialog = std::make_unique<ui::Dialog>("New Project", 480.0f);
     ui::Column& body = dialog->body();
     if (keepCurrentScene) {
         body.emplace<ui::Label>("Scenes are saved inside a project. Create one now; this scene becomes its first "
@@ -1059,12 +1079,51 @@ void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()
                                 ui::Label::Style::Dim)
             .setWrap(true);
     }
+    // What to start from: a template or an example game (not when an
+    // existing scene becomes the new project's first scene).
+    auto templates = std::make_shared<std::vector<ProjectTemplate>>();
+    auto chosen = std::make_shared<int>(-1);
+    if (!keepCurrentScene) {
+        *templates = listProjectTemplates(m_resources);
+    }
+    if (!templates->empty()) {
+        body.emplace<ui::Label>("Start from", ui::Label::Style::Dim);
+        std::vector<std::string> names;
+        for (std::size_t i = 0; i < templates->size(); ++i) {
+            names.push_back((*templates)[i].name);
+            if ((*templates)[i].id == "topdown") {
+                *chosen = static_cast<int>(i);   // the friendliest start: something to play at once
+            }
+        }
+        if (*chosen < 0) {
+            *chosen = 0;
+        }
+        auto& choice = body.emplace<ui::ChoiceField>(std::move(names));
+        choice.setSelected(*chosen);
+        auto& about = body.emplace<ui::Label>((*templates)[static_cast<std::size_t>(*chosen)].description,
+                                              ui::Label::Style::Faint);
+        about.setWrap(true);
+        choice.setOnChoose([templates, chosen, &about](int index) {
+            if (index >= 0 && static_cast<std::size_t>(index) < templates->size()) {
+                *chosen = index;
+                about.setText((*templates)[static_cast<std::size_t>(index)].description);
+            }
+        });
+    } else if (!keepCurrentScene) {
+        body.emplace<ui::Label>("No templates were found (" + m_resources.templates.string()
+                                    + "), so the project starts empty. Reinstalling Lantern brings them back.",
+                                ui::Label::Style::Faint)
+            .setWrap(true);
+    }
     body.emplace<ui::Label>("Project name", ui::Label::Style::Dim);
     auto& name = body.emplace<ui::TextField>("");
     name.setText("My Game");
     body.emplace<ui::Label>("Location", ui::Label::Style::Dim);
-    auto& location = body.emplace<ui::TextField>("");
+    auto& locationRow = body.emplace<ui::Row>(6.0f);
+    auto& location = locationRow.emplace<ui::TextField>("");
+    location.setStretch(1.0f);
     location.setText(defaultProjectsDirectory().string());
+
     auto& hint = body.emplace<ui::Label>("", ui::Label::Style::Faint);
     hint.setWrap(true);
     auto& error = body.emplace<ui::Label>("");
@@ -1077,15 +1136,30 @@ void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()
     updateHint();
     name.setOnChange([updateHint](const std::string&) { updateHint(); });
     location.setOnChange([updateHint](const std::string&) { updateHint(); });
+    locationRow.emplace<ui::Button>("Browse…", [this, &location, updateHint] {
+        showFolderPicker(*m_ui, "Where to Create the Project", location.text(),
+                         [&location, updateHint](const std::filesystem::path& folder) {
+                             location.setText(folder.string());
+                             updateHint();
+                         });
+    });
 
-    auto create = [this, &name, &location, &error, keepCurrentScene, then](ui::Dialog& d) {
+    auto create = [this, &name, &location, &error, keepCurrentScene, then, templates, chosen](ui::Dialog& d) {
         if (location.text().empty()) {
             error.setText("Choose a location: the folder the project folder is created in.");
             return;
         }
         const std::filesystem::path folder = std::filesystem::path(location.text()) / name.text();
         std::string message;
-        auto project = Project::create(folder, name.text(), &message);
+        std::optional<Project> project;
+        if (*chosen >= 0 && static_cast<std::size_t>(*chosen) < templates->size()) {
+            const ProjectTemplate& from = (*templates)[static_cast<std::size_t>(*chosen)];
+            if (createProjectFromTemplate(from, folder, name.text(), &message)) {
+                project = Project::open(folder, &message);
+            }
+        } else {
+            project = Project::create(folder, name.text(), &message);
+        }
         if (!project) {
             error.setText(message);
             return;
@@ -1118,6 +1192,106 @@ void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()
     location.setOnSubmit([create, &d](const std::string&) { create(d); });
     m_ui->setFocus(&name);
     name.state().selectAll();
+}
+
+// --- Exporting ------------------------------------------------------------------------------------
+
+void EditorApp::showExportDialog()
+{
+    if (!m_project) {
+        showMessage("Export Game", "Open or create a project first: a game is exported from its project.");
+        return;
+    }
+    if (m_game) {
+        stopPlaying();
+    }
+    const char* system = currentOs() == HostOs::MacOS ? "macOS" : currentOs() == HostOs::Windows ? "Windows" : "Linux";
+    auto dialog = std::make_unique<ui::Dialog>("Export Game", 500.0f);
+    ui::Column& body = dialog->body();
+    body.emplace<ui::Label>(std::string("Makes a copy of your game that runs without the editor, for ") + system
+                                + " (this computer). To make a version for another system, export on that system.",
+                            ui::Label::Style::Dim)
+        .setWrap(true);
+    body.emplace<ui::Label>("Game name", ui::Label::Style::Dim);
+    auto& name = body.emplace<ui::TextField>("");
+    name.setText(m_project->settings().name);
+    body.emplace<ui::Label>("Export into", ui::Label::Style::Dim);
+    auto& folderRow = body.emplace<ui::Row>(6.0f);
+    auto& folder = folderRow.emplace<ui::TextField>("");
+    folder.setStretch(1.0f);
+    const std::filesystem::path projects = defaultProjectsDirectory();
+    folder.setText((projects.empty() ? m_project->folder().parent_path() : projects.parent_path() / "Lantern Exports")
+                       .string());
+    auto& hint = body.emplace<ui::Label>("", ui::Label::Style::Faint);
+    hint.setWrap(true);
+    const auto updateHint = [&hint, &name, &folder] {
+        const std::string file = exportFileName(name.text());
+        hint.setText("Creates " + (std::filesystem::path(folder.text()) / (currentOs() == HostOs::MacOS ? file + ".app" : file)).string()
+                     + ", replacing an earlier export of the same game.");
+    };
+    updateHint();
+    name.setOnChange([updateHint](const std::string&) { updateHint(); });
+    folder.setOnChange([updateHint](const std::string&) { updateHint(); });
+    folderRow.emplace<ui::Button>("Browse…", [this, &folder, updateHint] {
+        showFolderPicker(*m_ui, "Export Into", folder.text(), [&folder, updateHint](const std::filesystem::path& chosen) {
+            folder.setText(chosen.string());
+            updateHint();
+        });
+    });
+    if (m_document->isDirty()) {
+        body.emplace<ui::Label>("The open scene has unsaved changes. It is saved first, so the game has them.",
+                                ui::Label::Style::Faint)
+            .setWrap(true);
+    }
+    auto& error = body.emplace<ui::Label>("");
+    error.setColor(m_ui->theme().error);
+    error.setWrap(true);
+    std::error_code ec;
+    const bool runtimeFound = !m_resources.player.empty() && std::filesystem::exists(m_resources.player, ec);
+    if (!runtimeFound) {
+        error.setText("Lantern's game runtime (lantern_player) was not found"
+                      + (m_resources.player.empty() ? std::string() : " at " + m_resources.player.string())
+                      + ". Reinstall Lantern; when working from source, build the lantern_player target.");
+    }
+    dialog->addButton("Cancel");
+    ui::Button& ok = dialog->addButton(m_document->isDirty() ? "Save and Export" : "Export",
+                                       ui::Button::Style::Primary);
+    ok.setEnabled(runtimeFound);
+    ui::Dialog& d = ui::showDialog(*m_ui, std::move(dialog));
+    ok.setOnClick([this, &d, &name, &folder, &error] {
+        if (folder.text().empty()) {
+            error.setText("Choose the folder to export into.");
+            return;
+        }
+        const std::string gameName = name.text();
+        const std::filesystem::path into = folder.text();
+        m_ui->closeOverlay(&d);
+        if (m_document->isDirty()) {
+            saveScene([this, gameName, into] { exportNow(gameName, into); });
+        } else {
+            exportNow(gameName, into);
+        }
+    });
+}
+
+void EditorApp::exportNow(const std::string& name, const std::filesystem::path& folder)
+{
+    const ExportRun run = exportProject(m_project->folder(), folder, name, m_resources, m_registry, log());
+    if (!run.ok) {
+        showMessage("Could Not Export", run.message);
+        return;
+    }
+    auto dialog = std::make_unique<ui::Dialog>("Game Exported", 480.0f);
+    dialog->body().emplace<ui::Label>(run.message).setWrap(true);
+    dialog->body()
+        .emplace<ui::Label>("Players run " + run.result.program.filename().string()
+                                + ". Share the whole folder (zip it); its licenses folder must stay with the game.",
+                            ui::Label::Style::Dim)
+        .setWrap(true);
+    const std::filesystem::path where = run.result.game.parent_path();
+    dialog->addButton("Show in Folder", ui::Button::Style::Normal, [where] { revealInFileManager(where); });
+    dialog->addButton("Done", ui::Button::Style::Primary);
+    ui::showDialog(*m_ui, std::move(dialog));
 }
 
 void EditorApp::openProject()
@@ -1159,12 +1333,14 @@ void EditorApp::showOpenProjectDialog()
         recentButtons.emplace_back(&button, folder);
     }
     body.emplace<ui::Label>("Project folder", ui::Label::Style::Dim);
-    auto& path = body.emplace<ui::TextField>("Path to the folder containing project.lantern");
+    auto& pathRow = body.emplace<ui::Row>(6.0f);
+    auto& path = pathRow.emplace<ui::TextField>("Path to the folder containing project.lantern");
+    path.setStretch(1.0f);
     if (m_state.recentProjects.empty()) {
         path.setText(defaultProjectsDirectory().string());
     }
-    body.emplace<ui::Label>("Type or paste the folder's path. (A folder browser arrives with the project wizard in "
-                            "Milestone 8.)",
+    auto& browse = pathRow.emplace<ui::Button>("Browse…");
+    body.emplace<ui::Label>("Browse to the project's folder (marked with a flame), or type or paste its path.",
                             ui::Label::Style::Faint)
         .setWrap(true);
 
@@ -1173,6 +1349,12 @@ void EditorApp::showOpenProjectDialog()
     ui::Dialog& d = ui::showDialog(*m_ui, std::move(dialog));
     ok.setOnClick([open, &d, &path] { open(d, path.text()); });
     path.setOnSubmit([open, &d](const std::string& text) { open(d, text); });
+    browse.setOnClick([this, open, &d, &path] {
+        showFolderPicker(*m_ui, "Open Project", path.text(), [open, &d, &path](const std::filesystem::path& folder) {
+            path.setText(folder.string());
+            open(d, folder.string());
+        }, true);
+    });
     for (auto& entry : recentButtons) {
         entry.first->setOnClick([open, &d, target = entry.second] { open(d, target); });
     }
@@ -1217,6 +1399,8 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("Save Scene As…", platform.macConventions ? "⇧⌘S" : "Ctrl+Shift+S",
                                [this] { saveSceneAs(); }),
                       menuItem("Import Assets…", "", [this] { showImportDialog(); },
+                               [this] { return m_project.has_value(); }),
+                      menuItem("Export Game…", "", [this] { showExportDialog(); },
                                [this] { return m_project.has_value(); }),
                       ui::MenuItem::divider(),
                       menuItem("Revert to Saved", "", [this] { reloadScene(); },
@@ -1289,7 +1473,11 @@ void EditorApp::buildMenus(ui::Widget& root)
                                [this] { return m_assetDb != nullptr; }),
                       menuItem("New Variables", "", [this] { createContent(AssetType::Variables); },
                                [this] { return m_assetDb != nullptr; })}});
-    menuBar.addMenu({"Help", {menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
+    menuBar.addMenu({"Help", {menuItem("Welcome…", "", [this] { showWelcome(); }),
+                              menuItem("Getting Started Guide", "", [this] { showGuide("getting-started.md"); }),
+                              menuItem("Exporting Games", "", [this] { showGuide("exporting.md"); }),
+                              ui::MenuItem::divider(),
+                              menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
 }
 
 void EditorApp::buildToolbar(ui::Widget& root)
@@ -1335,7 +1523,9 @@ void EditorApp::buildToolbar(ui::Widget& root)
                                        [this] { reloadScene(); });
     small(*m_revertButton);
     toolbar.emplace<ui::Spacer>();
-    addToolbarButton(toolbar, ui::Icon::Send, "Build", kComingWithBuilds, nullptr);
+    addToolbarButton(toolbar, ui::Icon::Send, "Build",
+                     "Export the game: a copy that runs without the editor, to share with players",
+                     [this] { showExportDialog(); });
     small(addToolbarButton(toolbar, ui::Icon::Folder, "", "Show the project folder", [this] {
         if (m_project) {
             revealInFileManager(m_project->folder());
@@ -1529,6 +1719,77 @@ void EditorApp::updateTitle(UiFrame& frame)
     m_sceneChoice->setSelected(selected);
 }
 
+void EditorApp::showGuide(const std::string& file)
+{
+    const std::filesystem::path guide = m_resources.docs / file;
+    std::error_code ec;
+    if (!std::filesystem::exists(guide, ec)) {
+        showMessage("Guide Not Found", "The documentation is missing (" + guide.string() + "). Reinstall Lantern.");
+        return;
+    }
+    log().info(kCategory, "Guide: " + guide.string());
+    showMessage("Lantern Documentation", "The guide is a text file you can read in any editor or web browser:\n"
+                                             + guide.string() + "\n\nIts folder opens now.");
+    revealInFileManager(guide.parent_path());
+}
+
+void EditorApp::openExampleCopy()
+{
+    const auto templates = listProjectTemplates(m_resources);
+    const auto it = std::find_if(templates.begin(), templates.end(), [](const ProjectTemplate& t) { return t.example; });
+    if (it == templates.end()) {
+        showMessage("No Example Found", "The example game was not found in " + m_resources.examples.string()
+                                            + ". Reinstall Lantern.");
+        return;
+    }
+    // A copy of its own in the projects folder, so the original stays as it is.
+    const std::filesystem::path projects = defaultProjectsDirectory();
+    const std::string base = it->name.rfind("Example: ", 0) == 0 ? it->name.substr(9) : it->name;
+    std::error_code ec;
+    std::filesystem::path folder = projects / base;
+    if (std::filesystem::exists(folder / ProjectFormat::kFileName, ec)) {
+        openProjectFolder(folder, true);   // made earlier: open it again
+        return;
+    }
+    for (int n = 2; std::filesystem::exists(folder, ec); ++n) {
+        folder = projects / (base + " " + std::to_string(n));
+    }
+    std::string error;
+    if (!createProjectFromTemplate(*it, folder, base, &error)) {
+        showMessage("Could Not Copy the Example", error);
+        return;
+    }
+    log().info(kCategory, "Copied the example game to " + folder.string());
+    openProjectFolder(folder, true);
+}
+
+void EditorApp::showWelcome()
+{
+    auto dialog = std::make_unique<ui::Dialog>("Welcome to Lantern", 520.0f);
+    ui::Column& body = dialog->body();
+    body.emplace<ui::Label>("Lantern " + std::string(versionString())
+                                + " is an editor for 2D games: top-down RPGs, pixel-art adventures, tile-based and "
+                                  "story-driven games.",
+                            ui::Label::Style::Dim)
+        .setWrap(true);
+    body.emplace<ui::Label>("New here? Start a project from the Top-Down Starter and press Play, or look inside "
+                            "The Lantern Keeper, a small finished game. Help > Getting Started Guide walks you from "
+                            "a new project to a game you can share.",
+                            ui::Label::Style::Dim)
+        .setWrap(true);
+    auto& again = body.emplace<ui::Checkbox>("Show this window when Lantern starts without a project",
+                                             m_preferences.getBool(kShowWelcomeKey, true));
+    again.setOnChange([this](bool on) {
+        m_preferences.setBool(kShowWelcomeKey, on);
+        saveSettings();
+    });
+    dialog->addButton("Open Project…", ui::Button::Style::Normal, [this] { m_ui->post([this] { openProject(); }); });
+    dialog->addButton("Try The Lantern Keeper", ui::Button::Style::Normal,
+                      [this] { m_ui->post([this] { confirmDiscard("opening the example", [this] { openExampleCopy(); }); }); });
+    dialog->addButton("New Project…", ui::Button::Style::Primary, [this] { m_ui->post([this] { newProject(); }); });
+    ui::showDialog(*m_ui, std::move(dialog));
+}
+
 void EditorApp::showAbout()
 {
     auto dialog = std::make_unique<ui::Dialog>("About Lantern Engine", 400.0f);
@@ -1539,7 +1800,9 @@ void EditorApp::showAbout()
     // It is still reported by --version and in the Console, for bug reports.
     body.emplace<ui::Separator>();
     body.emplace<ui::Label>("Copyright (c) 2026 Oscar Hird. MIT License.");
-    body.emplace<ui::Label>("Third-party licenses are listed in THIRD_PARTY_NOTICES.md.", ui::Label::Style::Faint)
+    body.emplace<ui::Label>("Third-party licenses: THIRD_PARTY_NOTICES.md and the licenses folder ("
+                                + m_resources.licenses.string() + "). Exported games carry them.",
+                            ui::Label::Style::Faint)
         .setWrap(true);
     dialog->addButton("Close", ui::Button::Style::Primary);
     ui::showDialog(*m_ui, std::move(dialog));
@@ -1554,6 +1817,9 @@ void EditorApp::setupUi(UiFrame& frame)
     restoreLayout();
     m_layoutDirty = false;
     openInitialContent();
+    if (!m_project && m_preferences.getBool(kShowWelcomeKey, true)) {
+        showWelcome();   // a first start, or no project to come back to
+    }
     if (m_options.play) {
         play();
     }

@@ -7,6 +7,7 @@
 
 add_library(lantern_gameplay STATIC
     src/Collision.cpp
+    src/BuiltinBehaviours.cpp
     src/Components.cpp
     src/SaveStore.cpp
     src/Game.cpp

@@ -8,7 +8,9 @@ namespace lantern {
 inline constexpr int kVersionMajor = @PROJECT_VERSION_MAJOR@;
 inline constexpr int kVersionMinor = @PROJECT_VERSION_MINOR@;
 inline constexpr int kVersionPatch = @PROJECT_VERSION_PATCH@;
-inline constexpr std::string_view kVersionString = "@PROJECT_VERSION@";
+inline constexpr std::string_view kVersionString = "@PROJECT_VERSION@@LANTERN_VERSION_SUFFIX@";
+/// The pre-release label ("-alpha"), or empty for a release.
+inline constexpr std::string_view kVersionSuffix = "@LANTERN_VERSION_SUFFIX@";
 
 /// Runtime backend chosen at configure time, e.g. "Axmol 2.11.5" or "none".
 inline constexpr std::string_view kRuntimeBackend = "@LANTERN_BACKEND_DISPLAY_NAME@";

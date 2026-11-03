@@ -7,6 +7,24 @@ plays. This guide shows how, using the sample game in
 
 Design reasons: [ADR 0007](adr/0007-gameplay-and-play-mode.md).
 
+## Built-in behaviours: games without C++
+
+Lantern comes with three behaviours for top-down games. Add them in the
+Inspector (**Add Component > Gameplay**). The New Project wizard's
+**Top-Down Starter** uses all three.
+
+| Behaviour | Put it on | What it does |
+|---|---|---|
+| **Top-Down Controller** (`lantern.TopDownController`) | the player (with a Collider and an Interactor) | Walks with the arrow keys or W A S D (*Speed*, points per second), stopped by anything solid, and stands still during dialogues. With an Animator it plays `walk_down`, `walk_left`, `walk_right`, `walk_up` and `idle_…` clips when the animations have them; otherwise it flips the Sprite to face left or right. |
+| **Scene Door** (`lantern.SceneDoor`) | an object with a non-solid Collider at a map's edge | When the player walks into it, the game changes to *Scene*. The player appears at the object named *Arrive At* in that scene: put an empty object a step inside the way back. Empty: where that scene puts the player. |
+| **Camera Bounds** (`lantern.CameraBounds`) | the Camera (a child of the player) | The view follows the player but stays inside *Min*–*Max* (world points, e.g. the map's corners), so it never shows past the map's edges. |
+
+From C++, `game.changeScene(scene, "From the Village")` does what a Scene
+Door does.
+
+The rest of this guide is for when you want more than these: your own
+behaviours in C++.
+
 ## A first behaviour
 
 ```cpp
@@ -275,6 +293,11 @@ as using a null pointer, cannot be caught this way and closes the program,
 editor included: save before playing new code.
 
 ## The example games
+
+The Lantern Keeper's own `keeper.PlayerController`, `keeper.SceneDoor`,
+`keeper.SpawnPoint` and `keeper.CameraLimits` came first: the built-in
+behaviours above grew out of them. They stay in its module as an example of
+writing your own.
 
 **The Lantern Keeper** ([`examples/lantern_keeper`](../examples/lantern_keeper))
 is a small, complete RPG: three scenes, four characters, a cat, two quests,

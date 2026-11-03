@@ -13,6 +13,7 @@
 
 #include "../model/ConsoleLog.hpp"
 #include "../model/EditorState.hpp"
+#include "../model/LanternResources.hpp"
 #include "../model/SceneDocument.hpp"
 
 #include "lantern/assets/Animation.hpp"
@@ -52,8 +53,6 @@ inline constexpr const char* kConsolePanel = "console";
 inline constexpr const char* kTilePalettePanel = "tilepalette";
 inline constexpr const char* kAnimationPanel = "animation";
 
-// Tooltips for controls that are visible but not working yet.
-inline constexpr const char* kComingWithBuilds = "Coming in Milestone 8: building your game for players";
 
 enum class NewEntityKind { Empty, Rectangle, Ellipse, Sprite, Camera, Tilemap };
 
@@ -107,6 +106,8 @@ public:
     virtual void newProject() = 0;
     virtual void openProject() = 0;
     virtual void showMessage(const std::string& title, const std::string& text) = 0;
+    /// Lantern's templates, examples, licenses, docs and game runtime.
+    virtual const LanternResources& resources() const = 0;
     /// Asks for files to import (the dialog explains drag and drop too).
     virtual void showImportDialog() = 0;
     /// Creates a new content file (Variables, Dialogue or Quest) from a
@@ -142,6 +143,11 @@ ui::Row& makePanelToolbar(ui::Widget& parent);
 ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string tooltip, std::function<void()> action = {});
 /// Opens a menu just below `anchor`.
 void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items);
+
+/// A dialog for choosing a folder by browsing (FolderPicker.cpp). With
+/// `projectsOnly`, only a Lantern project folder can be chosen.
+void showFolderPicker(ui::Context& ctx, const std::string& title, const std::filesystem::path& start,
+                      std::function<void(const std::filesystem::path&)> onChosen, bool projectsOnly = false);
 
 /// Changes an animation set (.lanim) and saves it as one undoable step.
 /// With `merge`, consecutive changes with the same label join into one step

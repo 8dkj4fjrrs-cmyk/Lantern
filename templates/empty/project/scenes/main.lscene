@@ -1,0 +1,377 @@
+{
+  "format": "lantern.scene",
+  "version": 1,
+  "name": "Main",
+  "entities": [
+    {
+      "id": "5697995ae7f37ffe",
+      "name": "Background",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [640, 360],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [1280, 720],
+          "color": "#0f121cff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "b3960b190d724f20",
+      "name": "Lantern",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [640, 360],
+          "rotation": 0,
+          "scale": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "98278b69e0036aec",
+      "parent": "b3960b190d724f20",
+      "name": "Glow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "23bee7055721b059",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 1",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [440, 440],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "8db6190bcbfc66ef",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 2",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [340, 340],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "e11a8b095980f4e5",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 3",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [260, 260],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "6823ce80816f0042",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 4",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [200, 200],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "73f3ae7aeb40670a",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 5",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [160, 160],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "f14a40f8a88db622",
+      "parent": "98278b69e0036aec",
+      "name": "Glow 6",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [130, 130],
+          "color": "#ffb84d12",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "0b7f380f225fc5ae",
+      "parent": "b3960b190d724f20",
+      "name": "Glass",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [76, 110],
+          "color": "#ffb84d59",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "6fe37ccdff5f62d0",
+      "parent": "b3960b190d724f20",
+      "name": "Flame",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -8],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [44, 44],
+          "color": "#ffb84dff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "a3bb3c59dc7c7dca",
+      "parent": "6fe37ccdff5f62d0",
+      "name": "Core",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 4],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [24, 24],
+          "color": "#ffe08cff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "393f04884ba90f87",
+      "parent": "b3960b190d724f20",
+      "name": "Frame",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "867e752848da2d46",
+      "parent": "393f04884ba90f87",
+      "name": "Top",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 61.5],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [96, 13],
+          "color": "#38333dff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "78bb846faadb4cee",
+      "parent": "393f04884ba90f87",
+      "name": "Bottom",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, -61.5],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [96, 13],
+          "color": "#38333dff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "0bce4f473f96e7f7",
+      "parent": "393f04884ba90f87",
+      "name": "Left Bar",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [-39, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [6, 110],
+          "color": "#38333dff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "b1eb6bb74765cfc1",
+      "parent": "393f04884ba90f87",
+      "name": "Right Bar",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [39, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "rectangle",
+          "size": [6, 110],
+          "color": "#38333dff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "e79f92876750a6e4",
+      "parent": "393f04884ba90f87",
+      "name": "Handle",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 82],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [36, 36],
+          "color": "#38333dff",
+          "filled": false,
+          "lineWidth": 3
+        }
+      ]
+    }
+  ]
+}
