@@ -77,6 +77,13 @@ deletes yasio from its copy of Axmol so nothing builds it. The reason: yasio's
 upstream license adds the "Anti 996" License 1.0 to MIT, a non-standard
 license that Lantern does not want every game to carry.
 
+**Windows only: the Microsoft Visual C++ runtime** (`msvcp140.dll`,
+`vcruntime140.dll`, `vcruntime140_1.dll`) is copied beside the editor and the
+game runtime, so programs start on PCs without the Visual C++
+Redistributable. These are Microsoft's redistributable files, shipped under
+the Visual Studio license terms for redistributable code; they are not open
+source.
+
 ## Gameplay scripts (`engine/gameplay`)
 
 | Component | Version | License | Shipped? |

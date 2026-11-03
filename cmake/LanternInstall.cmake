@@ -33,6 +33,21 @@ else()
     install(DIRECTORY "${AXSLCC_OUT_DIR}/" DESTINATION axslc ${_component})
     install(DIRECTORY "${AXSLCC_OUT_DIR}/" DESTINATION runtime/axslc ${_component})
     if(WIN32)
+        # The DLLs the programs link (Axmol's prebuilt zlib1.dll, for one).
+        # A Windows program only finds DLLs beside it, so both folders get them;
+        # exported games copy runtime/ (tools/release/check_windows_dlls.py
+        # checks the package).
+        install(FILES $<TARGET_RUNTIME_DLLS:lantern_editor> DESTINATION . ${_component})
+        install(FILES $<TARGET_RUNTIME_DLLS:lantern_player> DESTINATION runtime ${_component})
+        # The Visual C++ runtime (msvcp140.dll, vcruntime140*.dll): not every
+        # PC has it installed, and Microsoft allows shipping it beside a program.
+        set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+        set(CMAKE_INSTALL_UCRT_LIBRARIES FALSE)   # the Universal CRT is part of Windows 10 and later
+        include(InstallRequiredSystemLibraries)
+        if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+            install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . ${_component})
+            install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION runtime ${_component})
+        endif()
         # DLLs Axmol puts beside its programs (e.g. ANGLE's OpenGL ES on Windows).
         # The build folder also has an "axslc" link to the shaders there;
         # it is left out, since the real shaders are installed above (CMake

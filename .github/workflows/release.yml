@@ -82,6 +82,15 @@ jobs:
       - name: Package
         run: cmake --build --preset package
 
+      # A program that cannot find a DLL does not start on players' PCs,
+      # while it may still start here (build folders are on the PATH).
+      - name: Check the Windows package's DLLs
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          pip install pefile
+          python tools/release/check_windows_dlls.py "$(ls -d dist/Lantern-*/ | head -1)"
+
       - uses: actions/upload-artifact@v4
         with:
           name: lantern-${{ runner.os }}
@@ -112,6 +121,12 @@ jobs:
       - name: Draft release with the packages
         env:
           GH_TOKEN: ${{ github.token }}
+        # An earlier *draft* of this version (a failed or repeated run) is
+        # replaced; a published release is never touched.
         # --target: when the tag does not exist yet (Run workflow), it is
         # made on the commit that was built.
-        run: gh release create "$TAG" dist/*.zip --draft --target "${{ github.sha }}" --repo "${{ github.repository }}" --title "Lantern $TAG" --notes-file notes.md
+        run: |
+          if [ "$(gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft --jq .isDraft 2>/dev/null)" = "true" ]; then
+            gh release delete "$TAG" --yes --repo "${{ github.repository }}"
+          fi
+          gh release create "$TAG" dist/*.zip --draft --target "${{ github.sha }}" --repo "${{ github.repository }}" --title "Lantern $TAG" --notes-file notes.md
