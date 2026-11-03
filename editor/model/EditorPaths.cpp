@@ -1,5 +1,7 @@
 #include "EditorPaths.hpp"
 
+#include "lantern/core/Files.hpp"
+
 #include <cstdint>
 #include <cstdlib>
 #include <string>
@@ -8,11 +10,7 @@ namespace lantern::editor {
 
 std::optional<std::string> realEnvironment(const char* name)
 {
-    // std::getenv is fine here: read-only, and only called from the main thread.
-    if (const char* value = std::getenv(name); value != nullptr && *value != '\0') {
-        return std::string(value);
-    }
-    return std::nullopt;
+    return environmentVariable(name);
 }
 
 HostOs currentOs() noexcept

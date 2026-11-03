@@ -37,8 +37,13 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      # "-- -k 0" tells Ninja to keep going after an error, so one run
+      # reports every file that fails to compile, not just the first.
       - name: Configure, build and test
-        run: cmake --workflow --preset core
+        run: |
+          cmake --preset core
+          cmake --build --preset core -- -k 0
+          ctest --preset core
 
   runtime:
     name: runtime / ${{ matrix.os }}
@@ -54,7 +59,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: external
-          key: external-${{ runner.os }}-${{ hashFiles('cmake/LanternAxmol.cmake') }}
+          key: external-${{ runner.os }}-${{ hashFiles('cmake/LanternAxmol.cmake', 'cmake/axmol-patches/**') }}
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -76,7 +81,7 @@ jobs:
       - name: Configure and build
         run: |
           cmake --preset dev
-          cmake --build --preset dev
+          cmake --build --preset dev -- -k 0
 
       - name: Test (macOS)
         if: runner.os == 'macOS'

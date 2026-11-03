@@ -23,4 +23,10 @@ Status writeTextFileAtomically(const std::filesystem::path& path, std::string_vi
 /// find files that ship beside it, e.g. an exported game's data.
 std::filesystem::path executablePath();
 
+/// The value of an environment variable such as HOME or APPDATA; nothing if
+/// it is not set or is empty. (std::getenv is deprecated by Microsoft's
+/// compiler, which builds with warnings as errors here, so this wraps the
+/// safe Windows equivalent.) Read-only; call it from the main thread.
+std::optional<std::string> environmentVariable(const char* name);
+
 } // namespace lantern

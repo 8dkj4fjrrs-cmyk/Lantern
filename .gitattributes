@@ -1,0 +1,3 @@
+# Patches must keep Unix line endings on every system, or git apply fails
+# against Axmol's files (cmake/axmol-patches/README.md).
+*.patch text eol=lf

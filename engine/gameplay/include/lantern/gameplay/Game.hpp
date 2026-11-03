@@ -203,6 +203,8 @@ private:
     void loadGame(std::string_view slot) override { load(slot); }
 
     std::vector<EntityId> findAllWith(std::string_view typeId) const;
+    // The player: the first object with an Interactor, or a null id.
+    EntityId firstPlayer() const;
     void beginScene(Scene scene, AssetId id);
     void handleDialogueInput();
     void runBehaviours();

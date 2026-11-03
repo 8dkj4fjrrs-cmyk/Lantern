@@ -102,7 +102,7 @@ void Game::beginScene(Scene scene, AssetId id)
         m_arriveAt.clear();
     }
     if (m_placePlayerAt) {
-        for (const EntityId player : findAll<Interactor>()) {
+        if (const EntityId player = firstPlayer(); !player.isNull()) {
             Vec2 local = *m_placePlayerAt;
             if (const Entity* parent = m_scene->find(m_scene->find(player)->parent())) {
                 if (const auto inverse = m_scene->worldTransform(parent->id()).inverse()) {
@@ -110,7 +110,6 @@ void Game::beginScene(Scene scene, AssetId id)
                 }
             }
             m_scene->edit<Transform>(player)->position = local;
-            break;
         }
         m_placePlayerAt.reset();
     }
@@ -218,9 +217,8 @@ void Game::handleDialogueInput()
     }
     // The player's interact key, Enter or Space go on; up and down pick a choice.
     Key interact = Key::E;
-    for (const EntityId id : findAll<Interactor>()) {
-        interact = toKey(m_scene->find(id)->get<Interactor>()->key);
-        break;
+    if (const EntityId player = firstPlayer(); !player.isNull()) {
+        interact = toKey(m_scene->find(player)->get<Interactor>()->key);
     }
     const bool confirm = m_input.wasPressed(interact) || m_input.wasPressed(Key::Enter) || m_input.wasPressed(Key::Space);
     if (!line->choices.empty()) {
@@ -503,6 +501,12 @@ EntityId Game::find(std::string_view name) const
     return found;
 }
 
+EntityId Game::firstPlayer() const
+{
+    const std::vector<EntityId> players = findAll<Interactor>();
+    return players.empty() ? EntityId{} : players.front();
+}
+
 std::vector<EntityId> Game::findAllWith(std::string_view typeId) const
 {
     std::vector<EntityId> out;
@@ -569,9 +573,8 @@ bool Game::save(std::string_view slot)
     GameState& state = m_runner->state();
     state.scene = m_sceneId;
     state.playerPosition.reset();
-    for (const EntityId player : findAll<Interactor>()) {
+    if (const EntityId player = firstPlayer(); !player.isNull()) {
         state.playerPosition = worldPosition(player);
-        break;
     }
     if (const Status s = m_setup.saves->write(slot, serializeSave(state, m_setup.gameName)); !s) {
         m_log.error(kCategory, s.message);

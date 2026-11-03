@@ -20,11 +20,7 @@ bool isValidSlot(std::string_view slot)
 
 std::optional<std::string> env(const char* name)
 {
-    // Read-only, and only from the main thread.
-    if (const char* value = std::getenv(name); value != nullptr && *value != '\0') {
-        return std::string(value);
-    }
-    return std::nullopt;
+    return environmentVariable(name);
 }
 
 } // namespace

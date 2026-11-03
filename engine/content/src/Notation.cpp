@@ -1,6 +1,7 @@
 #include "lantern/content/Notation.hpp"
 
 #include "lantern/content/Content.hpp"   // isValidContentId
+#include "lantern/core/Numbers.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -604,10 +605,9 @@ std::optional<Action> parseActionNotation(std::string_view text, const NotationN
                 const Token t = p.next();
                 double seconds = -1.0;
                 if (t.kind == Token::Kind::Number) {
-                    const auto [ptr, ec] = std::from_chars(t.text.data(), t.text.data() + t.text.size(), seconds);
-                    if (ec != std::errc{} || ptr != t.text.data() + t.text.size()) {
-                        seconds = -1.0;
-                    }
+                    // lantern::parseNumber, not std::from_chars: Apple's standard
+                    // library has no from_chars for decimals (see Numbers.hpp).
+                    seconds = parseNumber(t.text).value_or(-1.0);
                 }
                 ok = (seconds >= 0.0 && seconds <= 3600.0) || p.fail("wait needs seconds from 0 to 3600, e.g. wait 1.5");
                 if (ok) {

@@ -1,6 +1,7 @@
 #include "lantern/core/Files.hpp"
 
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -83,6 +84,30 @@ std::filesystem::path executablePath()
     const std::filesystem::path self = std::filesystem::read_symlink("/proc/self/exe", ec);
     return ec ? std::filesystem::path() : self;
 #endif
+}
+
+std::optional<std::string> environmentVariable(const char* name)
+{
+#if defined(_WIN32)
+    // _dupenv_s copies the value into memory we must free.
+    char* buffer = nullptr;
+    std::size_t length = 0;
+    if (_dupenv_s(&buffer, &length, name) != 0 || buffer == nullptr) {
+        return std::nullopt;
+    }
+    std::string value(buffer);
+    std::free(buffer);
+#else
+    const char* raw = std::getenv(name);
+    if (raw == nullptr) {
+        return std::nullopt;
+    }
+    std::string value(raw);
+#endif
+    if (value.empty()) {
+        return std::nullopt;
+    }
+    return value;
 }
 
 } // namespace lantern
