@@ -34,9 +34,13 @@ else()
     install(DIRECTORY "${AXSLCC_OUT_DIR}/" DESTINATION runtime/axslc ${_component})
     if(WIN32)
         # DLLs Axmol puts beside its programs (e.g. ANGLE's OpenGL ES on Windows).
-        install(DIRECTORY "$<TARGET_FILE_DIR:lantern_editor>/" DESTINATION . ${_component} FILES_MATCHING PATTERN "*.dll")
+        # The build folder also has an "axslc" link to the shaders there;
+        # it is left out, since the real shaders are installed above (CMake
+        # refuses to install a link over that folder).
+        install(DIRECTORY "$<TARGET_FILE_DIR:lantern_editor>/" DESTINATION . ${_component}
+                FILES_MATCHING PATTERN "*.dll" PATTERN "axslc" EXCLUDE)
         install(DIRECTORY "$<TARGET_FILE_DIR:lantern_player>/" DESTINATION runtime ${_component}
-                FILES_MATCHING PATTERN "*.dll")
+                FILES_MATCHING PATTERN "*.dll" PATTERN "axslc" EXCLUDE)
     endif()
 endif()
 
