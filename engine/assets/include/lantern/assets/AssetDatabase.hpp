@@ -35,9 +35,9 @@ namespace lantern {
 
 class Scene;
 
-enum class AssetType { Image, Tileset, Audio, Font, Scene, Variables, Dialogue, Quest, Animation };
+enum class AssetType { Image, Tileset, Audio, Font, Scene, Variables, Dialogue, Quest, Animation, Script };
 
-/// "image", "tileset", "audio", "font", "scene", "variables", "dialogue", "quest", "animation"
+/// "image", "tileset", "audio", "font", "scene", "variables", "dialogue", "quest", "animation", "script"
 /// (as in .meta files and PropertyOptions::assetType).
 std::string_view assetTypeName(AssetType type);
 std::optional<AssetType> assetTypeFromName(std::string_view name);
@@ -46,7 +46,8 @@ std::optional<AssetType> assetTypeFromName(std::string_view name);
 /// .lscene (Scene: scenes have IDs too, so gameplay can say "go to that scene"
 /// and keep working when the scene file is renamed), .lvars (Variables),
 /// .ldialogue (Dialogue), .lquest (Quest): RPG content, see lantern_content;
-/// .lanim (Animation): flipbook clips cut from an image.
+/// .lanim (Animation): flipbook clips cut from an image; .lua (Script): gameplay
+/// code in Lua (run by lantern_gameplay's Script component).
 std::optional<AssetType> assetTypeForPath(const std::filesystem::path& path);
 
 /// How an image is smoothed when it is drawn larger or smaller than its size.

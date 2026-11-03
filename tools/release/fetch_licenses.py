@@ -23,6 +23,7 @@ LIBRARIES = {
     "lantern": ("Lantern Engine", "MIT", ["LICENSE"]),
     "axmol": ("Axmol Engine 2.11.5", "MIT", ["external/axmol/LICENSE"]),
     "inter-font": ("Inter font 4.0 (Lantern's default text font)", "SIL OFL 1.1", ["assets/fonts/Inter-LICENSE.txt"]),
+    "lua": ("Lua 5.4.9 (gameplay scripts)", "MIT", ["third_party/lua/LICENSE"]),
     "nlohmann-json": ("nlohmann/json 3.12.0", "MIT", [GH + "nlohmann/json/v3.12.0/LICENSE.MIT"]),
     "stb": ("stb_image, stb_truetype", "MIT or public domain", [GH + "nothings/stb/master/LICENSE"]),
     "astcenc": ("astc-encoder 5.3.0", "Apache-2.0", [GH + "ARM-software/astc-encoder/5.3.0/LICENSE.txt"]),

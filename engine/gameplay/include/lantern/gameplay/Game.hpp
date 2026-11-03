@@ -46,6 +46,9 @@
 
 namespace lantern {
 
+class ScriptHost;
+struct Script;
+
 /// Loads a scene asset for a scene change. Returns nothing (and says why in
 /// `error`) if it cannot.
 using SceneLoader = std::function<std::optional<Scene>(AssetId scene, std::string& error)>;
@@ -189,6 +192,9 @@ public:
     const std::string& interactionPrompt() const noexcept { return m_prompt; }
 
 private:
+    friend class ScriptHost;   // Lua scripts reach setActive and the player through it
+    friend struct Script;
+
     struct TriggerState {
         bool started = false;
         bool inside = false;
@@ -205,6 +211,8 @@ private:
     std::vector<EntityId> findAllWith(std::string_view typeId) const;
     // The player: the first object with an Interactor, or a null id.
     EntityId firstPlayer() const;
+    // The Lua state of this run, made when the first script starts.
+    std::shared_ptr<ScriptHost> scriptHost();
     void beginScene(Scene scene, AssetId id);
     void handleDialogueInput();
     void runBehaviours();
@@ -239,6 +247,7 @@ private:
     std::string m_prompt;
     std::size_t m_choice = 0;                         // the selected dialogue choice
     std::string m_shownLine;                          // to notice a new line (resets the choice)
+    std::shared_ptr<ScriptHost> m_scripts;            // Lua scripts' state; dropped when the game stops
 };
 
 } // namespace lantern

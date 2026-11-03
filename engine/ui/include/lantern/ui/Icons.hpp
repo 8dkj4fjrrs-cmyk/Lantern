@@ -47,6 +47,7 @@ enum class Icon {
     Save,          // a disk: save
     Undo,          // arrow curving back to the left
     Redo,          // arrow curving on to the right
+    Code,          // "</>": a script
 };
 
 /// Draws `icon` centred in `area`.

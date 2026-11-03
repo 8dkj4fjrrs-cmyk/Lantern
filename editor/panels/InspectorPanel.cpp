@@ -1,6 +1,7 @@
 #include "Panels.hpp"
 
 #include "lantern/gameplay/Components.hpp"
+#include "lantern/gameplay/Script.hpp"
 
 #include "../model/EditorPaths.hpp"
 
@@ -807,6 +808,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
                                  : asset.type == AssetType::Variables ? ui::Icon::Sliders
                                  : asset.type == AssetType::Dialogue ? ui::Icon::Terminal
                                  : asset.type == AssetType::Quest    ? ui::Icon::Check
+                                 : asset.type == AssetType::Script   ? ui::Icon::Code
                                                                    : ui::Icon::Folder,
                                  16.0f, ui::Color::hex(0xF2A93B));
     auto& name = header.emplace<ui::TextField>("Name");
@@ -1009,6 +1011,45 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
         buildContentAsset(content, asset);
     }
 
+    if (asset.type == AssetType::Script && db != nullptr) {
+        // Scripts are edited in a code editor; here: whether the code is
+        // valid, and its first lines.
+        const auto code = db->readText(id);
+        const auto problem = code ? checkScriptSyntax(*code, asset.path) : std::optional<std::string>("could not read the file");
+        auto& check = content.emplace<ui::Label>(problem ? "Problem: " + *problem : "No syntax errors.",
+                                                 ui::Label::Style::Small);
+        check.setWrap(true);
+        if (problem) {
+            check.setColor(ui::Color::hex(0xF26B65));
+        }
+        if (code) {
+            auto& preview = content.emplace<ui::Column>(0.0f, ui::Insets{8.0f, 6.0f, 8.0f, 6.0f});
+            std::size_t start = 0;
+            int shown = 0;
+            constexpr int kMaxLines = 40;
+            while (start <= code->size() && shown < kMaxLines) {
+                const std::size_t end = code->find('\n', start);
+                std::string line = code->substr(start, end == std::string::npos ? std::string::npos : end - start);
+                std::string expanded;   // tabs as four spaces
+                for (const char c : line) {
+                    expanded += c == '\t' ? std::string("    ") : std::string(1, c);
+                }
+                if (!expanded.empty() && expanded.back() == '\r') {
+                    expanded.pop_back();
+                }
+                preview.emplace<ui::Label>(expanded.empty() ? " " : expanded, ui::Label::Style::Small);
+                ++shown;
+                if (end == std::string::npos) {
+                    break;
+                }
+                start = end + 1;
+            }
+            if (shown == kMaxLines) {
+                preview.emplace<ui::Label>("…", ui::Label::Style::Faint);
+            }
+        }
+    }
+
     // Where it is used.
     if (db != nullptr) {
         const std::vector<std::string> scenes = db->scenesReferencing(id);
@@ -1037,6 +1078,15 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             revealInFileManager(assets->absolutePath(*a).parent_path());
         }
     });
+    if (asset.type == AssetType::Script) {
+        actions.emplace<ui::Button>("Open in Code Editor", [this, id] {
+            AssetDatabase* assets = m_editor.assets();
+            if (const AssetRecord* a = assets != nullptr ? assets->find(id) : nullptr) {
+                openWithDefaultApp(assets->absolutePath(*a));
+            }
+        }).setTooltip("Opens the script in the program your computer uses for .lua files, e.g. Visual Studio Code. "
+                      "Save it there, then press Play.");
+    }
     if (asset.type == AssetType::Animation) {
         actions.emplace<ui::Button>("Edit Clips", [this] { m_editor.showPanel(kAnimationPanel); })
             .setTooltip("Opens the Animation panel: choose frames, speed and looping, with a preview");

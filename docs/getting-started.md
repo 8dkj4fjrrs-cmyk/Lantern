@@ -81,6 +81,9 @@ Linux); see [exporting](exporting.md).
 - [Editor guide](editor.md): every panel and tool.
 - [Making The Lantern Keeper](making-the-lantern-keeper.md): a whole RPG,
   step by step.
+- [Scripting guide](scripting.md): your own gameplay in Lua, no compiler
+  needed. The starter's fireflies (`scripts/firefly.lua`) are a first
+  example to change.
 - [Gameplay guide](gameplay.md): triggers, quests and saving without code,
-  and C++ behaviours when you want more.
+  and C++ behaviours if you build Lantern from source.
 - [File formats](formats/scene.md): what Lantern writes, for version control.

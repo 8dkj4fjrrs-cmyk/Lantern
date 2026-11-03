@@ -291,6 +291,15 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
         draw.line(undo ? g(3.5f, cy - r) : g(12.5f, cy - r), tip, color, w * 0.9f);
         break;
     }
+    case Icon::Code: {
+        // "</>": two angle brackets and a slash between them.
+        const std::array<Vec2, 3> left{g(5.0f, 4.5f), g(1.8f, 8.0f), g(5.0f, 11.5f)};
+        const std::array<Vec2, 3> right{g(11.0f, 4.5f), g(14.2f, 8.0f), g(11.0f, 11.5f)};
+        draw.polyline(left, color, w);
+        draw.polyline(right, color, w);
+        draw.line(g(9.2f, 3.5f), g(6.8f, 12.5f), color, w);
+        break;
+    }
     case Icon::Brush: {
         // A handle going down-left into a rounded tip.
         draw.line(g(13.5f, 2.5f), g(7.2f, 8.8f), color, w * 1.2f);

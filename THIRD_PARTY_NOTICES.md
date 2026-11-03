@@ -6,9 +6,9 @@ built with Lantern ("shipped").
 
 Large dependencies are not copied into this repository: Axmol is downloaded
 by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
-Two small ones are kept in the repository, unmodified and with their license
-files: `third_party/stb/stb_truetype.h`, `third_party/stb/stb_image.h` and the
-Inter fonts in `assets/fonts/`.
+Small ones are kept in the repository, unmodified and with their license
+files: `third_party/stb/stb_truetype.h`, `third_party/stb/stb_image.h`, Lua's
+sources in `third_party/lua/` and the Inter fonts in `assets/fonts/`.
 
 ## Runtime backend
 
@@ -76,6 +76,18 @@ Axmol's core. Lantern replaces those with its own code,
 deletes yasio from its copy of Axmol so nothing builds it. The reason: yasio's
 upstream license adds the "Anti 996" License 1.0 to MIT, a non-standard
 license that Lantern does not want every game to carry.
+
+## Gameplay scripts (`engine/gameplay`)
+
+| Component | Version | License | Shipped? |
+|---|---|---|---|
+| [Lua](https://www.lua.org) (`third_party/lua/`) | 5.4.9 (`312b9ef`, from the official mirror github.com/lua/lua) | MIT | Yes: runs Lua scripts in the editor and in games |
+
+Kept in this repository, unmodified, with its license file. Only the language
+core and the base, coroutine, string, table, math and utf8 libraries are
+copied and built; the io, os, debug and package libraries are left out on
+purpose (see `third_party/lua/README.md` and ADR 0013). Its MIT notice goes
+with every game in `licenses/lua.txt`.
 
 ## Lantern UI (the editor's interface toolkit, `engine/ui`)
 

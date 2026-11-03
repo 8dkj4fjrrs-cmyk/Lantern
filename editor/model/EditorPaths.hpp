@@ -41,6 +41,9 @@ std::filesystem::path defaultProjectsDirectory();
 
 /// Shows `folder` in Finder / Explorer / the file manager. False if that failed.
 bool revealInFileManager(const std::filesystem::path& folder);
+/// Opens a file in the program the computer uses for its kind of file (e.g. a
+/// .lua script in a code editor). False if that failed.
+bool openWithDefaultApp(const std::filesystem::path& file);
 
 /// File names inside the config directory.
 inline constexpr const char* kPreferencesFileName = "editor.prefs";

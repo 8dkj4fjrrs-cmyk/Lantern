@@ -6,6 +6,7 @@
 
 #include "lantern/core/Version.hpp"
 #include "lantern/gameplay/Components.hpp"
+#include "lantern/gameplay/Script.hpp"
 #include "lantern/gameplay/GameModule.hpp"
 #include "lantern/scene/SceneFile.hpp"
 #include "lantern/ui/Context.hpp"
@@ -453,10 +454,17 @@ void EditorApp::createContent(AssetType type)
         extension = ContentFormat::kVariablesExtension;
         text = serializeVariables({});
         break;
+    case AssetType::Script:
+        // Lowercase with underscores, so require("new_script") works as written.
+        name = "new_script";
+        extension = ".lua";
+        text = newScriptTemplate(name);
+        break;
     default: return;
     }
     std::string error;
-    if (const auto id = m_assetDb->createTextAsset("content", name, extension, text, &error)) {
+    const char* folder = type == AssetType::Script ? "scripts" : "content";
+    if (const auto id = m_assetDb->createTextAsset(folder, name, extension, text, &error)) {
         log().info(kCategory, "Created " + m_assetDb->find(*id)->path + ".");
         selectAsset(*id);
         refreshAssets();
@@ -475,6 +483,9 @@ std::size_t EditorApp::checkContent()
     std::vector<FileIssue> issues;
     const ContentLibrary library = ContentLibrary::load(*m_assetDb, &issues);
     for (FileIssue& issue : library.check()) {
+        issues.push_back(std::move(issue));
+    }
+    for (FileIssue& issue : checkScripts(*m_assetDb)) {   // Lua syntax errors
         issues.push_back(std::move(issue));
     }
     // The open scene's triggers (as edited, saved or not).
@@ -1472,10 +1483,13 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("New Quest", "", [this] { createContent(AssetType::Quest); },
                                [this] { return m_assetDb != nullptr; }),
                       menuItem("New Variables", "", [this] { createContent(AssetType::Variables); },
+                               [this] { return m_assetDb != nullptr; }),
+                      menuItem("New Script", "", [this] { createContent(AssetType::Script); },
                                [this] { return m_assetDb != nullptr; })}});
     menuBar.addMenu({"Help", {menuItem("Welcome…", "", [this] { showWelcome(); }),
                               menuItem("Getting Started Guide", "", [this] { showGuide("getting-started.md"); }),
                               menuItem("Exporting Games", "", [this] { showGuide("exporting.md"); }),
+                              menuItem("Scripting Guide (Lua)", "", [this] { showGuide("scripting.md"); }),
                               ui::MenuItem::divider(),
                               menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
 }

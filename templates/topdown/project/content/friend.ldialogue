@@ -40,6 +40,11 @@
           "next": "make"
         },
         {
+          "id": "code",
+          "text": "Can I write code?",
+          "next": "code"
+        },
+        {
           "id": "bye",
           "text": "Bye!",
           "next": null
@@ -56,6 +61,12 @@
       "id": "make",
       "speaker": "friend",
       "text": "Paint the Ground tilemap, import your own art, write dialogues in the Game menu, and press the Build button to export.",
+      "next": "ask"
+    },
+    {
+      "id": "code",
+      "speaker": "friend",
+      "text": "Yes, in Lua! The fireflies in the grove run scripts/firefly.lua. Select it in the Assets panel and open it in your code editor.",
       "next": "ask"
     }
   ]

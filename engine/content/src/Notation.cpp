@@ -2,6 +2,8 @@
 
 #include "lantern/content/Content.hpp"   // isValidContentId
 #include "lantern/core/Numbers.hpp"
+#include "lantern/assets/AssetDatabase.hpp"
+#include "lantern/scene/Scene.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -629,6 +631,81 @@ std::optional<Action> parseActionNotation(std::string_view text, const NotationN
         *error = message;
     }
     return result;
+}
+
+// --- Names in a project ----------------------------------------------------------------------------
+
+namespace {
+std::string fileStemOf(const std::string& path)
+{
+    std::string name = path.substr(path.rfind('/') + 1);
+    return name.substr(0, name.rfind('.'));
+}
+} // namespace
+
+NotationNames projectNotationNames(const AssetDatabase* assets, const Scene* scene)
+{
+    NotationNames names;
+    if (assets != nullptr) {
+        // Assets by file name ("gems"), or by path when two share a name.
+        names.assetName = [assets](AssetId id) -> std::optional<std::string> {
+            const AssetRecord* a = assets->find(id);
+            if (a == nullptr) {
+                return std::nullopt;
+            }
+            const std::string stem = fileStemOf(a->path);
+            const auto all = assets->all(a->type);
+            const auto same =
+                std::count_if(all.begin(), all.end(), [&](const AssetRecord* o) { return fileStemOf(o->path) == stem; });
+            return same == 1 ? stem : a->path;
+        };
+        names.findAsset = [assets](std::string_view name, std::string_view kind,
+                                   std::string& error) -> std::optional<AssetId> {
+            const auto type = assetTypeFromName(kind);
+            if (!type) {
+                return std::nullopt;
+            }
+            std::vector<const AssetRecord*> matches;
+            for (const AssetRecord* a : assets->all(*type)) {
+                if (a->path == name || fileStemOf(a->path) == name) {
+                    matches.push_back(a);
+                }
+            }
+            if (matches.size() == 1) {
+                return matches.front()->id;
+            }
+            error = matches.empty() ? "there is no " + std::string(kind) + " called \"" + std::string(name) + "\""
+                                    : "several " + std::string(kind) + "s are called \"" + std::string(name)
+                                          + "\"; write the path, e.g. \"" + matches.front()->path + "\"";
+            return std::nullopt;
+        };
+    }
+    if (scene != nullptr) {
+        names.entityName = [scene](EntityId id) -> std::optional<std::string> {
+            const Entity* e = scene->find(id);
+            if (e == nullptr) {
+                return std::nullopt;
+            }
+            int same = 0;
+            scene->forEach([&](const Entity& o, int) { same += o.name() == e->name() ? 1 : 0; });
+            return same == 1 ? std::optional<std::string>(e->name()) : std::nullopt;
+        };
+        names.findEntity = [scene](std::string_view name, std::string& error) -> std::optional<EntityId> {
+            std::vector<EntityId> matches;
+            scene->forEach([&](const Entity& e, int) {
+                if (e.name() == name) {
+                    matches.push_back(e.id());
+                }
+            });
+            if (matches.size() == 1) {
+                return matches.front();
+            }
+            error = matches.empty() ? "there is no object called \"" + std::string(name) + "\" in this scene"
+                                    : "several objects are called \"" + std::string(name) + "\"; rename one";
+            return std::nullopt;
+        };
+    }
+    return names;
 }
 
 } // namespace lantern

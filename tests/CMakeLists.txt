@@ -44,6 +44,7 @@ add_executable(lantern_tests
     gameplay/test_animation_play.cpp
     gameplay/test_builtin_behaviours.cpp
     gameplay/test_game_content.cpp
+    gameplay/test_scripts.cpp
     content/test_logic.cpp
     content/test_content_files.cpp
     content/test_content_library.cpp

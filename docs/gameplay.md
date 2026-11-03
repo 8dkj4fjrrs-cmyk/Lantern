@@ -1,6 +1,11 @@
 # Writing gameplay in C++
 
-Lantern games are written in C++. You write **behaviours**: small classes
+> **New to programming, or using a downloaded Lantern?** Write gameplay in
+> **Lua** instead: no compiler, no rebuilding Lantern. See the
+> [scripting guide](scripting.md). This guide is for C++, which needs
+> Lantern built from source.
+
+Lantern games can be written in C++. You write **behaviours**: small classes
 attached to objects, like components, that run every frame while the game
 plays. This guide shows how, using the sample game in
 [`examples/sample_game`](../examples/sample_game) as the running example.

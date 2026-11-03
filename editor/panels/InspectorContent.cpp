@@ -75,12 +75,6 @@ std::string freeId(std::string_view stem, const std::set<std::string>& taken)
     }
 }
 
-std::string fileStem(const std::string& path)
-{
-    std::string name = path.substr(path.rfind('/') + 1);
-    return name.substr(0, name.rfind('.'));
-}
-
 } // namespace
 
 // --- Shared pieces ---------------------------------------------------------------------------------
@@ -93,65 +87,7 @@ ui::Widget& InspectorPanel::keyed(std::string key, ui::Widget& widget)
 
 NotationNames InspectorPanel::notationNames() const
 {
-    NotationNames names;
-    AssetDatabase* db = m_editor.assets();
-    if (db != nullptr) {
-        // Assets by file name ("gems"), or by path when two share a name.
-        names.assetName = [db](AssetId id) -> std::optional<std::string> {
-            const AssetRecord* a = db->find(id);
-            if (a == nullptr) {
-                return std::nullopt;
-            }
-            const std::string stem = fileStem(a->path);
-            const auto all = db->all(a->type);
-            const auto same = std::count_if(all.begin(), all.end(), [&](const AssetRecord* o) { return fileStem(o->path) == stem; });
-            return same == 1 ? stem : a->path;
-        };
-        names.findAsset = [db](std::string_view name, std::string_view kind, std::string& error) -> std::optional<AssetId> {
-            const auto type = assetTypeFromName(kind);
-            if (!type) {
-                return std::nullopt;
-            }
-            std::vector<const AssetRecord*> matches;
-            for (const AssetRecord* a : db->all(*type)) {
-                if (a->path == name || fileStem(a->path) == name) {
-                    matches.push_back(a);
-                }
-            }
-            if (matches.size() == 1) {
-                return matches.front()->id;
-            }
-            error = matches.empty() ? "there is no " + std::string(kind) + " called \"" + std::string(name) + "\""
-                                    : "several " + std::string(kind) + "s are called \"" + std::string(name)
-                                          + "\"; write the path, e.g. \"" + matches.front()->path + "\"";
-            return std::nullopt;
-        };
-    }
-    const Scene* scene = &m_editor.document().scene();
-    names.entityName = [scene](EntityId id) -> std::optional<std::string> {
-        const Entity* e = scene->find(id);
-        if (e == nullptr) {
-            return std::nullopt;
-        }
-        int same = 0;
-        scene->forEach([&](const Entity& o, int) { same += o.name() == e->name() ? 1 : 0; });
-        return same == 1 ? std::optional<std::string>(e->name()) : std::nullopt;
-    };
-    names.findEntity = [scene](std::string_view name, std::string& error) -> std::optional<EntityId> {
-        std::vector<EntityId> matches;
-        scene->forEach([&](const Entity& e, int) {
-            if (e.name() == name) {
-                matches.push_back(e.id());
-            }
-        });
-        if (matches.size() == 1) {
-            return matches.front();
-        }
-        error = matches.empty() ? "there is no object called \"" + std::string(name) + "\" in this scene"
-                                : "several objects are called \"" + std::string(name) + "\"; rename one";
-        return std::nullopt;
-    };
-    return names;
+    return projectNotationNames(m_editor.assets(), &m_editor.document().scene());
 }
 
 void InspectorPanel::conditionField(ui::Widget& parent, const std::string& key, const std::optional<Condition>& value,

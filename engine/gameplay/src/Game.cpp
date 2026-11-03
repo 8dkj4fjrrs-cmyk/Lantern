@@ -5,6 +5,8 @@
 #include "lantern/gameplay/Behaviour.hpp"
 #include "lantern/gameplay/Components.hpp"
 
+#include "ScriptHost.hpp"
+
 #include <algorithm>
 #include <exception>
 
@@ -47,6 +49,8 @@ void Game::start(const Scene& scene, AssetId sceneId)
     m_events.clear();
     m_input.releaseAll();
     m_input.endFrame();
+    m_scene.reset();
+    m_scripts.reset();   // scripts start from scratch, and read their files again
     m_runner->setState(GameState::newGame(*m_setup.content));   // a new game
     beginScene(scene, sceneId);
 }
@@ -54,6 +58,7 @@ void Game::start(const Scene& scene, AssetId sceneId)
 void Game::stop()
 {
     m_scene.reset();
+    m_scripts.reset();
     m_toDestroy.clear();
     m_nextScene.reset();
     m_arriveAt.clear();
@@ -499,6 +504,14 @@ EntityId Game::find(std::string_view name) const
         });
     }
     return found;
+}
+
+std::shared_ptr<ScriptHost> Game::scriptHost()
+{
+    if (m_scripts == nullptr) {
+        m_scripts = std::make_shared<ScriptHost>(*this, m_log);
+    }
+    return m_scripts;
 }
 
 EntityId Game::firstPlayer() const

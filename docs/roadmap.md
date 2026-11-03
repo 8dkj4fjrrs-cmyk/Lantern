@@ -82,11 +82,19 @@ Delivered in 0.8.0-alpha:
 
 In rough order of importance:
 
-1. **Verify macOS and Windows.** Put the repository on GitHub, let CI build
-   and test all three systems, and fix what they reveal. Until then the
-   alpha is "tested on Linux".
-2. **Custom C++ without building Lantern**: games' own modules loaded by a
-   downloaded editor and player, or a supported way to build only the game.
+1. **Verify macOS and Windows.** ~~Put the repository on GitHub, let CI build
+   and test all three systems, and fix what they reveal.~~ On GitHub, macOS
+   now builds and passes every test, including those in real windows.
+   Windows builds the engine and passes its unit tests; its full build is
+   being finished. Trying the editor by hand on each is still to do.
+2. **Custom gameplay without building Lantern**: ~~games' own modules
+   loaded by a downloaded editor~~ — **Lua scripts** do this (ADR 0013).
+   Next for scripts:
+   - script properties shown in the Inspector;
+   - more than one script per object;
+   - reloading scripts while the game plays.
+
+   Loading compiled C++ modules is still open, for games that need C++.
 3. **Sound** (Axmol audio with OpenAL Soft linked dynamically, LGPL), and
    gamepad input.
 4. **Signing** of macOS apps and Windows programs, and installers.

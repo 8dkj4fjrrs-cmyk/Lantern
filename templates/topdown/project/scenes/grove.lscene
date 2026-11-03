@@ -50,6 +50,147 @@
     },
     {
       "id": "5354020000000002",
+      "name": "Firefly 1",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [744, 456],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [12, 12],
+          "color": "#fff2a6ff",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.Script",
+          "script": "535441525400000e"
+        }
+      ]
+    },
+    {
+      "id": "5354020000000003",
+      "parent": "5354020000000002",
+      "name": "Glow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [34, 34],
+          "color": "#ffe68055",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "5354020000000004",
+      "name": "Firefly 2",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [888, 336],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [12, 12],
+          "color": "#fff2a6ff",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.Script",
+          "script": "535441525400000e"
+        }
+      ]
+    },
+    {
+      "id": "5354020000000005",
+      "parent": "5354020000000004",
+      "name": "Glow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [34, 34],
+          "color": "#ffe68055",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "5354020000000006",
+      "name": "Firefly 3",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [816, 264],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [12, 12],
+          "color": "#fff2a6ff",
+          "filled": true,
+          "lineWidth": 2
+        },
+        {
+          "type": "lantern.Script",
+          "script": "535441525400000e"
+        }
+      ]
+    },
+    {
+      "id": "5354020000000007",
+      "parent": "5354020000000006",
+      "name": "Glow",
+      "active": true,
+      "components": [
+        {
+          "type": "lantern.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "lantern.Shape",
+          "kind": "ellipse",
+          "size": [34, 34],
+          "color": "#ffe68055",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "5354020000000008",
       "name": "Path to the Meadow",
       "active": true,
       "components": [
@@ -73,7 +214,7 @@
       ]
     },
     {
-      "id": "5354020000000003",
+      "id": "5354020000000009",
       "name": "From Meadow",
       "active": true,
       "components": [
@@ -86,7 +227,7 @@
       ]
     },
     {
-      "id": "5354020000000004",
+      "id": "535402000000000a",
       "name": "Player",
       "active": true,
       "components": [
@@ -128,8 +269,8 @@
       ]
     },
     {
-      "id": "5354020000000005",
-      "parent": "5354020000000004",
+      "id": "535402000000000b",
+      "parent": "535402000000000a",
       "name": "Camera",
       "active": true,
       "components": [
@@ -152,8 +293,8 @@
       ]
     },
     {
-      "id": "5354020000000006",
-      "parent": "5354020000000005",
+      "id": "535402000000000c",
+      "parent": "535402000000000b",
       "name": "Quest Log",
       "active": true,
       "components": [
@@ -176,8 +317,8 @@
       ]
     },
     {
-      "id": "5354020000000007",
-      "parent": "5354020000000005",
+      "id": "535402000000000d",
+      "parent": "535402000000000b",
       "name": "Help",
       "active": true,
       "components": [
@@ -200,8 +341,8 @@
       ]
     },
     {
-      "id": "5354020000000008",
-      "parent": "5354020000000005",
+      "id": "535402000000000e",
+      "parent": "535402000000000b",
       "name": "Prompt",
       "active": true,
       "components": [
@@ -224,8 +365,8 @@
       ]
     },
     {
-      "id": "5354020000000009",
-      "parent": "5354020000000005",
+      "id": "535402000000000f",
+      "parent": "535402000000000b",
       "name": "Dialogue Box",
       "active": false,
       "components": [
@@ -250,8 +391,8 @@
       ]
     },
     {
-      "id": "535402000000000a",
-      "parent": "5354020000000009",
+      "id": "5354020000000010",
+      "parent": "535402000000000f",
       "name": "Speaker",
       "active": true,
       "components": [
@@ -274,8 +415,8 @@
       ]
     },
     {
-      "id": "535402000000000b",
-      "parent": "5354020000000009",
+      "id": "5354020000000011",
+      "parent": "535402000000000f",
       "name": "Line",
       "active": true,
       "components": [
@@ -298,8 +439,8 @@
       ]
     },
     {
-      "id": "535402000000000c",
-      "parent": "5354020000000009",
+      "id": "5354020000000012",
+      "parent": "535402000000000f",
       "name": "Choices",
       "active": true,
       "components": [
@@ -322,8 +463,8 @@
       ]
     },
     {
-      "id": "535402000000000d",
-      "parent": "5354020000000009",
+      "id": "5354020000000013",
+      "parent": "535402000000000f",
       "name": "Continue",
       "active": true,
       "components": [

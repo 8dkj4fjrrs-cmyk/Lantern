@@ -12,9 +12,13 @@ add_library(lantern_gameplay STATIC
     src/SaveStore.cpp
     src/Game.cpp
     src/GameModule.cpp
-    src/Input.cpp)
+    src/Input.cpp
+    src/ScriptApi.cpp
+    src/ScriptHost.cpp)
 add_library(lantern::gameplay ALIAS lantern_gameplay)
 
 target_include_directories(lantern_gameplay PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(lantern_gameplay PUBLIC lantern::core lantern::scene lantern::assets lantern::content)
+target_link_libraries(lantern_gameplay
+    PUBLIC lantern::core lantern::scene lantern::assets lantern::content
+    PRIVATE lantern::lua)   # Lua scripts (Script.hpp); scripts never see Lua's C API
 lantern_set_warnings(lantern_gameplay)

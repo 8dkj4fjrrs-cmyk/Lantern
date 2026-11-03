@@ -91,6 +91,7 @@ endif()
 # ---------------------------------------------------------------------------
 # Our modules
 # ---------------------------------------------------------------------------
+add_subdirectory(third_party/lua)   # the Lua language, for gameplay scripts (ADR 0013)
 add_subdirectory(engine/core)
 add_subdirectory(engine/scene)
 add_subdirectory(engine/assets)

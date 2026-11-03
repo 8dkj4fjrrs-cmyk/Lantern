@@ -7,8 +7,9 @@ A small game made only of Lantern's built-in components (no C++): a meadow
 and a grove joined by a path, a hero who walks in four directions (Top-Down
 Controller), a camera that stays on the map (Camera Bounds), doors that
 arrive at named spots (Scene Door), a friend and a signpost to talk to, and
-the on-screen dialogue box, prompt and quest log. The art is The Lantern
-Keeper's (original, MIT). Fixed IDs keep the output the same every run.
+the on-screen dialogue box, prompt and quest log. Fireflies in the grove run
+a Lua script (scripts/firefly.lua), the example of scripting. The art is The
+Lantern Keeper's (original, MIT). Fixed IDs keep the output the same every run.
 """
 import json
 import random
@@ -21,7 +22,7 @@ ART = ROOT / "examples" / "lantern_keeper" / "project" / "assets" / "art"
 
 _NAMES = ["tiles.png", "hero_walk.png", "wren.png", "sign.png", "tiles.ltileset", "hero.lanim", "friend.lanim",
           "meadow.lscene", "grove.lscene", "starter.lvars", "friend.ldialogue", "sign.ldialogue",
-          "hello.lquest"]
+          "hello.lquest", "firefly.lua"]
 IDS = {n: f"5354415254{i + 1:06x}" for i, n in enumerate(_NAMES)}     # "START..."
 TILE = {".": 0, ",": 1, "=": 2, "~": 3, "#": 4, "T": 5, "b": 11, '"': 23}
 SOLID = [3, 4, 5, 6, 7, 8, 9, 11, 13, 15, 17, 18, 20, 22, 23]
@@ -51,6 +52,28 @@ def to_json(value, indent=0):
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(to_json(data) + "\n")
+
+
+FIREFLY = """-- firefly.lua: a firefly that drifts in loops around where it starts.
+-- This is a Lua script. Every firefly in the grove has a Script component
+-- that runs this file. Change the numbers, save, and press Play again.
+-- Help > Scripting Guide lists everything a script can use.
+
+-- start runs once for each firefly. self is that firefly's own table:
+-- self.object is the firefly, and anything else you put in self stays there.
+function start(self)
+    self.homeX, self.homeY = self.object:position()
+    self.time = math.random() * 10   -- so the fireflies are not all in step
+end
+
+-- update runs every frame. dt is the time since the last frame, in seconds.
+function update(self, dt)
+    self.time = self.time + dt
+    local x = self.homeX + math.cos(self.time * 1.3) * 40
+    local y = self.homeY + math.sin(self.time * 2.1) * 20
+    self.object:setPosition(x, y)
+end
+"""
 
 
 def meta(name, kind, extra=None):
@@ -199,7 +222,16 @@ def grove():
                 g[r][c] = ","
 
     def extras(s):
-        pass
+        # Fireflies over the clearing, each moved by scripts/firefly.lua.
+        for i, (col, row) in enumerate([(15, 6), (18, 8.5), (16.5, 10)]):
+            x, y = s.at(col, row)
+            fly = s.add(f"Firefly {i + 1}", [
+                transform(x, y),
+                {"type": "lantern.Shape", "kind": "ellipse", "size": [12, 12], "color": "#fff2a6ff", "filled": True,
+                 "lineWidth": 2},
+                {"type": "lantern.Script", "script": IDS["firefly.lua"]}])
+            s.add("Glow", [transform(), {"type": "lantern.Shape", "kind": "ellipse", "size": [34, 34],
+                                         "color": "#ffe68055", "filled": True, "lineWidth": 2}], parent=fly)
 
     return build_scene("Grove", "535402", g, (3, 7.5), ("Path to the Meadow", -0.5, 7.5, "meadow.lscene", "From Grove"),
                        ("From Meadow", 2.5, 7.5), extras)
@@ -256,6 +288,7 @@ def main():
         {"id": "ask", "speaker": "friend", "text": "What would you like to know?", "choices": [
             {"id": "move", "text": "How do I walk?", "next": "move"},
             {"id": "make", "text": "How do I make it my own?", "next": "make"},
+            {"id": "code", "text": "Can I write code?", "next": "code"},
             {"id": "bye", "text": "Bye!", "next": None}]},
         {"id": "move", "speaker": "friend", "text": "The Top-Down Controller on the Player walks with the arrow keys "
                                                     "or W A S D, and plays the walk_ clips of its Animator.",
@@ -263,11 +296,19 @@ def main():
         {"id": "make", "speaker": "friend", "text": "Paint the Ground tilemap, import your own art, write dialogues "
                                                     "in the Game menu, and press the Build button to export.",
          "next": "ask"},
+        {"id": "code", "speaker": "friend", "text": "Yes, in Lua! The fireflies in the grove run scripts/firefly.lua. "
+                                                    "Select it in the Assets panel and open it in your code editor.",
+         "next": "ask"},
     ]))
     write(content / "friend.ldialogue.meta", meta("friend.ldialogue", "dialogue"))
     write(content / "sign.ldialogue", dialogue([], [
         {"id": "read", "text": "East: the grove. (Walk into the path at the edge of the map.)", "next": None}]))
     write(content / "sign.ldialogue.meta", meta("sign.ldialogue", "dialogue"))
+
+    scripts = root / "scripts"
+    scripts.mkdir(parents=True, exist_ok=True)
+    (scripts / "firefly.lua").write_text(FIREFLY, encoding="utf-8")
+    write(scripts / "firefly.lua.meta", meta("firefly.lua", "script"))
 
     for old in ("scenes/main.lscene", "scenes/main.lscene.meta"):
         (root / old).unlink(missing_ok=True)

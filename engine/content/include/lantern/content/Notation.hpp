@@ -34,6 +34,9 @@
 
 namespace lantern {
 
+class AssetDatabase;
+class Scene;
+
 /// How names in the written form map to IDs. Any member may be empty
 /// (names then cannot be used, and IDs are written as hex).
 struct NotationNames {
@@ -56,5 +59,11 @@ std::optional<Condition> parseConditionNotation(std::string_view text, const Not
                                                 std::string* error = nullptr);
 std::optional<Action> parseActionNotation(std::string_view text, const NotationNames& names = {},
                                           std::string* error = nullptr);
+
+/// The usual names for a project: assets by file name ("gems", or the path
+/// when two files share a name) and objects of `scene` by their name (when
+/// unique). Either may be null; neither is owned, and both must outlive the
+/// result. Used by the editor's fields and by Lua scripts.
+NotationNames projectNotationNames(const AssetDatabase* assets, const Scene* scene);
 
 } // namespace lantern

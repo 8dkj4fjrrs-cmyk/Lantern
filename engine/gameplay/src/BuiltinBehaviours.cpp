@@ -3,6 +3,7 @@
 #include "lantern/assets/Animation.hpp"
 #include "lantern/gameplay/Components.hpp"
 #include "lantern/gameplay/Game.hpp"
+#include "lantern/gameplay/Script.hpp"
 
 #include <algorithm>
 
@@ -155,6 +156,7 @@ void registerBuiltinBehaviours(ComponentRegistry& registry)
     static_cast<void>(registry.add(TopDownController::componentType()));
     static_cast<void>(registry.add(SceneDoor::componentType()));
     static_cast<void>(registry.add(CameraBounds::componentType()));
+    static_cast<void>(registry.add(Script::componentType()));
 }
 
 } // namespace lantern

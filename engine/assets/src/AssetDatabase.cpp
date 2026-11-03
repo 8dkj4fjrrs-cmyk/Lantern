@@ -139,6 +139,7 @@ std::string_view assetTypeName(AssetType type)
     case AssetType::Dialogue: return "dialogue";
     case AssetType::Quest: return "quest";
     case AssetType::Animation: return "animation";
+    case AssetType::Script: return "script";
     }
     return "image";
 }
@@ -146,7 +147,8 @@ std::string_view assetTypeName(AssetType type)
 std::optional<AssetType> assetTypeFromName(std::string_view name)
 {
     for (AssetType t : {AssetType::Image, AssetType::Tileset, AssetType::Audio, AssetType::Font, AssetType::Scene,
-                        AssetType::Variables, AssetType::Dialogue, AssetType::Quest, AssetType::Animation}) {
+                        AssetType::Variables, AssetType::Dialogue, AssetType::Quest, AssetType::Animation,
+                        AssetType::Script}) {
         if (assetTypeName(t) == name) {
             return t;
         }
@@ -184,6 +186,9 @@ std::optional<AssetType> assetTypeForPath(const fs::path& path)
     }
     if (ext == AnimationFormat::kExtension) {
         return AssetType::Animation;
+    }
+    if (ext == ".lua") {
+        return AssetType::Script;
     }
     return std::nullopt;
 }

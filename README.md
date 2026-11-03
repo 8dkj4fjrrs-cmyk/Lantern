@@ -24,7 +24,8 @@ What is in it:
 - **Exporting**: **Build** checks the project and makes a stand-alone game
   with the license texts it must carry.
 - **Gameplay** without code (built-in behaviours, triggers, dialogue, quests,
-  saves), and C++ behaviours in game modules when you want more.
+  saves); **Lua scripts** when you want more, with no compiler needed; and
+  C++ behaviours in game modules for those who build Lantern from source.
 - **[The Lantern Keeper](examples/lantern_keeper)**, a small finished RPG
   ([how it was made](docs/making-the-lantern-keeper.md)).
 
@@ -32,7 +33,8 @@ What is in it:
 
 - **[Getting started](docs/getting-started.md)**: from a new project to a
   game you can share, in half an hour.
-- [Editor guide](docs/editor.md) · [Gameplay guide](docs/gameplay.md) ·
+- [Editor guide](docs/editor.md) · [Scripting in Lua](docs/scripting.md) ·
+  [Gameplay in C++](docs/gameplay.md) ·
   [Exporting](docs/exporting.md) · [File formats](docs/formats/scene.md) ·
   [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
@@ -46,7 +48,7 @@ cmake --workflow --preset dev
 
 Full instructions per platform: [docs/building.md](docs/building.md).
 Using the editor: [docs/editor.md](docs/editor.md).
-Writing gameplay in C++: [docs/gameplay.md](docs/gameplay.md).
+Writing gameplay in Lua: [docs/scripting.md](docs/scripting.md); in C++: [docs/gameplay.md](docs/gameplay.md).
 What comes next: [docs/roadmap.md](docs/roadmap.md).
 
 ## Repository layout
@@ -56,7 +58,7 @@ engine/core/     Engine lifecycle, logging, version (no third-party deps)
 engine/scene/    Scenes, entities, components, scene and project files (no backend)
 engine/assets/   Asset IDs (.meta files), import, image checks, tilesets (no backend)
 engine/content/  RPG content: variables, dialogue, quests, conditions, actions, saves (no backend)
-engine/gameplay/ Behaviours, game modules, input, collision queries, scene changes (no backend)
+engine/gameplay/ Behaviours, Lua scripts, game modules, input, collision queries, scene changes (no backend)
 engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application

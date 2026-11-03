@@ -94,7 +94,8 @@ AssetsPanel::AssetsPanel(EditorServices& editor)
         openMenuAt(m_editor.ui(), plus.bounds(),
                    {std::move(scene), ui::MenuItem::divider(), content("New Dialogue", AssetType::Dialogue),
                     content("New Quest", AssetType::Quest), content("New Variables", AssetType::Variables),
-                    ui::MenuItem::divider(), std::move(import)});
+                    ui::MenuItem::divider(), content("New Script", AssetType::Script), ui::MenuItem::divider(),
+                    std::move(import)});
     });
     auto& search = toolbar.emplace<ui::TextField>("Search assets");
     search.setLeadingIcon(ui::Icon::Search);
@@ -229,6 +230,7 @@ void AssetsPanel::rebuild()
             case AssetType::Variables: item.icon = ui::Icon::Sliders; item.detail = "Variables"; break;
             case AssetType::Dialogue: item.icon = ui::Icon::Terminal; item.detail = "Dialogue"; break;
             case AssetType::Quest: item.icon = ui::Icon::Check; item.detail = "Quest"; break;
+            case AssetType::Script: item.icon = ui::Icon::Code; item.detail = "Lua script"; break;
             case AssetType::Animation:
                 item.icon = ui::Icon::Play;
                 item.detail = asset->animation ? std::to_string(asset->animation->clips.size())

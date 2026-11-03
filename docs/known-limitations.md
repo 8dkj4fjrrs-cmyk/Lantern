@@ -53,14 +53,16 @@ untested.**
 
 ## Editor
 
-- **Your own C++ behaviours need Lantern built from source.** Game modules
-  are linked into the editor and the player when they are built (see the
-  [gameplay guide](gameplay.md)). A downloaded Lantern has:
-  - the built-in components;
-  - Top-Down Controller, Scene Door and Camera Bounds;
-  - the modules of its two example games.
-
-  This is the main thing to change after the alpha.
+- **Custom gameplay code:** write it in **Lua** ([scripting guide](scripting.md));
+  a downloaded Lantern runs scripts. **C++** behaviours still need Lantern
+  built from source: game modules are linked into the editor and the player
+  when they are built ([gameplay guide](gameplay.md)).
+- Lua scripts, for now:
+  - one Script per object (share code with `require`);
+  - no per-object settings in the Inspector (put them in the script, or
+    look at the object's name);
+  - edits are picked up when Play is pressed again, not while playing;
+  - no debugger: use `print`, which writes to the Console.
 - Scenes cannot be renamed, and folders cannot be created, in the editor.
   Use your file manager; the editor notices.
 - One object can be selected at a time. There are no prefabs (reusable

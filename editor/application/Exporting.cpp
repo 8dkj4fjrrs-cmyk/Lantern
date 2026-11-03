@@ -4,6 +4,7 @@
 #include "lantern/content/ContentLibrary.hpp"
 #include "lantern/core/Version.hpp"
 #include "lantern/gameplay/Components.hpp"
+#include "lantern/gameplay/Script.hpp"
 #include "lantern/scene/Project.hpp"
 #include "lantern/scene/SceneFile.hpp"
 
@@ -50,6 +51,9 @@ ProjectCheck checkProject(const std::filesystem::path& folder, const ComponentRe
     for (FileIssue& issue : content.check()) {
         issues.push_back(std::move(issue));
     }
+    for (FileIssue& issue : checkScripts(assets)) {   // Lua syntax errors
+        issues.push_back(std::move(issue));
+    }
     for (const AssetRecord* scene : assets.all(AssetType::Scene)) {
         SceneLoadResult loaded = loadSceneFile(assets.absolutePath(*scene), registry);
         for (FileIssue& issue : loaded.issues) {
@@ -62,6 +66,10 @@ ProjectCheck checkProject(const std::filesystem::path& folder, const ComponentRe
             issues.push_back(std::move(issue));
         }
         loaded.scene->forEach([&](const Entity& e, int) {
+            if (const Script* s = e.get<Script>(); s != nullptr && s->script.isNull()) {
+                issues.push_back({FileIssue::Severity::Warning, scene->path + ", object '" + e.name() + "', Script",
+                                  "No script file is chosen, so it does nothing."});
+            }
             const Trigger* t = e.get<Trigger>();
             if (t == nullptr) {
                 return;

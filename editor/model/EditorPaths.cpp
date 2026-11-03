@@ -70,10 +70,16 @@ std::filesystem::path defaultProjectsDirectory()
 
 bool revealInFileManager(const std::filesystem::path& folder)
 {
+    // Opening a folder with the system's "open" shows it in the file manager.
+    return openWithDefaultApp(folder);
+}
+
+bool openWithDefaultApp(const std::filesystem::path& file)
+{
     // Quoted for the shell, so spaces and quotes in the path are safe.
 #if defined(_WIN32)
     std::string quoted = "\"";
-    for (char c : folder.string()) {
+    for (char c : file.string()) {
         if (c != '"') {
             quoted += c;
         }
@@ -82,7 +88,7 @@ bool revealInFileManager(const std::filesystem::path& folder)
     const std::string command = "explorer " + quoted;
 #else
     std::string quoted = "'";
-    for (char c : folder.string()) {
+    for (char c : file.string()) {
         quoted += c == '\'' ? std::string("'\\''") : std::string(1, c);
     }
     quoted += "'";

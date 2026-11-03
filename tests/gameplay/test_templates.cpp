@@ -83,7 +83,8 @@ TEST_CASE("A project made from the Top-Down Starter plays without any C++", "[te
     p.tap(Key::E);
     REQUIRE(game.isInDialogue());
     for (int i = 0; i < 6 && game.isInDialogue(); ++i) {
-        p.tap(Key::Down);   // choose "Bye!"
+        p.tap(Key::Down);   // choose "Bye!", the fourth answer
+        p.tap(Key::Down);
         p.tap(Key::Down);
         p.tap(Key::E);
     }
@@ -95,6 +96,14 @@ TEST_CASE("A project made from the Top-Down Starter plays without any C++", "[te
     p.frames(2);
     REQUIRE(game.scene().name() == "Grove");
     CHECK(game.worldPosition(p.player()).x == Catch::Approx(game.worldPosition(game.find("From Meadow")).x));
+
+    // The fireflies fly: a Lua script (scripts/firefly.lua) moves them.
+    const EntityId firefly = game.find("Firefly 1");
+    REQUIRE_FALSE(firefly.isNull());
+    const Vec2 before = game.worldPosition(firefly);
+    p.frames(30);
+    const Vec2 after = game.worldPosition(firefly);
+    CHECK((after.x != before.x || after.y != before.y));
     p.stand(game.colliderBox(game.find("Path to the Meadow"))->center());
     p.frames(2);
     REQUIRE(game.scene().name() == "Meadow");

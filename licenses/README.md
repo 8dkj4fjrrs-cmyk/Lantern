@@ -8,6 +8,7 @@ Their license texts are in this folder; games carry a copy of it.
 | `lantern.txt` | Lantern Engine | MIT |
 | `axmol.txt` | Axmol Engine 2.11.5 | MIT |
 | `inter-font.txt` | Inter font 4.0 (Lantern's default text font) | SIL OFL 1.1 |
+| `lua.txt` | Lua 5.4.9 (gameplay scripts) | MIT |
 | `nlohmann-json.txt` | nlohmann/json 3.12.0 | MIT |
 | `stb.txt` | stb_image, stb_truetype | MIT or public domain |
 | `astcenc.txt` | astc-encoder 5.3.0 | Apache-2.0 |
