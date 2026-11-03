@@ -1,11 +1,25 @@
-# Release: on a version tag (v0.9.0-alpha...), build, test and package
-# Lantern on each system, and attach the zips to a draft GitHub release
-# whose notes are that version's section of CHANGELOG.md. See docs/releasing.md.
+# Release: build, test and package Lantern on each system, and attach the
+# zips to a draft GitHub release whose notes are that version's section of
+# CHANGELOG.md. See docs/releasing.md.
+#
+# Two ways to start it:
+#   * push a version tag (v0.9.0-alpha...);
+#   * or, on GitHub: Actions > Release > Run workflow, typing the version
+#     (e.g. 0.9.0-alpha). The release then creates the tag on that commit.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, as in CHANGELOG.md (e.g. 0.9.0-alpha)"
+        required: true
+
+env:
+  # The tag of this release: the pushed tag, or v + the version typed in.
+  TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
 
 permissions:
   contents: write
@@ -20,6 +34,16 @@ jobs:
         os: [macos-14, ubuntu-24.04, windows-2022]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the version matches CMakeLists.txt
+        shell: bash
+        run: |
+          major_minor_patch=$(sed -n 's/^ *VERSION \([0-9.]*\)$/\1/p' CMakeLists.txt | head -1)
+          suffix=$(sed -n 's/^set(LANTERN_VERSION_SUFFIX "\(.*\)")$/\1/p' CMakeLists.txt)
+          if [ "v${major_minor_patch}${suffix}" != "$TAG" ]; then
+            echo "Releasing $TAG, but CMakeLists.txt says v${major_minor_patch}${suffix}" >&2
+            exit 1
+          fi
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -72,7 +96,7 @@ jobs:
         run: |
           # The section for this version: from its "## 0.9.0-alpha" heading
           # to the next "## " heading.
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v v="$version" '
             /^## / { if (found) exit; if (index($0, "## " v " ") == 1 || $0 == "## " v) found = 1; next }
             found { print }
@@ -88,4 +112,6 @@ jobs:
       - name: Draft release with the packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" dist/*.zip --draft --repo "${{ github.repository }}" --title "Lantern ${{ github.ref_name }}" --notes-file notes.md
+        # --target: when the tag does not exist yet (Run workflow), it is
+        # made on the commit that was built.
+        run: gh release create "$TAG" dist/*.zip --draft --target "${{ github.sha }}" --repo "${{ github.repository }}" --title "Lantern $TAG" --notes-file notes.md

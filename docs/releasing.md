@@ -45,10 +45,14 @@ folder), so the installed layout is what gets tested:
 
 ## 3. Publish
 
-1. Commit, then tag: `git tag -a v0.9.0-alpha -m "Lantern 0.9.0-alpha"` and
-   push the tag.
-2. The **release** workflow (`.github/workflows/release.yml`) runs on the
-   tag:
+1. Commit and push. Then start the release in one of two ways:
+   - on GitHub: **Actions › Release › Run workflow**, type the version
+     (`0.9.0-alpha`) and press **Run workflow**. The release creates the
+     tag `v0.9.0-alpha` on the commit it built;
+   - or tag yourself: `git tag -a v0.9.0-alpha -m "Lantern 0.9.0-alpha"`
+     and push the tag.
+2. The **release** workflow (`.github/workflows/release.yml`):
+   - first checks that the version matches `CMakeLists.txt`;
    - builds, tests and packages on Linux, macOS and Windows;
    - attaches the three `.zip` files to a draft GitHub release, with that
      version's section of `CHANGELOG.md` as its notes. Its heading must
