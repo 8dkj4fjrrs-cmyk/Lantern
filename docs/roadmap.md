@@ -16,7 +16,8 @@ so the plan stays in one place.
 | 6 | RPG content systems: dialogue, quests, conditions, actions, events, content validation, save games | Done (0.6) — [ADR 0008](adr/0008-rpg-content.md) |
 | 6.5 | *Added:* flipbook (sprite-sheet) animation | Done (0.6.5) — [ADR 0009](adr/0009-flipbook-animation.md) |
 | 7 | Complete sample game: a small top-down RPG built from a fresh project | Done (0.7) — [ADR 0010](adr/0010-demo-game.md), [the game](../examples/lantern_keeper) |
-| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Done (0.8.0-alpha) — [ADR 0011](adr/0011-public-alpha.md); Linux verified, macOS and Windows not yet ([known limitations](known-limitations.md)) |
+| 8 | Public alpha: project wizard, packaging and export, clean builds, onboarding, release | Done (0.8.0-alpha) — [ADR 0011](adr/0011-public-alpha.md) |
+| — | *After the alpha:* Lua scripting; no yasio or networking; macOS and Windows verified in CI | Done (0.9.0-alpha) — [ADR 0012](adr/0012-no-yasio.md), [ADR 0013](adr/0013-lua-scripting.md); [known limitations](known-limitations.md) |
 | — | *Added, after the alpha:* timeline animation editor | Later |
 
 ## Milestone 6.5 — Flipbook animation (*added*)

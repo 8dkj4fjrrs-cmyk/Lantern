@@ -23,10 +23,10 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Lantern
-    VERSION 0.8.0
+    VERSION 0.9.0
     DESCRIPTION "Lantern Engine: a C++-first 2D game engine and editor"
     LANGUAGES C CXX)
-# Pre-release label shown after the version ("0.8.0-alpha"); empty for a release.
+# Pre-release label shown after the version ("0.9.0-alpha"); empty for a release.
 set(LANTERN_VERSION_SUFFIX "-alpha")
 
 # ---------------------------------------------------------------------------

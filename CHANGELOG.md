@@ -3,7 +3,7 @@
 All notable changes to Lantern Engine. Versions follow the milestones in
 [docs/roadmap.md](docs/roadmap.md); design reasons are in [docs/adr](docs/adr).
 
-## Unreleased
+## 0.9.0-alpha — Lua scripting, and verified on macOS and Windows
 
 - **Lua scripting.** Gameplay code without a compiler: write a `.lua` file,
   add a **Script** component, press Play. A downloaded Lantern runs scripts,

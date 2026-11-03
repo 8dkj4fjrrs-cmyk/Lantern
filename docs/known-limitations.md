@@ -1,4 +1,4 @@
-# Known limitations (0.8.0-alpha)
+# Known limitations (0.9.0-alpha)
 
 Lantern is an alpha: it works end to end, from a new project to an
 exported game, but much is missing or untested. This page lists what we

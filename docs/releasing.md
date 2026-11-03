@@ -45,14 +45,15 @@ folder), so the installed layout is what gets tested:
 
 ## 3. Publish
 
-1. Commit, then tag: `git tag -a v0.8.0-alpha -m "Lantern 0.8.0-alpha"` and
+1. Commit, then tag: `git tag -a v0.9.0-alpha -m "Lantern 0.9.0-alpha"` and
    push the tag.
 2. The **release** workflow (`.github/workflows/release.yml`) runs on the
    tag:
    - builds, tests and packages on Linux, macOS and Windows;
-   - attaches the three `.zip` files to a draft GitHub release.
-3. Check the draft: the files download and start. Paste the changelog
-   section, and publish.
+   - attaches the three `.zip` files to a draft GitHub release, with that
+     version's section of `CHANGELOG.md` as its notes. Its heading must
+     start with the version, e.g. `## 0.9.0-alpha — ...`.
+3. Check the draft: the files download and start. Then publish it.
 
 ## What a package contains
 
@@ -61,7 +62,7 @@ installs the `lantern` component (`cmake/LanternInstall.cmake`) into
 `dist/Lantern-<version>-<system>-<processor>/` and zips it:
 
 ```
-Lantern-0.8.0-alpha-Linux-x86_64/
+Lantern-0.9.0-alpha-Linux-x86_64/
   lantern_editor         the editor (lantern_editor.exe on Windows)
   axslc/                 its compiled shaders
   runtime/               the game runtime that exports are made from
