@@ -209,6 +209,11 @@ TEST_CASE("String helpers compare prefixes and suffixes", "[runtime][compat]")
     CHECK(cxx20::ic::ends_with(path, ".png"));
     CHECK(cxx20::ic::iequals("File:///", "file:///"));
     CHECK_FALSE(cxx20::ic::iequals("file", "files"));
+    {
+        using namespace cxx17;
+        CHECK("abc"_sv == std::string_view("abc"));
+        CHECK(L"NO"_sv.length() == 2);
+    }
     CHECK(YASIO_SZ_ALIGN(17, 16) == 32);
     CHECK(YASIO_SZ_ALIGN(32, 16) == 32);
 }

@@ -243,13 +243,20 @@ if(TARGET lantern_editor)
             COMMAND lantern_editor --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project"
                     --export "${_exports}")
         set_tests_properties(editor.exports_game PROPERTIES
-            PASS_REGULAR_EXPRESSION "Exported The Lantern Keeper \\([0-9]+ files"
+            # macOS exports an app bundle: "Exported The Lantern Keeper.app (163 files ..."
+            PASS_REGULAR_EXPRESSION "Exported The Lantern Keeper(\\.app)? \\([0-9]+ files"
             FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
             FIXTURES_REQUIRED export_clean
             FIXTURES_SETUP exported_game
             TIMEOUT 120)
+        # The game program: on macOS inside the app bundle (docs/exporting.md).
+        if(APPLE)
+            set(_exported_program "${_exports}/The Lantern Keeper.app/Contents/MacOS/lantern_player")
+        else()
+            set(_exported_program "${_exports}/The Lantern Keeper/The Lantern Keeper${CMAKE_EXECUTABLE_SUFFIX}")
+        endif()
         add_test(NAME exported_game.plays
-            COMMAND "${_exports}/The Lantern Keeper/The Lantern Keeper" --frames 30
+            COMMAND "${_exported_program}" --frames 30
                     --save-dir "${CMAKE_CURRENT_BINARY_DIR}/exported-game-saves"
                     --screenshot "${CMAKE_CURRENT_BINARY_DIR}/exported_game.png")
         set_tests_properties(exported_game.plays PROPERTIES

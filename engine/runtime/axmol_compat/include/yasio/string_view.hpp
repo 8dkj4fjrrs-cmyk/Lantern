@@ -24,6 +24,25 @@ using std::wstring_view;
 inline namespace literals {
 inline namespace string_view_literals {
 using namespace std::string_view_literals;
+
+// "text"_sv and L"text"_sv: the same as the standard "text"sv, under the
+// name Axmol's Windows code uses (after `using namespace cxx17;`).
+constexpr std::string_view operator""_sv(const char* text, std::size_t length) noexcept
+{
+    return {text, length};
+}
+constexpr std::wstring_view operator""_sv(const wchar_t* text, std::size_t length) noexcept
+{
+    return {text, length};
+}
+constexpr std::u16string_view operator""_sv(const char16_t* text, std::size_t length) noexcept
+{
+    return {text, length};
+}
+constexpr std::u32string_view operator""_sv(const char32_t* text, std::size_t length) noexcept
+{
+    return {text, length};
+}
 } // namespace string_view_literals
 } // namespace literals
 } // namespace cxx17
