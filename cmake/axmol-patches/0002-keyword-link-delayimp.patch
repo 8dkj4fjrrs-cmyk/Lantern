@@ -1,0 +1,15 @@
+diff --git a/cmake/Modules/AXBuildHelpers.cmake b/cmake/Modules/AXBuildHelpers.cmake
+index 653f4b8..6a152b7 100644
+--- a/cmake/Modules/AXBuildHelpers.cmake
++++ b/cmake/Modules/AXBuildHelpers.cmake
+@@ -437,7 +437,9 @@ function(ax_add_delay_load_options target)
+   target_link_options(${target} PRIVATE "LINKER:/DELAYLOAD:mf.dll" "LINKER:/DELAYLOAD:mfplat.dll")
+ 
+   if(CMAKE_GENERATOR MATCHES "Ninja")
+-    target_link_libraries(${target} delayimp)
++    # Lantern patch: keyword form, so apps that use target_link_libraries(... PRIVATE ...)
++    # can call ax_setup_app_config (CMake forbids mixing the two forms on one target).
++    target_link_libraries(${target} PRIVATE delayimp)
+   endif()
+ endfunction()
+ 

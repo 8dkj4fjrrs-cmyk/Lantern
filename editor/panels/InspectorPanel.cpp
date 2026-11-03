@@ -1086,7 +1086,7 @@ void InspectorPanel::showCreateTilesetDialog(AssetId imageId)
     name.setStretch(1.0f);
     name.setFixedSize({0.0f, 24.0f});
     name.setText(stem);
-    auto size = std::make_shared<Vec2>(16.0f, 16.0f);
+    auto size = std::make_shared<Vec2>(Vec2{16.0f, 16.0f});   // braces: Apple Clang 15 cannot build aggregates from ( )
     auto& sizeRow = body.emplace<ui::PropertyField>("Tile Size");
     for (int axis = 0; axis < 2; ++axis) {
         auto& f = sizeRow.addValue(std::make_unique<ui::NumberField>());
@@ -1227,7 +1227,7 @@ void InspectorPanel::showCreateAnimationsDialog(AssetId imageId)
     name.setStretch(1.0f);
     name.setFixedSize({0.0f, 24.0f});
     name.setText(stem);
-    auto size = std::make_shared<Vec2>(16.0f, 16.0f);
+    auto size = std::make_shared<Vec2>(Vec2{16.0f, 16.0f});   // braces: Apple Clang 15 cannot build aggregates from ( )
     auto& sizeRow = body.emplace<ui::PropertyField>("Frame Size");
     for (int axis = 0; axis < 2; ++axis) {
         auto& f = sizeRow.addValue(std::make_unique<ui::NumberField>());
