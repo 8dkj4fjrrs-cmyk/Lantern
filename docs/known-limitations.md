@@ -31,14 +31,10 @@ untested.**
 - macOS apps are **not signed or notarized**: players must right-click
   **Open** the first time.
 - No installer: games are folders (or `.app` bundles) to zip and share.
-- Every game contains the whole runtime, including networking libraries
-  that Axmol builds in and Lantern never uses (curl, OpenSSL, yasio and
-  others). They add size and license notices, not behaviour.
-- **yasio's license adds the "Anti 996" terms** to MIT. You must comply with
-  labour laws, and you must display the license, which exports do by
-  including `licenses/`. These terms are not a standard open-source license;
-  see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Removing yasio
-  would mean changing Axmol.
+- Every game contains the whole runtime (about 16 MB on Linux), even the
+  parts a small game does not use.
+- Games cannot use the network: Lantern builds Axmol without HTTP,
+  WebSocket and downloads (ADR 0012).
 
 ## Games
 

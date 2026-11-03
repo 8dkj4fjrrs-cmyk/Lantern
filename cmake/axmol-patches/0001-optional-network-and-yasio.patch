@@ -1,0 +1,48 @@
+diff --git a/3rdparty/CMakeLists.txt b/3rdparty/CMakeLists.txt
+index c02c857..875cbe3 100644
+--- a/3rdparty/CMakeLists.txt
++++ b/3rdparty/CMakeLists.txt
+@@ -412,7 +412,12 @@ if(WIN32)
+ endif()
+ 
+ # yasio
+-ax_add_3rd(yasio)
++# Lantern patch: yasio can be left out when the network module and console are
++# off; something else must then provide the headers the core includes.
++option(AX_WITH_YASIO "Build with yasio" ON)
++if(AX_WITH_YASIO)
++  ax_add_3rd(yasio)
++endif()
+ 
+ # simdjson
+ ax_add_3rd(simdjson)
+diff --git a/core/2d/ParticleSystem.cpp b/core/2d/ParticleSystem.cpp
+index 7703693..3e5b688 100644
+--- a/core/2d/ParticleSystem.cpp
++++ b/core/2d/ParticleSystem.cpp
+@@ -2342,7 +2342,7 @@ void ParticleEmissionMaskCache::bakeEmissionMask(std::string_view maskId,
+     iter->second = desc;
+ 
+     AXLOGD("Particle emission mask '{}' baked ({}x{}), {} samples generated taking {:.2f}mb of memory.",
+-          (unsigned int)htonl(fourccId), w, h, desc.points.size(), desc.points.size() * 8 / 1e+6);
++          std::string_view{reinterpret_cast<const char*>(&fourccId), sizeof(fourccId)}, w, h, desc.points.size(), desc.points.size() * 8 / 1e+6);
+ }
+ 
+ const ParticleEmissionMaskDescriptor& ParticleEmissionMaskCache::getEmissionMask(uint32_t fourccId)
+diff --git a/core/CMakeLists.txt b/core/CMakeLists.txt
+index b137b6a..e26aa97 100644
+--- a/core/CMakeLists.txt
++++ b/core/CMakeLists.txt
+@@ -209,7 +209,11 @@ endif()
+ include(renderer/CMakeLists.txt)
+ include(base/CMakeLists.txt)
+ include(ui/CMakeLists.txt)
+-include(network/CMakeLists.txt)
++# Lantern patch: games without networking (no HTTP, WebSocket or downloader).
++option(AX_ENABLE_NETWORK "Build the network module (HTTP, WebSocket, Downloader)" ON)
++if(AX_ENABLE_NETWORK)
++  include(network/CMakeLists.txt)
++endif()
+ 
+ if(AX_ENABLE_AUDIO)
+   include(audio/CMakeLists.txt)

@@ -124,7 +124,7 @@ After changing gameplay code, build again and restart the editor.
 
 ```sh
 sudo apt install build-essential cmake ninja-build git pkg-config \
-    libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+    libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxxf86vm-dev \
     libgl1-mesa-dev libglu1-mesa-dev libfontconfig1-dev \
     libgtk-3-dev libwebkit2gtk-4.1-dev libwayland-dev libxkbcommon-dev
 sudo snap install powershell --classic     # or see Microsoft's install guide
@@ -152,5 +152,6 @@ cmake --workflow --preset dev
 | `fatal error: 'AppKit/NSColor.h' file not found` (macOS) | Apple's Command Line Tools are damaged. Run `sudo rm -rf /Library/Developer/CommandLineTools`, then reinstall them: `xcode-select --install`, or download "Command Line Tools for Xcode" from developer.apple.com/download/all (pick a version your macOS supports). Then delete `build/` and build again. |
 | `PowerShell 7 ('pwsh') was not found` | Install it (see step 1), open a new Terminal, configure again. |
 | `external/axmol is not at the pinned commit` | Delete the `external/axmol` folder and configure again. |
+| `Could not apply Lantern's Axmol patch` | `external/axmol` was changed, or the patches in `cmake/axmol-patches/` were. Delete the `external/axmol` folder and configure again. |
 | `Could not download Axmol` | Check your internet connection; configure again. |
 | `Failed to download` / `HASH mismatch` for `json.tar.xz` | CMake downloads nlohmann/json (for scene files) from GitHub at configure time and checks it. Check your connection and configure again; a hash mismatch means the download was damaged or tampered with: delete `build/` and retry. |

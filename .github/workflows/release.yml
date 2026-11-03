@@ -30,7 +30,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build pkg-config xvfb \
-            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxxf86vm-dev \
             libgl1-mesa-dev libglu1-mesa-dev libgl1-mesa-dri libfontconfig1-dev \
             libgtk-3-dev libwebkit2gtk-4.1-dev libwayland-dev libxkbcommon-dev
 

@@ -95,8 +95,8 @@ In rough order of importance:
    - multi-selection;
    - prefabs;
    - fullscreen and window settings for games;
-   - removing Axmol's unused networking libraries (and yasio's Anti 996
-     terms with them).
+   - ~~removing Axmol's unused networking libraries (and yasio's Anti 996
+     terms with them)~~ — **done** after the alpha (ADR 0012).
 6. The timeline animation editor (below) and a visual dialogue graph.
 
 ## After the alpha: timeline animation editor (*added*)

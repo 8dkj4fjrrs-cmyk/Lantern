@@ -31,7 +31,6 @@ LIBRARIES = {
                         [GH + "cameron314/concurrentqueue/v1.0.4/LICENSE.md"]),
     "convertutf": ("ConvertUTF (from LLVM)", "Apache-2.0 WITH LLVM-exception",
                    [GH + "llvm/llvm-project/main/llvm/LICENSE.TXT"]),
-    "curl": ("curl 8.17.0", "curl", [GH + "curl/curl/curl-8_17_0/COPYING"]),
     "doctest": ("doctest 2.4.12", "MIT", [GH + "doctest/doctest/v2.4.12/LICENSE.txt"]),
     "fastlz": ("FastLZ", "MIT", ["external/axmol/3rdparty/fastlz/LICENSE.MIT"]),
     "fmt": ("{fmt} 11.2.0", "MIT", [GH + "fmtlib/fmt/11.2.0/LICENSE"]),
@@ -42,7 +41,6 @@ LIBRARIES = {
     "libjpeg-turbo": ("libjpeg-turbo 3.1.3", "IJG, BSD-3-Clause, zlib",
                       [GH + "libjpeg-turbo/libjpeg-turbo/3.1.3/LICENSE.md",
                        GH + "libjpeg-turbo/libjpeg-turbo/3.1.3/README.ijg"]),
-    "llhttp": ("llhttp 9.3.0", "MIT", [GH + "nodejs/llhttp/release/v9.3.0/LICENSE"]),
     "mio": ("mio", "MIT", [GH + "vimpunk/mio/master/LICENSE"]),
     "openssl": ("OpenSSL 3.0.18", "Apache-2.0", [GH + "openssl/openssl/openssl-3.0.18/LICENSE.txt"]),
     "libpng": ("libpng 1.6.53", "PNG Reference Library License v2", ["external/axmol/3rdparty/png/LICENSE"]),
@@ -54,11 +52,8 @@ LIBRARIES = {
     "minizip": ("minizip (unzip) 1.2", "zlib", ["header:external/axmol/3rdparty/unzip/unzip.h"]),
     "libwebp": ("libwebp 1.6.0", "BSD-3-Clause (Google)",
                 [GH + "webmproject/libwebp/v1.6.0/COPYING", GH + "webmproject/libwebp/v1.6.0/PATENTS"]),
-    # Axmol's copy has no notice; upstream (php-ion/websocket-parser) is BSD-3-Clause.
-    "websocket-parser": ("websocket-parser", "BSD-3-Clause", [GH + "php-ion/websocket-parser/master/LICENSE"]),
     "xsxml": ("xsxml 1.1", "MIT", ["header:external/axmol/3rdparty/xsxml/xsxml.hpp"]),
     "xxhash": ("xxHash 0.8.3", "BSD-2-Clause", [GH + "Cyan4973/xxHash/v0.8.3/LICENSE"]),
-    "yasio": ("yasio 4.3.2", "MIT (Axmol lists it as MIT WITH Anti-996)", [GH + "yasio/yasio/v4.3.2/LICENSE"]),
     "zlib": ("zlib 1.3.1", "zlib", [GH + "madler/zlib/v1.3.1/LICENSE"]),
 }
 

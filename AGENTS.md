@@ -42,6 +42,10 @@ and AI assistants.
   `LanternResources` (beside the program when installed, the source tree when built); never
   hard-code paths to them. Anything a game contains must have its license text in `licenses/`.
 - Saved files use project-relative paths and an explicit format version.
+- Axmol is used unmodified except for the small patches in `cmake/axmol-patches/` (switches and
+  build fixes only, each explained in its README). Lantern builds Axmol without networking or
+  yasio; `engine/runtime/axmol_compat` provides the yasio headers Axmol's core includes, written
+  for Lantern (ADR 0012). Never copy yasio code into it.
 
 ## Code style
 

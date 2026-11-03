@@ -4,10 +4,14 @@
 #   1. Checks the tools Axmol needs (git, PowerShell).
 #   2. Downloads Axmol's source at an exact, verified commit into external/axmol
 #      (only the first time; the folder is reused by every build preset).
-#   3. Downloads Axmol's shader compiler (axslcc) for this computer and checks
+#   3. Applies Lantern's small patches to Axmol (cmake/axmol-patches/) and
+#      removes yasio, which Lantern replaces (see step 6).
+#   4. Downloads Axmol's shader compiler (axslcc) for this computer and checks
 #      its SHA-256, so a corrupted or tampered download is rejected.
-#   4. Switches off Axmol features Lantern does not use yet (faster builds).
-#   5. Adds Axmol's core library as the CMake target named in ${_AX_CORE_LIB}.
+#   5. Switches off Axmol features Lantern does not use (faster builds, fewer
+#      third-party licenses in every game).
+#   6. Adds Axmol's core library as the CMake target named in ${_AX_CORE_LIB},
+#      with Lantern's replacement for the yasio headers it includes.
 #
 # Nothing outside engine/runtime and player/ may use Axmol directly.
 # See docs/adr/0001-runtime-foundation.md.
@@ -55,7 +59,10 @@ if(NOT EXISTS "${LANTERN_AXMOL_DIR}/core/CMakeLists.txt")
     message(STATUS "Downloading Axmol ${LANTERN_AXMOL_TAG} (about 130 MB, first time only)...")
     file(MAKE_DIRECTORY "${LANTERN_EXTERNAL_DIR}")
     execute_process(
+        # core.autocrlf=false keeps Unix line endings on Windows too, so the
+        # patches in cmake/axmol-patches apply everywhere.
         COMMAND "${GIT_EXECUTABLE}" -c advice.detachedHead=false clone --depth 1
+                --config core.autocrlf=false
                 --branch "${LANTERN_AXMOL_TAG}" "${LANTERN_AXMOL_REPOSITORY}" "${LANTERN_AXMOL_DIR}"
         RESULT_VARIABLE _clone_result)
     if(NOT _clone_result EQUAL 0)
@@ -79,7 +86,46 @@ endif()
 message(STATUS "Axmol ${LANTERN_AXMOL_VERSION} at ${_axmol_head}")
 
 # ---------------------------------------------------------------------------
-# 3. Shader compiler (axslcc), pinned and checksum-verified
+# 3. Lantern's patches to Axmol, and removing yasio (ADR 0012)
+#
+# Each patch is applied once: if it can already be reversed, it is in place.
+# The patches only add switches (network module, yasio) and fix one line that
+# needed a header from the networking code; see cmake/axmol-patches/README.md.
+# ---------------------------------------------------------------------------
+file(GLOB _lantern_axmol_patches "${CMAKE_CURRENT_LIST_DIR}/axmol-patches/*.patch")
+list(SORT _lantern_axmol_patches)
+foreach(_patch IN LISTS _lantern_axmol_patches)
+    get_filename_component(_patch_name "${_patch}" NAME)
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" -C "${LANTERN_AXMOL_DIR}" apply --reverse --check "${_patch}"
+        RESULT_VARIABLE _already_applied OUTPUT_QUIET ERROR_QUIET)
+    if(_already_applied EQUAL 0)
+        continue()
+    endif()
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" -C "${LANTERN_AXMOL_DIR}" apply "${_patch}"
+        RESULT_VARIABLE _apply_result
+        ERROR_VARIABLE _apply_error)
+    if(NOT _apply_result EQUAL 0)
+        message(FATAL_ERROR
+            "Could not apply Lantern's Axmol patch ${_patch_name}:\n${_apply_error}\n"
+            "external/axmol may have been changed by hand. Delete the folder "
+            "${LANTERN_AXMOL_DIR} and configure again to re-download it.")
+    endif()
+    message(STATUS "Applied Axmol patch ${_patch_name}")
+endforeach()
+
+# yasio's license adds terms to MIT that Lantern does not want in every game
+# (ADR 0012). Lantern does not build it: engine/runtime/axmol_compat provides
+# the few headers Axmol's core still includes. Deleting the folder makes sure
+# nothing compiles or includes the original by accident.
+if(EXISTS "${LANTERN_AXMOL_DIR}/3rdparty/yasio")
+    file(REMOVE_RECURSE "${LANTERN_AXMOL_DIR}/3rdparty/yasio")
+    message(STATUS "Removed yasio from external/axmol (Lantern uses its own replacement)")
+endif()
+
+# ---------------------------------------------------------------------------
+# 4. Shader compiler (axslcc), pinned and checksum-verified
 # ---------------------------------------------------------------------------
 if(CMAKE_HOST_APPLE)
     if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
@@ -139,7 +185,7 @@ file(WRITE "${_axslcc_dir}/VERSION" "${LANTERN_AXSLCC_VERSION}\n")
 set(ENV{AX_ROOT} "${LANTERN_AXMOL_DIR}")
 
 # ---------------------------------------------------------------------------
-# 4. Axmol feature switches
+# 5. Axmol feature switches
 #
 # Only what Lantern needs: 2D rendering, windowing, images, text.
 # Later milestones switch features back on deliberately (and update
@@ -156,14 +202,22 @@ set(AX_ENABLE_PHYSICS OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_AUDIO OFF CACHE BOOL "" FORCE)        # also keeps LGPL OpenAL Soft out for now
 set(AX_ENABLE_OPUS OFF CACHE BOOL "" FORCE)
 set(AX_ENABLE_MEDIA OFF CACHE BOOL "" FORCE)
-# AX_ENABLE_CONSOLE stays at Axmol's default (ON): with it OFF, Axmol 2.11.5
-# fails to compile in Debug (ParticleSystem.cpp then lacks htonl()). The
-# console is inert unless code explicitly starts it; Lantern never does.
-set(AX_ENABLE_CONSOLE ON CACHE BOOL "" FORCE)
+# No networking (ADR 0012): Lantern games do not download, open web sockets or
+# take remote console commands. This leaves out yasio, curl, llhttp and
+# websocket-parser. (The console's ParticleSystem build error is fixed by
+# cmake/axmol-patches/0001.)
+set(AX_ENABLE_CONSOLE OFF CACHE BOOL "" FORCE)
+set(AX_ENABLE_NETWORK OFF CACHE BOOL "" FORCE)      # added by Lantern's Axmol patch
+set(AX_ENABLE_HTTP OFF CACHE BOOL "" FORCE)
+set(AX_ENABLE_WEBSOCKET OFF CACHE BOOL "" FORCE)
+set(AX_WITH_YASIO OFF CACHE BOOL "" FORCE)          # added by Lantern's Axmol patch
+set(AX_WITH_CURL OFF CACHE BOOL "" FORCE)
+set(AX_WITH_LLHTTP OFF CACHE BOOL "" FORCE)
+set(AX_WITH_WEBSOCKET_PARSER OFF CACHE BOOL "" FORCE)
 set(AX_UPDATE_BUILD_VERSION OFF CACHE BOOL "" FORCE)
 
 # ---------------------------------------------------------------------------
-# 5. Add Axmol's core library
+# 6. Add Axmol's core library
 # (mirrors Axmol's own templates/common/cmake/modules/AXGameEngineSetup.cmake)
 # ---------------------------------------------------------------------------
 set(_AX_ROOT "${LANTERN_AXMOL_DIR}")
@@ -179,4 +233,12 @@ add_subdirectory("${_AX_ROOT}/core" "${ENGINE_BINARY_PATH}/axmol/core" SYSTEM)
 if(NOT TARGET ${_AX_CORE_LIB})
     message(FATAL_ERROR "Axmol did not create its core library target.")
 endif()
+
+# Lantern's replacement for the yasio headers Axmol's core includes (ADR 0012).
+# Linked through Axmol's "3rdparty" interface target, which the core and
+# everything using it already link.
+add_library(lantern_axmol_compat INTERFACE)
+target_include_directories(lantern_axmol_compat SYSTEM INTERFACE
+    "${PROJECT_SOURCE_DIR}/engine/runtime/axmol_compat/include")
+target_link_libraries(3rdparty INTERFACE lantern_axmol_compat)
 

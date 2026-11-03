@@ -100,5 +100,6 @@ Copyright (c) 2026 Oscar Hird.
 
 Third-party components keep their own licenses; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [licenses/](licenses/README.md).
-Games exported with Lantern carry those license texts. Note yasio's
-"Anti 996" terms, described in the notices.
+Games exported with Lantern carry those license texts. Lantern builds Axmol
+without its networking libraries, so games contain only permissively
+licensed code (ADR 0012).

@@ -77,6 +77,7 @@ endif()
 # Unit tests that need no window.
 add_executable(lantern_runtime_tests
     player/test_command_line.cpp
+    runtime/test_axmol_compat.cpp
     runtime/test_log_bridge.cpp
     runtime/test_scene_renderer.cpp)
 target_link_libraries(lantern_runtime_tests PRIVATE

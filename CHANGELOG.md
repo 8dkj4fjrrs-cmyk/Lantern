@@ -3,6 +3,18 @@
 All notable changes to Lantern Engine. Versions follow the milestones in
 [docs/roadmap.md](docs/roadmap.md); design reasons are in [docs/adr](docs/adr).
 
+## Unreleased
+
+- **No more yasio, curl, llhttp or websocket-parser in games.** Lantern now
+  builds Axmol without its network module and remote console, which Lantern
+  never used. The few yasio containers and helpers that Axmol's core still
+  needs are replaced by Lantern's own code (`engine/runtime/axmol_compat`).
+  Exported games no longer carry yasio's non-standard "Anti 996" license
+  terms. See ADR 0012.
+- Axmol is now patched at configure time from `cmake/axmol-patches/`. An
+  existing `external/axmol` folder is patched in place the next time you
+  configure.
+
 ## 0.8.0-alpha — Public alpha (Milestone 8)
 
 The first version meant for people other than its authors. See

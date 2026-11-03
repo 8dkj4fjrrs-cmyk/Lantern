@@ -1,6 +1,7 @@
 # ADR 0011: Public alpha — templates, exporting, packaging, licenses (Milestone 8)
 
-- **Status:** Accepted
+- **Status:** Accepted; decision 6's handling of yasio is replaced by
+  [ADR 0012](0012-no-yasio.md) (yasio and Axmol's networking removed)
 - **Date:** 2026-11-03
 - **Milestone:** 8
 

@@ -14,7 +14,6 @@ Their license texts are in this folder; games carry a copy of it.
 | `clipper2.txt` | Clipper2 2.0.1 | BSL-1.0 |
 | `concurrentqueue.txt` | moodycamel::ConcurrentQueue 1.0.4 | BSL-1.0 or Simplified BSD |
 | `convertutf.txt` | ConvertUTF (from LLVM) | Apache-2.0 WITH LLVM-exception |
-| `curl.txt` | curl 8.17.0 | curl |
 | `doctest.txt` | doctest 2.4.12 | MIT |
 | `fastlz.txt` | FastLZ | MIT |
 | `fmt.txt` | {fmt} 11.2.0 | MIT |
@@ -22,7 +21,6 @@ Their license texts are in this folder; games carry a copy of it.
 | `glad.txt` | Glad 2.0.8 | MIT |
 | `glfw.txt` | GLFW 3.4 (modified by Axmol) | zlib |
 | `libjpeg-turbo.txt` | libjpeg-turbo 3.1.3 | IJG, BSD-3-Clause, zlib |
-| `llhttp.txt` | llhttp 9.3.0 | MIT |
 | `mio.txt` | mio | MIT |
 | `openssl.txt` | OpenSSL 3.0.18 | Apache-2.0 |
 | `libpng.txt` | libpng 1.6.53 | PNG Reference Library License v2 |
@@ -33,8 +31,6 @@ Their license texts are in this folder; games carry a copy of it.
 | `simdjson.txt` | simdjson 3.10.1 | Apache-2.0 |
 | `minizip.txt` | minizip (unzip) 1.2 | zlib |
 | `libwebp.txt` | libwebp 1.6.0 | BSD-3-Clause (Google) |
-| `websocket-parser.txt` | websocket-parser | BSD-3-Clause |
 | `xsxml.txt` | xsxml 1.1 | MIT |
 | `xxhash.txt` | xxHash 0.8.3 | BSD-2-Clause |
-| `yasio.txt` | yasio 4.3.2 | MIT (Axmol lists it as MIT WITH Anti-996) |
 | `zlib.txt` | zlib 1.3.1 | zlib |
