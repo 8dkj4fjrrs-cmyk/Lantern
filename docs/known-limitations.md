@@ -26,8 +26,10 @@ Please report what you find.
 
 - Games are exported for the system the editor runs on; there is no
   cross-export.
-- macOS apps are **not signed or notarized**: players must right-click
-  **Open** the first time.
+- macOS apps are signed only "ad hoc", **not with an Apple Developer ID**,
+  and not notarized. The first time, players right-click the app and choose
+  **Open** (on newer macOS: **System Settings › Privacy & Security › Open
+  Anyway**). The same goes for Lantern itself.
 - No installer: games are folders (or `.app` bundles) to zip and share.
 - Every game contains the whole runtime (about 16 MB on Linux), even the
   parts a small game does not use.

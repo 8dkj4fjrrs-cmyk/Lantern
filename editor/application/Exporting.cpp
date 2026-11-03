@@ -94,6 +94,36 @@ ProjectCheck checkProject(const std::filesystem::path& folder, const ComponentRe
     return check;
 }
 
+#if defined(__APPLE__)
+namespace {
+// Signs an app bundle ad hoc with the codesign tool every Mac has. False,
+// with codesign's message, if it failed.
+bool signAdHoc(const std::filesystem::path& app, std::string& error)
+{
+    std::string quoted = "'";
+    for (const char c : app.string()) {
+        quoted += c == '\'' ? std::string("'\\''") : std::string(1, c);
+    }
+    quoted += "'";
+    const std::string command = "/usr/bin/codesign --force --deep --sign - " + quoted + " 2>&1";
+    FILE* pipe = popen(command.c_str(), "r");
+    if (pipe == nullptr) {
+        error = "codesign could not be started";
+        return false;
+    }
+    char buffer[256];
+    while (std::fgets(buffer, sizeof buffer, pipe) != nullptr) {
+        error += buffer;
+    }
+    const int status = pclose(pipe);
+    while (!error.empty() && (error.back() == '\n' || error.back() == '\r')) {
+        error.pop_back();
+    }
+    return status == 0;
+}
+} // namespace
+#endif
+
 ExportRun exportProject(const std::filesystem::path& project, const std::filesystem::path& output,
                         const std::string& gameName, const LanternResources& resources,
                         const ComponentRegistry& registry, const Logger& log)
@@ -122,6 +152,18 @@ ExportRun exportProject(const std::filesystem::path& project, const std::filesys
         log.error(kCategory, run.message);
         return run;
     }
+#if defined(__APPLE__)
+    // The exported app was copied, renamed and given the game: its old
+    // signature no longer matches. Apple silicon Macs call a downloaded app
+    // with no valid signature "damaged" and refuse to open it, so sign it
+    // again ("ad hoc": valid, though not from an Apple developer account;
+    // players then right-click > Open the first time, docs/exporting.md).
+    if (std::string error; !signAdHoc(run.result.game, error)) {
+        log.warning(kCategory, "Could not sign " + run.result.game.filename().string() + " (" + error
+                                   + "). Other Macs may call it damaged. Run: codesign --force --deep --sign - \""
+                                   + run.result.game.string() + "\"");
+    }
+#endif
     char size[32];
     std::snprintf(size, sizeof size, "%.1f MB", static_cast<double>(run.result.bytes) / (1024.0 * 1024.0));
     run.ok = true;

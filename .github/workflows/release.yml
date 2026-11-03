@@ -84,6 +84,10 @@ jobs:
 
       # A program that cannot find a DLL does not start on players' PCs,
       # while it may still start here (build folders are on the PATH).
+      - name: Check the macOS package's signature
+        if: runner.os == 'macOS'
+        run: codesign --verify --deep --strict --verbose=2 dist/Lantern-*/lantern_editor.app
+
       - name: Check the Windows package's DLLs
         if: runner.os == 'Windows'
         shell: bash

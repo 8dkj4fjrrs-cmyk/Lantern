@@ -77,10 +77,15 @@ An export contains the runtime of the computer it was made on, so:
 
 There is no cross-export yet.
 
-- **macOS**: the app is not signed or notarized by Apple. The first time,
-  players right-click it and choose **Open**. Signing needs an Apple
-  Developer account; it is on the roadmap. Exported apps run on the same kind
-  of Mac they were made on (Apple silicon from an Apple silicon build).
+- **macOS**: the editor signs the exported app "ad hoc", but it is not
+  signed or notarized with an Apple Developer ID. So the first time, players:
+  - right-click the app and choose **Open**, then **Open** again;
+  - on newer macOS, if it is still blocked: **System Settings › Privacy &
+    Security**, then **Open Anyway**.
+
+  Developer ID signing and notarization are on the roadmap. Exported apps
+  run on the same kind of Mac they were made on (Apple silicon from an Apple
+  silicon build).
 - **Windows**: the game is a folder with `My Game.exe` and the DLLs it needs.
 - **Linux**: the game is a folder; the program needs a desktop with OpenGL,
   as the editor does.

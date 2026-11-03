@@ -69,6 +69,30 @@ install(DIRECTORY licenses/ DESTINATION "${_resources}/licenses" ${_component})
 install(DIRECTORY docs/ DESTINATION "${_resources}/docs" ${_component})
 install(FILES README.md LICENSE THIRD_PARTY_NOTICES.md CHANGELOG.md DESTINATION . ${_component})
 
+# macOS: sign the apps "ad hoc", after everything is inside them. Apple
+# silicon Macs call a downloaded app with no valid signature "damaged" and
+# refuse to open it. An ad-hoc signature is valid without an Apple developer
+# account; users then right-click > Open once ("unidentified developer").
+# The linker signs the programs, but that signature does not cover the
+# bundle's resources added here, so it would not count. Inner app first.
+if(APPLE)
+    install(CODE [[
+        foreach(_app "lantern_editor.app/Contents/Resources/lantern/runtime/lantern_player.app" "lantern_editor.app")
+            execute_process(COMMAND /usr/bin/codesign --force --deep --sign - "${CMAKE_INSTALL_PREFIX}/${_app}"
+                            RESULT_VARIABLE _signed)
+            if(NOT _signed EQUAL 0)
+                message(FATAL_ERROR "Could not sign ${CMAKE_INSTALL_PREFIX}/${_app}")
+            endif()
+        endforeach()
+        execute_process(COMMAND /usr/bin/codesign --verify --deep --strict "${CMAKE_INSTALL_PREFIX}/lantern_editor.app"
+                        RESULT_VARIABLE _valid)
+        if(NOT _valid EQUAL 0)
+            message(FATAL_ERROR "The signature of lantern_editor.app does not verify")
+        endif()
+        message(STATUS "Signed lantern_editor.app (ad hoc)")
+    ]] COMPONENT lantern)
+endif()
+
 # The package: install into dist/<name>, then zip it.
 if(APPLE)
     set(_system "macOS")

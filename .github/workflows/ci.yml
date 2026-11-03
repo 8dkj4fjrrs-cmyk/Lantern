@@ -87,6 +87,12 @@ jobs:
         if: runner.os == 'macOS'
         run: ctest --preset dev
 
+      # An exported game is changed after the build, so the editor signs it
+      # again; without a valid signature other Macs call it "damaged".
+      - name: Check the exported game's signature (macOS)
+        if: runner.os == 'macOS'
+        run: codesign --verify --deep --strict --verbose=2 "build/dev/tests/test-exports/The Lantern Keeper.app"
+
       - name: Test (Linux, virtual display)
         if: runner.os == 'Linux'
         run: xvfb-run -a ctest --preset dev

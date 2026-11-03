@@ -37,7 +37,10 @@ All notable changes to Lantern Engine. Versions follow the milestones in
   - the Windows package lacked `zlib1.dll` and the Visual C++ runtime, so
     its programs (and exported games) would not have started. The release
     now checks every packaged program's DLLs
-    (`tools/release/check_windows_dlls.py`).
+    (`tools/release/check_windows_dlls.py`);
+  - macOS called the downloaded Lantern "damaged": its bundles had no valid
+    signature. The package, and every game exported on a Mac, is now signed
+    ad hoc, and CI checks the signatures.
 - **No more yasio, curl, llhttp or websocket-parser in games.** Lantern now
   builds Axmol without its network module and remote console, which Lantern
   never used. The few yasio containers and helpers that Axmol's core still

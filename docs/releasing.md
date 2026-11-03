@@ -89,8 +89,10 @@ The editor finds all of this from its own location
 
 ## Not done yet
 
-- **Code signing.** macOS apps need an Apple Developer ID and notarization,
-  and Windows programs an Authenticode certificate; neither is set up. So:
+- **Code signing.** macOS apps are signed ad hoc when packaged and
+  exported, which is enough for Apple silicon Macs to open them. They need
+  an Apple Developer ID and notarization to open without a warning. Windows
+  programs need an Authenticode certificate. Neither is set up, so:
   - macOS asks users to right-click **Open** the first time;
   - Windows SmartScreen may warn.
 - **Installers.** Lantern ships as zips, not `.dmg`, `.msi` or packages.
