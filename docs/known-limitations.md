@@ -8,21 +8,19 @@ know. Please report anything else.
 
 | | Linux x86_64 | macOS Apple silicon | Windows x64 |
 |---|---|---|---|
-| Builds (development and release) | **Yes**, every change | Not yet: the code and CI job exist, but no build has run | Not yet: same |
-| Automated tests (unit + real windows) | **Yes**, every change | Not yet | Not yet |
+| Builds | **Yes**, development and release | **Yes**, development build in CI (GitHub, macOS 14, Xcode 15); release build not yet | **Yes**, development build in CI (Windows Server 2022, MSVC); release build not yet |
+| Automated unit tests | **Yes** | **Yes**, in CI | **Yes**, in CI |
+| Automated tests in real windows (playing, the editor, exported games) | **Yes**, on a virtual display | **Yes**, in CI | Not yet: CI machines have no screen that runs OpenGL 3 |
+| Exporting a game | **Yes** | **Yes**, in CI (an `.app`, then started) | **Yes**, in CI (the export; starting it needs a screen) |
 | Editor used by hand | **Yes**, on a virtual display | No | No |
-| Exported games run | **Yes** (export, move elsewhere, start with no arguments) | No | No |
 
-Lantern was planned for macOS first. The macOS paths are written:
-- app bundles, Metal through Axmol;
-- the program's own location (`_NSGetExecutablePath`);
-- user folders, and exporting `.app` bundles with their Info.plist.
+So far:
+- the macOS app bundles, Metal through Axmol and the exported `.app` have
+  only run on CI machines;
+- on Windows, the editor and games have been built and exported, but not
+  yet opened in a window.
 
-The Windows paths are written too: `.exe`, the DLLs beside it, and user
-folders. So far, though, the only real builds have been on Linux.
-`.github/workflows/ci.yml` builds and tests on all three systems as soon as
-the repository is on GitHub. **Until it has run, treat macOS and Windows as
-untested.**
+Please report what you find.
 
 ## Exporting
 

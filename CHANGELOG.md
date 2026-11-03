@@ -22,7 +22,10 @@ All notable changes to Lantern Engine. Versions follow the milestones in
   - The Top-Down Starter has Lua fireflies as an example.
   - Guide: [docs/scripting.md](docs/scripting.md); design: ADR 0013. Lua
     5.4.9 (MIT) is kept in `third_party/lua`.
-- **macOS and Windows build in CI.** The first runs on GitHub found and fixed:
+- **macOS and Windows build in CI.** macOS passes every test, including
+  those in real windows. Windows passes all but the window tests, which
+  its CI machines cannot run (they are labelled `window` and skipped
+  there). The first runs on GitHub found and fixed:
   - Apple's standard library lacks decimal `std::from_chars`;
   - Apple Clang 15 cannot construct aggregates from parentheses;
   - MSVC warnings (`getenv`, unreachable code);

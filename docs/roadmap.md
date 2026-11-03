@@ -84,9 +84,10 @@ In rough order of importance:
 
 1. **Verify macOS and Windows.** ~~Put the repository on GitHub, let CI build
    and test all three systems, and fix what they reveal.~~ On GitHub, macOS
-   now builds and passes every test, including those in real windows.
-   Windows builds the engine and passes its unit tests; its full build is
-   being finished. Trying the editor by hand on each is still to do.
+   builds and passes every test, including those in real windows, and
+   Windows builds, passes the unit tests and exports games (its CI
+   machines cannot open OpenGL windows). Still to do: using the editor by
+   hand on both, and running Windows' window tests somewhere with a screen.
 2. **Custom gameplay without building Lantern**: ~~games' own modules
    loaded by a downloaded editor~~ — **Lua scripts** do this (ADR 0013).
    Next for scripts:

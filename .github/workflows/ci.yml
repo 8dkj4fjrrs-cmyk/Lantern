@@ -91,6 +91,8 @@ jobs:
         if: runner.os == 'Linux'
         run: xvfb-run -a ctest --preset dev
 
+      # GitHub's Windows machines have no screen that can run OpenGL 3, so
+      # the tests that open a window (labelled "window") are skipped there.
       - name: Test (Windows, without window tests)
         if: runner.os == 'Windows'
-        run: ctest --preset dev -E "^(editor|player|exported_game)\\."
+        run: ctest --preset dev -LE window

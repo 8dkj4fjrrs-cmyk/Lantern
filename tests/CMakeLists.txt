@@ -94,14 +94,6 @@ set_tests_properties(player.version PROPERTIES PASS_REGULAR_EXPRESSION "backend:
 add_test(NAME player.rejects_bad_option COMMAND lantern_player --frames zero)
 set_tests_properties(player.rejects_bad_option PROPERTIES WILL_FAIL TRUE)
 
-add_test(NAME player.plays_scene_file
-    COMMAND lantern_player --scene "${CMAKE_CURRENT_SOURCE_DIR}/data/test_card.lscene" --frames 30
-            --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_test_card.png")
-set_tests_properties(player.plays_scene_file PROPERTIES
-    PASS_REGULAR_EXPRESSION "Showing scene 'Test Card' \\(4 entities\\).*Screenshot saved"
-    FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
-    TIMEOUT 60)
-
 add_test(NAME player.rejects_missing_scene COMMAND lantern_player --scene "no-such-file.lscene")
 set_tests_properties(player.rejects_missing_scene PROPERTIES WILL_FAIL TRUE)
 
@@ -119,6 +111,20 @@ endif()
 if(NOT LANTERN_WINDOW_TESTS)
     return()
 endif()
+
+# Every test added from here on is labelled "window" at the end of this file,
+# except those listed there that run without one. CI on systems without a
+# screen (Windows runners) skips them with: ctest -LE window
+get_property(_tests_without_window DIRECTORY PROPERTY TESTS)
+
+add_test(NAME player.plays_scene_file
+    COMMAND lantern_player --scene "${CMAKE_CURRENT_SOURCE_DIR}/data/test_card.lscene" --frames 30
+            --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_test_card.png")
+set_tests_properties(player.plays_scene_file PROPERTIES
+    PASS_REGULAR_EXPRESSION "Showing scene 'Test Card' \\(4 entities\\).*Screenshot saved"
+    FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
+    TIMEOUT 60)
+
 
 add_test(NAME player.window_smoke COMMAND lantern_player --frames 120)
 set_tests_properties(player.window_smoke PROPERTIES
@@ -284,3 +290,12 @@ if(TARGET lantern_editor)
         FIXTURES_REQUIRED editor_project
         TIMEOUT 60)
 endif()
+
+# Label the window tests (see above).
+get_property(_all_tests DIRECTORY PROPERTY TESTS)
+foreach(_test IN LISTS _all_tests)
+    if(NOT _test IN_LIST _tests_without_window
+       AND NOT _test MATCHES "^editor\\.(project_cleanup|export_cleanup|exports_game)$")
+        set_property(TEST ${_test} APPEND PROPERTY LABELS window)
+    endif()
+endforeach()
