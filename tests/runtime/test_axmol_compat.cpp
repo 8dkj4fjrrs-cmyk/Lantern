@@ -252,7 +252,12 @@ TEST_CASE("Clock helpers count in their stated units", "[runtime][compat]")
     const auto seconds = yasio::time_now();
     CHECK(milliseconds / 1000 >= seconds - 2);
     CHECK(milliseconds / 1000 <= seconds + 2);
-    CHECK(yasio::highp_clock() <= yasio::xhighp_clock() / 1000 + 1);
+    // Read one after the other: inside one expression, C++ does not say
+    // which side runs first (MSVC reads the right one first).
+    const auto micro = yasio::highp_clock();
+    const auto nano = yasio::xhighp_clock();
+    CHECK(micro <= nano / 1000 + 1);
+    CHECK(nano / 1000 - micro < 1'000'000);   // the same clock, in the same second
 }
 
 TEST_CASE("Axmol's own code works with the replacement buffers", "[runtime][compat]")
