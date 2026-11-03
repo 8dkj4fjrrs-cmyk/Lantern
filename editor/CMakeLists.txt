@@ -82,6 +82,14 @@ set(APP_NAME lantern_editor)
 set(_AX_EXTENSION_LIBS "")   # see player/CMakeLists.txt
 ax_setup_app_config(lantern_editor)
 
+# Windows: Axmol makes this a windowed program (no console window opens when
+# it is double-clicked). Such programs normally start at WinMain; ours starts
+# at an ordinary main(), so tell the linker to use the C runtime's start-up
+# that calls main(). Output still reaches a terminal or file it is piped to.
+if(MSVC)
+    target_link_options(lantern_editor PRIVATE "/ENTRY:mainCRTStartup")
+endif()
+
 if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_NAME "Lantern Editor")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "dev.lantern-engine.editor")
