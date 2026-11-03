@@ -3,7 +3,7 @@
 A C++-first 2D game engine and standalone editor for indie games — top-down
 RPGs, pixel-art adventures, tile-based and story-driven games.
 
-> **Status: 0.9.0-alpha.** Make a project from a template, build a small
+> **Status: 0.9.1-alpha.** Make a project from a template, build a small
 > game in the editor, with no code or with Lua scripts, and export it as a
 > program players run without Lantern. Built and tested on Linux, macOS and
 > Windows by CI, but so far used by hand only on Linux; read the

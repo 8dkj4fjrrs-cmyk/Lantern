@@ -3,6 +3,16 @@
 All notable changes to Lantern Engine. Versions follow the milestones in
 [docs/roadmap.md](docs/roadmap.md); design reasons are in [docs/adr](docs/adr).
 
+## 0.9.1-alpha — Lantern opens on downloaded Macs
+
+- **macOS called the downloaded Lantern "damaged"** and would not open it:
+  its app bundles had no valid signature, which Apple silicon Macs require
+  for downloaded apps.
+  - The package, and every game exported on a Mac, is now signed "ad hoc".
+    The first time, right-click the app and choose **Open** (see the
+    [known limitations](docs/known-limitations.md)).
+  - CI checks the signatures.
+
 ## 0.9.0-alpha — Lua scripting, and verified on macOS and Windows
 
 - **Lua scripting.** Gameplay code without a compiler: write a `.lua` file,
@@ -37,10 +47,7 @@ All notable changes to Lantern Engine. Versions follow the milestones in
   - the Windows package lacked `zlib1.dll` and the Visual C++ runtime, so
     its programs (and exported games) would not have started. The release
     now checks every packaged program's DLLs
-    (`tools/release/check_windows_dlls.py`);
-  - macOS called the downloaded Lantern "damaged": its bundles had no valid
-    signature. The package, and every game exported on a Mac, is now signed
-    ad hoc, and CI checks the signatures.
+    (`tools/release/check_windows_dlls.py`).
 - **No more yasio, curl, llhttp or websocket-parser in games.** Lantern now
   builds Axmol without its network module and remote console, which Lantern
   never used. The few yasio containers and helpers that Axmol's core still
