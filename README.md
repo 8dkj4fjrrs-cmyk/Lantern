@@ -2,13 +2,12 @@
 
 # Lantern Engine
 
-## A 2D Game Engine and Editor for Indie Games.
+## A 2D Game Engine and Editor.
 
-**Lantern Engine** is an open-source, C++20 2D game engine with its own
-standalone editor, made for top-down RPGs, pixel-art adventures, tile-based
-and story-driven games. Build a game in the editor with no code, or with
-**Lua scripts** and no compiler. Then export it as a program players run
-without Lantern.
+**Lantern Engine** is an open-source, C++20 game engine with its own
+standalone editor, for making all kinds of 2D games. Build a game in the
+editor with no code, or with **Lua scripts** and no compiler. Then export it
+as a program players run without Lantern.
 
 Please read **[Getting started](docs/getting-started.md)** to go from a new
 project to a game you can share in half an hour.
