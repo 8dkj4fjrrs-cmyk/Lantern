@@ -12,7 +12,7 @@ know. Please report anything else.
 | Automated unit tests | **Yes** | **Yes**, in CI | **Yes**, in CI |
 | Automated tests in real windows (playing, the editor, exported games) | **Yes**, on a virtual display | **Yes**, in CI | Not yet: CI machines have no screen that runs OpenGL 3 |
 | Exporting a game | **Yes** | **Yes**, in CI (an `.app`, then started) | **Yes**, in CI (the export; starting it needs a screen) |
-| Editor used by hand | **Yes**, on a virtual display | No | No |
+| Editor used by hand | **Yes**, on a virtual display | **Yes**: the downloaded 0.9.1-alpha, by its author | No |
 
 So far:
 - the macOS app bundles, Metal through Axmol and the exported `.app` have

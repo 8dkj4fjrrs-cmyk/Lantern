@@ -1,55 +1,152 @@
+<p align="center"><a href="https://github.com/8dkj4fjrrs-cmyk/Lantern"><img width="160" src="docs/images/lantern-logo.svg" alt="Lantern Engine logo"></a></p>
+
 # Lantern Engine
 
-A C++-first 2D game engine and standalone editor for indie games — top-down
-RPGs, pixel-art adventures, tile-based and story-driven games.
+## A 2D Game Engine and Editor for Indie Games.
 
-> **Status: 0.9.1-alpha.** Make a project from a template, build a small
-> game in the editor, with no code or with Lua scripts, and export it as a
-> program players run without Lantern. Built and tested on Linux, macOS and
-> Windows by CI, but so far used by hand only on Linux; read the
-> **[known limitations](docs/known-limitations.md)** before relying on it.
+**Lantern Engine** is an open-source, C++20 2D game engine with its own
+standalone editor, made for top-down RPGs, pixel-art adventures, tile-based
+and story-driven games. Build a game in the editor with no code, or with
+**Lua scripts** and no compiler. Then export it as a program players run
+without Lantern.
 
-What is in it:
+Please read **[Getting started](docs/getting-started.md)** to go from a new
+project to a game you can share in half an hour.
 
-- **An editor** with:
-  - scenes, sprites, tilemaps, colliders, text and cameras;
-  - flipbook animation;
-  - dialogue, quests and triggers;
-  - play mode;
-  - full undo.
+> **Status: 0.9.1-alpha.**
+>
+> - Built and tested on Linux, macOS and Windows by CI.
+> - Used by hand on Linux and macOS so far.
+> - Read the **[known limitations](docs/known-limitations.md)** before relying on it.
 
-  It is built with Lantern's own UI toolkit.
-- **A New Project wizard**: Empty, a **Top-Down Starter** that plays at once,
-  or a copy of the demo game.
-- **Exporting**: **Build** checks the project and makes a stand-alone game
-  with the license texts it must carry.
-- **Gameplay** without code (built-in behaviours, triggers, dialogue, quests,
-  saves); **Lua scripts** when you want more, with no compiler needed; and
-  C++ behaviours in game modules for those who build Lantern from source.
-- **[The Lantern Keeper](examples/lantern_keeper)**, a small finished RPG
-  ([how it was made](docs/making-the-lantern-keeper.md)).
+***
 
-## Start here
+[![CI](https://github.com/8dkj4fjrrs-cmyk/Lantern/actions/workflows/ci.yml/badge.svg)](https://github.com/8dkj4fjrrs-cmyk/Lantern/actions/workflows/ci.yml)
 
-- **[Getting started](docs/getting-started.md)**: from a new project to a
-  game you can share, in half an hour.
-- [Editor guide](docs/editor.md) · [Scripting in Lua](docs/scripting.md) ·
-  [Gameplay in C++](docs/gameplay.md) ·
-  [Exporting](docs/exporting.md) · [File formats](docs/formats/scene.md) ·
+[![Latest Release](https://img.shields.io/github/v/release/8dkj4fjrrs-cmyk/Lantern?include_prereleases&label=release)](https://github.com/8dkj4fjrrs-cmyk/Lantern/releases)
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![cxxstd](https://img.shields.io/badge/cxxstd-c++20-8A2BE2.svg)](https://github.com/8dkj4fjrrs-cmyk/Lantern)
+[![Lua](https://img.shields.io/badge/scripting-Lua%205.4-000080.svg)](docs/scripting.md)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](docs/known-limitations.md)
+
+![issues](https://img.shields.io/github/issues/8dkj4fjrrs-cmyk/Lantern?style=plastic)
+![forks](https://img.shields.io/github/forks/8dkj4fjrrs-cmyk/Lantern?style=plastic)
+![stars](https://img.shields.io/github/stars/8dkj4fjrrs-cmyk/Lantern?style=plastic)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/8dkj4fjrrs-cmyk/Lantern?style=plastic)
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg)](https://github.com/8dkj4fjrrs-cmyk/Lantern/pulls)
+[![Made with Axmol](https://img.shields.io/badge/runs%20on-Axmol%202.11-orange.svg)](https://github.com/axmolengine/axmol)
+
+***
+
+<p align="center"><img src="docs/images/editor.png" alt="The Lantern editor playing the Top-Down Starter: fireflies moved by a Lua script"></p>
+
+## ⚡️ Getting it
+
+* **Download it:** [Latest Release](https://github.com/8dkj4fjrrs-cmyk/Lantern/releases),
+  for macOS (Apple silicon), Windows and Linux. Unzip it and start
+  `lantern_editor`.
+  - On a Mac, the first time: right-click the app and choose **Open**, or
+    **System Settings › Privacy & Security › Open Anyway**. Lantern is not
+    signed by Apple yet.
+* **Build it from source:** [docs/building.md](docs/building.md). For
+  example, on macOS:
+
+  ```sh
+  brew install cmake ninja git powershell   # once
+  cmake --workflow --preset dev
+  ./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
+  ```
+
+## Learning and docs
+
+* [Getting started](docs/getting-started.md): your first game, step by step
+* [Editor guide](docs/editor.md): every panel and tool
+* [Scripting in Lua](docs/scripting.md): gameplay code without a compiler, with the full API
+* [Gameplay in C++](docs/gameplay.md): behaviours and game modules (Lantern built from source)
+* [Exporting games](docs/exporting.md): making a program to share
+* [Making The Lantern Keeper](docs/making-the-lantern-keeper.md): a whole RPG, built step by step
+* [File formats](docs/formats/scene.md) · [Known limitations](docs/known-limitations.md) ·
   [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
-## Building from source
+## General information
 
-```sh
-brew install cmake ninja git && brew install powershell   # macOS, once
-cmake --workflow --preset dev
-./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
-```
+Lantern is an editor first: scenes, art, maps, dialogue and quests are made
+by clicking, and saved as readable, versioned text files that work well with
+git. Gameplay is added with ready-made components, Lua scripts or C++. A
+game always plays a copy of the scene, so stopping the game never leaves
+changes behind.
 
-Full instructions per platform: [docs/building.md](docs/building.md).
-Using the editor: [docs/editor.md](docs/editor.md).
-Writing gameplay in Lua: [docs/scripting.md](docs/scripting.md); in C++: [docs/gameplay.md](docs/gameplay.md).
-What comes next: [docs/roadmap.md](docs/roadmap.md).
+**Supported platforms**:
+* Desktop: macOS (Apple silicon), Windows (x64), Linux (x64)
+* Exported games run on the system they were exported on
+
+**Languages**:
+* Lua 5.4, for game scripts
+* C++20, for the engine, and for game modules when building from source
+
+**Renderer backends** (through [Axmol](https://github.com/axmolengine/axmol)):
+* Metal on macOS
+* OpenGL 3.3+ on Windows and Linux
+
+**Architectures**:
+* macOS: arm64
+* Windows: x64
+* Linux: x64
+
+## Features
+
+Some highlights:
+
+- **A complete editor**, built with Lantern's own UI toolkit:
+  - Hierarchy, Inspector, Assets, Console and docking panels;
+  - full undo and redo;
+  - layouts that are remembered.
+- **Scenes and art**: sprites, tilemaps painted with tilesets, colliders,
+  text, cameras and shapes, with pixel-perfect filtering for pixel art.
+- **Flipbook animation**: cut sprite sheets into clips in the Animation
+  panel, and play them from components or scripts.
+- **RPG content without code**:
+  - dialogue with choices;
+  - quests with objectives;
+  - game variables;
+  - triggers with conditions and actions;
+  - save games (F5 / F9).
+- **Lua scripting**:
+  - `start(self)` and `update(self, dt)`, with objects, input, collisions,
+    animation, variables, events and scene changes;
+  - sandboxed, so scripts cannot reach files or programs;
+  - errors point at the file and line;
+  - endless loops are stopped.
+- **Play mode** inside the editor: ▶ to play, ■ to stop. Errors show in the
+  Console, and the scene being edited is never changed.
+- **New Project wizard**:
+  - an Empty project;
+  - a **Top-Down Starter** that plays at once;
+  - a copy of the demo game.
+- **Exporting**: **Build** checks the whole project, then makes a
+  stand-alone game with the license texts it must carry (an app bundle on
+  macOS).
+- **[The Lantern Keeper](examples/lantern_keeper)**, an original ten-minute
+  RPG made with Lantern. An automated test plays it to the end on every
+  change.
+- **Clean licensing**: everything inside a game is MIT or similarly
+  permissive. Lantern builds Axmol without its networking libraries (ADR 0012).
+- **Tested on every change** by CI on Linux, macOS and Windows: over 300
+  tests, including ones that play games in real windows.
+
+Please read the [changelog](CHANGELOG.md) for everything that changed, and
+the [roadmap](docs/roadmap.md) for what comes next.
+
+## Contributions
+
+How to contribute:
+
+* Suggestions, bug reports, fixes and improvements are very welcome!
+  - [Instructions for contributing](CONTRIBUTING.md)
+  - [Contributor and architecture rules](AGENTS.md)
+  - [Design decisions (ADRs)](docs/adr)
+* Adding a star on GitHub helps Lantern grow. Thank you!
 
 ## Repository layout
 
@@ -62,38 +159,24 @@ engine/gameplay/ Behaviours, Lua scripts, game modules, input, collision queries
 engine/ui/       Lantern UI: the editor's own interface toolkit (widgets, docking, text)
 engine/runtime/  Window and main loop (lantern::Application); wraps Axmol privately
 player/          lantern_player, the game runtime application
-examples/        The Lantern Keeper (the demo RPG) and the sample game: game modules and projects
+editor/          The editor: model (logic, undo), panels, application
+examples/        The Lantern Keeper (the demo RPG) and the sample game
 templates/       New Project templates (Empty, Top-Down Starter)
+third_party/     Small libraries kept in the repository (Lua, stb)
 licenses/        License texts of everything inside an exported game
-tools/release/   Release helpers (collecting license texts)
-editor/model/    Editor logic without UI code (console, preferences, state, undo commands)
-editor/panels/   Editor panels (built with Lantern UI)
-editor/application/  Editor window, menus, docking layout
-tests/           Catch2 unit tests + window smoke tests
-cmake/           Shared CMake helpers, incl. the pinned Axmol download
-docs/            Build guide and architecture decision records (ADRs)
-external/        Downloaded Axmol + tools (created by CMake, not in git)
+tests/           Catch2 unit tests and window tests
+tools/release/   Release helpers (license texts, Windows DLL check)
+cmake/           CMake helpers, the pinned Axmol download and its patches
+docs/            Guides, file formats and architecture decision records
 ```
 
-Contributing: [CONTRIBUTING.md](CONTRIBUTING.md). Releasing:
-[docs/releasing.md](docs/releasing.md).
+## Reference links
 
-## Architecture rules
-
-- The engine never depends on the editor.
-- Public engine headers never expose the runtime backend's types.
-- No global mutable state: loggers and engines are ordinary objects.
-- Every milestone leaves the project building with all tests passing.
-
-See [AGENTS.md](AGENTS.md) for the full contributor rules.
-
-## Runtime backend
-
-Lantern Engine runs on [Axmol](https://github.com/axmolengine/axmol) v2.11.5,
-the maintained fork of Cocos2d-x, pinned to an exact commit. Upstream Cocos2d-x
-4.0 was evaluated first but cannot be built natively on Apple silicon or
-linked on current Linux. Details and evidence:
-[docs/adr/0001-runtime-foundation.md](docs/adr/0001-runtime-foundation.md).
+- [Axmol Engine](https://github.com/axmolengine/axmol): the runtime Lantern
+  runs on (v2.11.5, pinned to an exact commit). Why Axmol:
+  [ADR 0001](docs/adr/0001-runtime-foundation.md).
+- [Lua](https://www.lua.org): the scripting language.
+- [Releasing Lantern](docs/releasing.md): how a version is built and published.
 
 ## License
 
@@ -102,6 +185,4 @@ Copyright (c) 2026 Oscar Hird.
 
 Third-party components keep their own licenses; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [licenses/](licenses/README.md).
-Games exported with Lantern carry those license texts. Lantern builds Axmol
-without its networking libraries, so games contain only permissively
-licensed code (ADR 0012).
+Games exported with Lantern carry those license texts.
