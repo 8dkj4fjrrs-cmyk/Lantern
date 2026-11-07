@@ -1,7 +1,8 @@
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/scene/SceneFile.hpp"
+#include "rolo/core/Names.hpp"
 
-#include "lantern/core/Files.hpp"
-#include "lantern/core/Numbers.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/core/Numbers.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -9,7 +10,7 @@
 #include <cmath>
 #include <unordered_set>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -296,14 +297,18 @@ void readComponent(Scene& scene, EntityId id, const std::string& where, const Js
             return;
         }
         scene.addComponent(id, std::make_unique<UnknownComponent>(typeId, j.dump()));
-        issues.warning(here, "This component type is not known to this version of Lantern. Its data is kept "
+        issues.warning(here, "This component type is not known to this version of Rolo. Its data is kept "
                              "and will be saved unchanged.");
         return;
     }
 
+    // The type's own ID, which may differ from the file's: Lantern's names
+    // ("lantern.Transform") find Rolo's types (rolo/core/Names.hpp).
+    const std::string& componentId = type->id;
+
     // Transform already exists on every entity; other types are added now.
     if (!type->required) {
-        if (entity->component(typeId) != nullptr) {
+        if (entity->component(componentId) != nullptr) {
             issues.warning(here, "A second component of this type was skipped.");
             return;
         }
@@ -316,7 +321,7 @@ void readComponent(Scene& scene, EntityId id, const std::string& where, const Js
         }
         if (key == "data") {
             std::string problem;
-            scene.modifyComponent(id, typeId, [&](Component& c) {
+            scene.modifyComponent(id, componentId, [&](Component& c) {
                 problem = c.loadData(value.dump());
                 return true;
             });
@@ -341,7 +346,7 @@ void readComponent(Scene& scene, EntityId id, const std::string& where, const Js
         if (coerced && *coerced != *parsed) {
             issues.warning(here, "\"" + key + "\" was out of range and has been adjusted.");
         }
-        scene.setProperty(id, typeId, key, *parsed);
+        scene.setProperty(id, componentId, key, *parsed);
     }
 }
 
@@ -393,8 +398,8 @@ SceneLoadResult parseScene(std::string_view text, const ComponentRegistry& regis
         return result;
     }
 
-    if (!document.is_object() || document.value("format", "") != SceneFormat::kName) {
-        issues.error("", "This is not a Lantern scene file (\"format\" should be \"lantern.scene\").");
+    if (!document.is_object() || !isFormatName(document.value("format", ""), SceneFormat::kName)) {
+        issues.error("", "This is not a Rolo scene file (\"format\" should be \"rolo.scene\").");
         return result;
     }
     if (!document.contains("version") || !document["version"].is_number_integer()) {
@@ -403,9 +408,9 @@ SceneLoadResult parseScene(std::string_view text, const ComponentRegistry& regis
     }
     const int version = document["version"].get<int>();
     if (version > SceneFormat::kVersion) {
-        issues.error("", "This scene was saved by a newer version of Lantern (scene format " + std::to_string(version)
+        issues.error("", "This scene was saved by a newer version of Rolo (scene format " + std::to_string(version)
                              + "; this version reads up to " + std::to_string(SceneFormat::kVersion)
-                             + "). Update Lantern to open it.");
+                             + "). Update Rolo to open it.");
         return result;
     }
     if (version < 1) {
@@ -622,4 +627,4 @@ std::vector<FileIssue> validateScene(const Scene& scene)
     return list;
 }
 
-} // namespace lantern
+} // namespace rolo

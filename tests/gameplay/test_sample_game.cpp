@@ -4,12 +4,12 @@
 #include "support/TempFolder.hpp"
 #include "SampleBehaviours.hpp"
 
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/GameModule.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/GameModule.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -17,11 +17,11 @@
 #include <algorithm>
 #include <filesystem>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
-const std::filesystem::path kSample = LANTERN_SAMPLE_PROJECT_DIR;
+const std::filesystem::path kSample = ROLO_SAMPLE_PROJECT_DIR;
 
 // Everything the player needs to play the sample, read-only like a game.
 struct SampleProject {
@@ -31,7 +31,7 @@ struct SampleProject {
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     AssetDatabase assets{kSample, AssetDatabase::Access::ReadOnly};
     ContentLibrary content;
-    FolderSaveStore saves{lantern::test::uniqueTempFolder("sample-saves")};
+    FolderSaveStore saves{rolo::test::uniqueTempFolder("sample-saves")};
     std::unique_ptr<Game> game;
 
     SampleProject()
@@ -57,7 +57,7 @@ struct SampleProject {
         setup.assets = &assets;
         setup.content = &content;
         setup.saves = &saves;
-        setup.gameName = "Lantern Sample";
+        setup.gameName = "Rolo Sample";
         setup.loadScene = [this](AssetId id, std::string& error) { return load(id, error); };
         game = std::make_unique<Game>(log, std::move(setup));
     }

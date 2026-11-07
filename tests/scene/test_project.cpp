@@ -1,11 +1,11 @@
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 struct TempDir {
@@ -21,13 +21,13 @@ struct TempDir {
 
 TEST_CASE("A new project has a project file and a start scene", "[project]")
 {
-    TempDir tmp("lantern_project_test");
+    TempDir tmp("rolo_project_test");
     const auto folder = tmp.path / "My Game";
     std::string error;
     const auto project = Project::create(folder, "My Game", &error);
     REQUIRE(project);
     CHECK(error.empty());
-    CHECK(std::filesystem::exists(folder / "project.lantern"));
+    CHECK(std::filesystem::exists(folder / "project.rolo"));
     CHECK(project->sceneFiles() == std::vector<std::string>{"scenes/main.lscene"});
 
     const auto reopened = Project::open(folder, &error);
@@ -45,7 +45,7 @@ TEST_CASE("A new project has a project file and a start scene", "[project]")
 
 TEST_CASE("Project paths are relative and stay inside the project", "[project]")
 {
-    TempDir tmp("lantern_project_paths");
+    TempDir tmp("rolo_project_paths");
     const auto project = Project::create(tmp.path / "P", "P");
     REQUIRE(project);
     CHECK(project->relative(project->folder() / "scenes" / "a.lscene") == "scenes/a.lscene");
@@ -75,9 +75,9 @@ TEST_CASE("Project files are validated", "[project]")
     std::string error;
     CHECK(Project::parseSettings(Project::serializeSettings({}), &error));
     CHECK_FALSE(Project::parseSettings("{}", &error));
-    CHECK_FALSE(Project::parseSettings(R"({"format": "lantern.project", "version": 5})", &error));
+    CHECK_FALSE(Project::parseSettings(R"({"format": "rolo.project", "version": 5})", &error));
     CHECK(error.find("newer version") != std::string::npos);
-    CHECK_FALSE(Project::parseSettings(R"({"format": "lantern.project", "version": 1, "startScene": "../x"})", &error));
-    CHECK_FALSE(Project::open(std::filesystem::temp_directory_path() / "no_such_lantern_project", &error));
-    CHECK(error.find("project.lantern") != std::string::npos);
+    CHECK_FALSE(Project::parseSettings(R"({"format": "rolo.project", "version": 1, "startScene": "../x"})", &error));
+    CHECK_FALSE(Project::open(std::filesystem::temp_directory_path() / "no_such_rolo_project", &error));
+    CHECK(error.find("project.rolo") != std::string::npos);
 }

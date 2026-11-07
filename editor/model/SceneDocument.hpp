@@ -6,7 +6,7 @@
 
 #include "Commands.hpp"
 
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 class SceneDocument {
 public:
@@ -53,4 +53,4 @@ private:
     CommandStack m_history;
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

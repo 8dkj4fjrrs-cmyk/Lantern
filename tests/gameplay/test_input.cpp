@@ -1,9 +1,9 @@
-#include "lantern/gameplay/Input.hpp"
+#include "rolo/gameplay/Input.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
+using namespace rolo;
 
 TEST_CASE("Keys are down, pressed this frame, released this frame", "[gameplay][input]")
 {

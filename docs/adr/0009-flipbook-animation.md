@@ -43,7 +43,7 @@ without a Sprite draws frames at their pixel size.
 ### 3. Frames are a function of a clock, not state that ticks
 
 The frame shown is computed from `(clock - startTime) * speed` and the clip
-(`animatorFrame`, in `lantern_assets`, unit-tested). Nothing advances per
+(`animatorFrame`, in `rolo_assets`, unit-tested). Nothing advances per
 frame and nothing is saved besides the clip choice. `startTime` is a
 runtime-only field (not a property, so never written to scenes). The clock
 is the game's time in a game (so pausing, stepping and fixed-step test runs
@@ -74,10 +74,10 @@ cover animation edits like scene edits, as for tilesets and content.
 
 ## Consequences
 
-- New asset type `animation` (`.lanim`, format `lantern.animations` version
-  1, documented in docs/formats/scene.md), new component `lantern.Animator`.
+- New asset type `animation` (`.lanim`, format `rolo.animations` version
+  1, documented in docs/formats/scene.md), new component `rolo.Animator`.
   The scene format version stays 1: older scenes have no Animators, and older
-  Lantern versions keep an Animator they do not know as an unknown component.
+  Rolo versions keep an Animator they do not know as an unknown component.
 - No new third-party code.
 - `AssetDatabase::find()` pointers are documented as short-lived: records
   are rebuilt on every refresh. The renderer copies the animation set it

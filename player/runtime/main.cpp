@@ -1,22 +1,22 @@
-// Lantern Player — runs a Lantern game in a window.
+// Rolo Player — runs a Rolo game in a window.
 //
-// Plays a Lantern scene: a project's start scene (--project), one scene file
-// (--scene), or Lantern's own start scene. The game's behaviours (C++ code
+// Plays a Rolo scene: a project's start scene (--project), one scene file
+// (--scene), or Rolo's own start scene. The game's behaviours (C++ code
 // from the game modules linked into this program) run every frame; doors and
 // other gameplay can change to other scenes of the project.
 
 #include "CommandLine.hpp"
 
-#include "lantern/core/Engine.hpp"
-#include "lantern/core/Files.hpp"
-#include "lantern/core/Version.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/GameModule.hpp"
-#include "lantern/runtime/Application.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/core/Engine.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/core/Version.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/GameModule.hpp"
+#include "rolo/runtime/Application.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -27,11 +27,11 @@
 namespace {
 
 // Reads a scene file, reporting what it finds wrong to the log.
-std::optional<lantern::Scene> loadScene(const std::filesystem::path& path, const lantern::ComponentRegistry& registry,
-                                        const lantern::Logger& log)
+std::optional<rolo::Scene> loadScene(const std::filesystem::path& path, const rolo::ComponentRegistry& registry,
+                                        const rolo::Logger& log)
 {
-    lantern::SceneLoadResult loaded = lantern::loadSceneFile(path, registry);
-    for (const lantern::FileIssue& issue : loaded.issues) {
+    rolo::SceneLoadResult loaded = rolo::loadSceneFile(path, registry);
+    for (const rolo::FileIssue& issue : loaded.issues) {
         if (issue.isError()) {
             log.error("scene", issue.toString());
         } else {
@@ -54,26 +54,26 @@ int main(int argc, char** argv)
         args.emplace_back(argv[i]);
     }
 
-    const lantern::player::ParseResult parsed = lantern::player::parseCommandLine(args);
+    const rolo::player::ParseResult parsed = rolo::player::parseCommandLine(args);
     if (!parsed.ok()) {
-        std::cerr << "Error: " << parsed.error << "\n\n" << lantern::player::helpText();
+        std::cerr << "Error: " << parsed.error << "\n\n" << rolo::player::helpText();
         return 2;
     }
-    lantern::player::PlayerOptions opt = parsed.options;
+    rolo::player::PlayerOptions opt = parsed.options;
     if (opt.showHelp) {
-        std::cout << lantern::player::helpText();
+        std::cout << rolo::player::helpText();
         return 0;
     }
     if (opt.showVersion) {
-        std::cout << "Lantern Player " << lantern::versionString() << " (backend: "
-                  << lantern::runtimeBackendName() << ")\n";
+        std::cout << "Rolo Player " << rolo::versionString() << " (backend: "
+                  << rolo::runtimeBackendName() << ")\n";
         return 0;
     }
 
-    lantern::Engine engine({.applicationName = opt.title});
-    engine.logger().addSink(lantern::makeConsoleSink());
+    rolo::Engine engine({.applicationName = opt.title});
+    engine.logger().addSink(rolo::makeConsoleSink());
 
-    if (const lantern::Status status = engine.initialize(); !status) {
+    if (const rolo::Status status = engine.initialize(); !status) {
         engine.logger().error("player", "Engine failed to start: " + status.message);
         return 1;
     }
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     // An exported game: the player was copied beside the game's files, and
     // started without saying what to play.
     if (opt.projectPath.empty() && opt.scenePath.empty()) {
-        if (const auto bundled = lantern::player::bundledGameFolder(lantern::executablePath())) {
+        if (const auto bundled = rolo::player::bundledGameFolder(rolo::executablePath())) {
             opt.projectPath = bundled->string();
             if (!opt.statsChosen) {
                 opt.showStats = false;
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     std::string title = opt.title;
     if (!opt.projectPath.empty()) {
         std::string error;
-        const auto project = lantern::Project::open(opt.projectPath, &error);
+        const auto project = rolo::Project::open(opt.projectPath, &error);
         if (!project) {
             engine.logger().error("player", error);
             return 1;
@@ -108,17 +108,17 @@ int main(int argc, char** argv)
                                                   "the game should begin with, and choose Make Start Scene.");
             return 1;
         }
-        if (title == lantern::player::PlayerOptions{}.title) {
+        if (title == rolo::player::PlayerOptions{}.title) {
             title = project->settings().name;
         }
     }
-    // The component types this game can use: Lantern's own, plus the
+    // The component types this game can use: Rolo's own, plus the
     // behaviours of the game modules linked into the player.
-    lantern::ComponentRegistry registry = lantern::ComponentRegistry::withBuiltins();
-    lantern::registerGameplayComponents(registry);
-    lantern::registerGameModules(registry, engine.logger());
+    rolo::ComponentRegistry registry = rolo::ComponentRegistry::withBuiltins();
+    rolo::registerGameplayComponents(registry);
+    rolo::registerGameModules(registry, engine.logger());
 
-    std::optional<lantern::Scene> firstScene;
+    std::optional<rolo::Scene> firstScene;
     if (!scenePath.empty()) {
         firstScene = loadScene(scenePath, registry, engine.logger());
         if (!firstScene) {
@@ -129,13 +129,13 @@ int main(int argc, char** argv)
     }
 
     // The project's images, tilesets and scenes: from --project, or the
-    // project folder the scene file is in (searching upwards for project.lantern).
+    // project folder the scene file is in (searching upwards for project.rolo).
     std::filesystem::path projectFolder = opt.projectPath;
     if (projectFolder.empty() && !scenePath.empty()) {
         std::error_code ec;
         for (std::filesystem::path dir = std::filesystem::absolute(scenePath, ec).parent_path(); !dir.empty();
              dir = dir.parent_path()) {
-            if (std::filesystem::exists(dir / lantern::ProjectFormat::kFileName, ec)) {
+            if (std::filesystem::exists(dir / rolo::ProjectFormat::kFileName, ec)) {
                 projectFolder = dir;
                 break;
             }
@@ -144,28 +144,28 @@ int main(int argc, char** argv)
             }
         }
     }
-    std::unique_ptr<lantern::AssetDatabase> assets;
+    std::unique_ptr<rolo::AssetDatabase> assets;
     if (!projectFolder.empty()) {
-        assets = std::make_unique<lantern::AssetDatabase>(projectFolder, lantern::AssetDatabase::Access::ReadOnly);
-        for (const lantern::FileIssue& issue : assets->refresh()) {
+        assets = std::make_unique<rolo::AssetDatabase>(projectFolder, rolo::AssetDatabase::Access::ReadOnly);
+        for (const rolo::FileIssue& issue : assets->refresh()) {
             engine.logger().warning("assets", issue.where + ": " + issue.message);
         }
         if (firstScene) {
-            for (const lantern::FileIssue& issue : lantern::checkAssetReferences(*firstScene, *assets)) {
+            for (const rolo::FileIssue& issue : rolo::checkAssetReferences(*firstScene, *assets)) {
                 engine.logger().warning("assets", issue.where + ": " + issue.message);
             }
         }
     }
 
     // The project's RPG content (variables, dialogues, quests), checked.
-    lantern::ContentLibrary content;
+    rolo::ContentLibrary content;
     if (assets) {
-        std::vector<lantern::FileIssue> issues;
-        content = lantern::ContentLibrary::load(*assets, &issues);
-        for (lantern::FileIssue& issue : content.check()) {
+        std::vector<rolo::FileIssue> issues;
+        content = rolo::ContentLibrary::load(*assets, &issues);
+        for (rolo::FileIssue& issue : content.check()) {
             issues.push_back(std::move(issue));
         }
-        for (const lantern::FileIssue& issue : issues) {
+        for (const rolo::FileIssue& issue : issues) {
             if (issue.isError()) {
                 engine.logger().error("content", issue.where + ": " + issue.message);
             } else {
@@ -177,20 +177,20 @@ int main(int argc, char** argv)
     // Save slots: in the user's application data folder (or --save-dir).
     std::filesystem::path saveFolder = opt.saveDir;
     if (saveFolder.empty()) {
-        saveFolder = lantern::FolderSaveStore::userFolder(title);
+        saveFolder = rolo::FolderSaveStore::userFolder(title);
     }
-    lantern::FolderSaveStore saves(saveFolder);
+    rolo::FolderSaveStore saves(saveFolder);
 
     // The game: plays the scene, loading other scenes of the project when
     // gameplay asks for them.
-    lantern::GameSetup setup;
+    rolo::GameSetup setup;
     setup.assets = assets.get();
     setup.content = &content;
     setup.saves = saveFolder.empty() ? nullptr : &saves;
     setup.gameName = title;
-    setup.loadScene = [&](lantern::AssetId id, std::string& error) -> std::optional<lantern::Scene> {
-        const lantern::AssetRecord* record = assets != nullptr ? assets->find(id) : nullptr;
-        if (record == nullptr || record->type != lantern::AssetType::Scene) {
+    setup.loadScene = [&](rolo::AssetId id, std::string& error) -> std::optional<rolo::Scene> {
+        const rolo::AssetRecord* record = assets != nullptr ? assets->find(id) : nullptr;
+        if (record == nullptr || record->type != rolo::AssetType::Scene) {
             error = "it is not a scene of this project";
             return std::nullopt;
         }
@@ -200,32 +200,32 @@ int main(int argc, char** argv)
         }
         return scene;
     };
-    lantern::Game game(engine.logger(), std::move(setup));
-    lantern::PresentationSettings presentation;
+    rolo::Game game(engine.logger(), std::move(setup));
+    rolo::PresentationSettings presentation;
     if (firstScene) {
         // The scene's asset ID lets the game remember progress per scene.
-        lantern::AssetId sceneId;
+        rolo::AssetId sceneId;
         if (assets) {
             std::error_code ec;
             const auto relative = std::filesystem::relative(std::filesystem::absolute(scenePath, ec), projectFolder, ec);
-            if (const lantern::AssetRecord* record = assets->findByPath(relative.generic_string())) {
+            if (const rolo::AssetRecord* record = assets->findByPath(relative.generic_string())) {
                 sceneId = record->id;
             }
         }
         game.start(*firstScene, sceneId);
         presentation.scene = game.sharedScene();
-        for (const lantern::Key key : opt.heldKeys) {
+        for (const rolo::Key key : opt.heldKeys) {
             game.input().press(key);
         }
     }
 
-    lantern::Application app(engine, {.title = title, .width = opt.width, .height = opt.height},
+    rolo::Application app(engine, {.title = title, .width = opt.width, .height = opt.height},
                              std::move(presentation));
     app.setAssets(assets.get());
     if (game.isRunning()) {
         app.setGameInput(&game.input());
-        std::shared_ptr<const lantern::Scene> shown = game.sharedScene();
-        app.setFrameCallback([&, shown](const lantern::FrameInfo& frame) mutable {
+        std::shared_ptr<const rolo::Scene> shown = game.sharedScene();
+        app.setFrameCallback([&, shown](const rolo::FrameInfo& frame) mutable {
             // Keys pressed by tests (--tap KEY@FROM-TO).
             for (const auto& tap : opt.tappedKeys) {
                 if (frame.frameIndex == tap.from) {
@@ -235,10 +235,10 @@ int main(int argc, char** argv)
                 }
             }
             // F5 saves to the "quick" slot, F9 loads it.
-            if (game.input().wasPressed(lantern::Key::F5)) {
+            if (game.input().wasPressed(rolo::Key::F5)) {
                 game.save("quick");
             }
-            if (game.input().wasPressed(lantern::Key::F9)) {
+            if (game.input().wasPressed(rolo::Key::F9)) {
                 game.load("quick");
             }
             const float dt = opt.fixedStep ? 1.0f / 60.0f : static_cast<float>(frame.deltaSeconds);
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
             }
         });
     }
-    const lantern::Status runStatus = app.run({
+    const rolo::Status runStatus = app.run({
         .maxFrames = opt.maxFrames,
         .screenshotPath = opt.screenshotPath,
         .showStats = opt.showStats,

@@ -17,7 +17,7 @@ languages, and asks for a simple component model without an ECS framework.
 
 ### 1. Behaviours are components with code
 
-`lantern::Behaviour` (new library `lantern_gameplay`, `engine/gameplay`)
+`rolo::Behaviour` (new library `rolo_gameplay`, `engine/gameplay`)
 derives from `Component` and adds `start(Game&)` and `update(Game&, dt)`.
 Behaviours describe their properties with the existing
 `ComponentTypeBuilder`, so the Inspector, scene files, undo and unknown-type
@@ -29,11 +29,11 @@ save, inspect and undo); an ECS (the brief asks not to without a need).
 
 ### 2. Game modules are static libraries with one registration function
 
-`LANTERN_GAME_MODULE(name) { registry.add(...); }` defines the function;
-`lantern_add_game_module()` builds the library; `lantern_link_game_modules()`
+`ROLO_GAME_MODULE(name) { registry.add(...); }` defines the function;
+`rolo_add_game_module()` builds the library; `rolo_link_game_modules()`
 links modules into an executable and **generates** the code that calls each
 module's function (`registerGameModules()`). The editor, the player and the
-tests call it at start-up. `LANTERN_GAME_MODULE_DIRS` adds outside folders.
+tests call it at start-up. `ROLO_GAME_MODULE_DIRS` adds outside folders.
 
 Self-registration through static constructors was rejected: linkers drop
 unreferenced objects from static libraries, so registrations would vanish
@@ -55,13 +55,13 @@ Play mode reuses the Scene view, seen through the game camera with the
 rest dimmed, instead of opening a second window or panel: one rendering
 path, and the game appears where the user is looking. The editor camera is
 saved and restored. The view passes keys and the mouse to the game while
-it has keyboard focus, except ⌘/Ctrl shortcuts. Lantern UI gained key
+it has keyboard focus, except ⌘/Ctrl shortcuts. Rolo UI gained key
 release events and modifier keys for this.
 
 ### 5. Input, collision and scene changes are engine types
 
-`lantern::Input` uses Lantern's own `Key` names; the runtime (Axmol
-keyboard and mouse) and the editor (Lantern UI events) both translate into
+`rolo::Input` uses Rolo's own `Key` names; the runtime (Axmol
+keyboard and mouse) and the editor (Rolo UI events) both translate into
 it, so game code never sees backend types.
 
 Collision is axis-aligned boxes: `Collider` components and solid tilemap
@@ -89,9 +89,9 @@ same, the renderer moves its existing nodes instead of rebuilding them.
 
 ## Consequences
 
-- New library `lantern_gameplay` (no backend; tested in every preset); the
+- New library `rolo_gameplay` (no backend; tested in every preset); the
   runtime links it for `Input`. No new third-party code.
-- Scene files gain `lantern.Collider` and behaviour components; format
+- Scene files gain `rolo.Collider` and behaviour components; format
   version stays 1 (older files remain valid). `.meta` files may now have
   type `"scene"`.
 - The editor and player must be rebuilt to pick up changed gameplay code.

@@ -1,11 +1,12 @@
-#include "lantern/content/Content.hpp"
+#include "rolo/content/Content.hpp"
+#include "rolo/core/Names.hpp"
 
 #include "Json.hpp"
 
 #include <algorithm>
 #include <set>
 
-namespace lantern {
+namespace rolo {
 
 using content_detail::Json;
 
@@ -105,7 +106,7 @@ struct Reader {
     /// readable file of that kind.
     bool header(const Json& j, std::string_view format)
     {
-        if (!j.is_object() || j.value("format", "") != format) {
+        if (!j.is_object() || !isFormatName(j.value("format", ""), format)) {
             error("file", "This is not a " + std::string(format) + " file (\"format\" should be \"" + std::string(format)
                               + "\").");
             return false;
@@ -115,7 +116,7 @@ struct Reader {
             return false;
         }
         if (j["version"].get<int>() > ContentFormat::kVersion) {
-            error("file", "This file was saved by a newer version of Lantern. Update Lantern to open it.");
+            error("file", "This file was saved by a newer version of Rolo. Update Rolo to open it.");
             return false;
         }
         return true;
@@ -523,4 +524,4 @@ std::string serializeQuest(const Quest& q)
     return j.dump(2) + "\n";
 }
 
-} // namespace lantern
+} // namespace rolo

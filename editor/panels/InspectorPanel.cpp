@@ -1,20 +1,20 @@
 #include "Panels.hpp"
 
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Script.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Script.hpp"
 
 #include "../model/EditorPaths.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Dialog.hpp"
-#include "lantern/ui/widgets/Menu.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <memory>
 #include <string>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -191,7 +191,7 @@ void InspectorPanel::buildScene(ui::Column& content)
         m_editor.endEdit();
         if (!m_editor.execute(std::make_unique<SetStartScene>(*rel))) {
             m_editor.showMessage("Could Not Change the Start Scene",
-                                 "Lantern could not write project.lantern. Check that it is not read-only.");
+                                 "Rolo could not write project.rolo. Check that it is not read-only.");
         }
         m_editor.endEdit();
     });
@@ -297,7 +297,7 @@ void InspectorPanel::buildComponent(ui::Column& content, const Entity& entity, c
 
     if (unknown != nullptr) {
         auto& note = section.body().emplace<ui::Label>(
-            "This component type is not known to this version of Lantern. Its data is kept unchanged and saved "
+            "This component type is not known to this version of Rolo. Its data is kept unchanged and saved "
             "with the scene.",
             ui::Label::Style::Faint);
         note.setWrap(true);
@@ -741,7 +741,7 @@ void InspectorPanel::openAddComponentMenu(ui::Button& button, EntityId id)
     if (entity == nullptr) {
         return;
     }
-    // Lantern's own components first, then each category of the game's
+    // Rolo's own components first, then each category of the game's
     // (e.g. "Gameplay": behaviours from the linked game modules).
     std::vector<std::string> categories{""};
     for (const ComponentType* type : m_editor.registry().types()) {
@@ -786,11 +786,11 @@ void InspectorPanel::openAddComponentMenu(ui::Button& button, EntityId id)
     openMenuAt(m_editor.ui(), button.bounds(), std::move(items));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor
 
 // --- An asset ------------------------------------------------------------------------------------
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
 {
@@ -804,7 +804,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     header.emplace<ui::IconView>(asset.type == AssetType::Tileset     ? ui::Icon::Grid
                                  : asset.type == AssetType::Animation ? ui::Icon::Play
                                  : asset.type == AssetType::Image ? ui::Icon::Scene
-                                 : asset.type == AssetType::Scene ? ui::Icon::Flame
+                                 : asset.type == AssetType::Scene ? ui::Icon::Rolo
                                  : asset.type == AssetType::Variables ? ui::Icon::Sliders
                                  : asset.type == AssetType::Dialogue ? ui::Icon::Terminal
                                  : asset.type == AssetType::Quest    ? ui::Icon::Check
@@ -818,7 +818,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
     name.setText(asset.fileName());
     name.setTooltip("Renaming changes the file name; scenes keep working because they use the asset's ID.");
     // A scene file may be open, or be the project's start scene (stored by
-    // path in project.lantern), so scenes are renamed and deleted outside the
+    // path in project.rolo), so scenes are renamed and deleted outside the
     // editor for now.
     const bool isScene = asset.type == AssetType::Scene;
     if (isScene) {
@@ -910,7 +910,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             const std::string path = a->path;
             m_editor.endEdit();
             if (!m_editor.execute(std::make_unique<ChangeImageFilter>(id, chosen))) {
-                m_editor.showMessage("Could Not Save", "Lantern could not write " + path + ".meta. Check that it is not read-only.");
+                m_editor.showMessage("Could Not Save", "Rolo could not write " + path + ".meta. Check that it is not read-only.");
             }
         });
     }
@@ -934,7 +934,7 @@ void InspectorPanel::buildAsset(ui::Column& content, const AssetRecord& asset)
             m_editor.endEdit();
             if (!m_editor.execute(std::make_unique<ChangeTileset>(id, std::move(t), label))) {
                 m_editor.showMessage("Could Not Save the Tileset",
-                                     "Lantern could not write " + path + ". Check that the file is not read-only.");
+                                     "Rolo could not write " + path + ". Check that the file is not read-only.");
             }
         };
         auto& imageRow = info.body().emplace<ui::PropertyField>("Image");
@@ -1342,4 +1342,4 @@ void InspectorPanel::confirmDeleteAsset(AssetId id)
     ui::showDialog(m_editor.ui(), std::move(dialog));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

@@ -1,12 +1,12 @@
-#include "lantern/content/ContentLibrary.hpp"
+#include "rolo/content/ContentLibrary.hpp"
 
-#include "lantern/core/Files.hpp"
+#include "rolo/core/Files.hpp"
 
 #include <algorithm>
 #include <functional>
 #include <set>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -481,4 +481,4 @@ std::vector<FileIssue> ContentLibrary::check() const
     return issues;
 }
 
-} // namespace lantern
+} // namespace rolo

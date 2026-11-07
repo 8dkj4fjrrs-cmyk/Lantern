@@ -1,6 +1,6 @@
 """Checks that every program in an unpacked Windows package can find its DLLs.
 
-    python tools/release/check_windows_dlls.py dist/Lantern-0.9.0-alpha-Windows-AMD64
+    python tools/release/check_windows_dlls.py dist/Rolo-0.9.0-alpha-Windows-AMD64
 
 A Windows program lists the DLLs it needs. Those that come with every Windows
 (KERNEL32.dll, USER32.dll, api-ms-win-crt-...) are always found; any other
@@ -18,7 +18,7 @@ import pefile
 
 # DLLs that are part of Windows itself (lower case). The Visual C++ runtime
 # (msvcp140.dll, vcruntime140*.dll) is deliberately not here: not every PC
-# has it, so Lantern ships it.
+# has it, so Rolo ships it.
 WINDOWS_DLLS = {
     "kernel32.dll", "user32.dll", "gdi32.dll", "shell32.dll", "advapi32.dll", "ole32.dll", "oleaut32.dll",
     "comdlg32.dll", "winspool.drv", "uuid.dll", "winmm.dll", "version.dll", "ws2_32.dll", "userenv.dll",

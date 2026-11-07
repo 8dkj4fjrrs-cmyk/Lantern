@@ -1,8 +1,8 @@
-#include "lantern/content/ContentRunner.hpp"
+#include "rolo/content/ContentRunner.hpp"
 
 #include <algorithm>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -449,4 +449,4 @@ void ContentRunner::notify(ContentEvent event)
     }
 }
 
-} // namespace lantern
+} // namespace rolo

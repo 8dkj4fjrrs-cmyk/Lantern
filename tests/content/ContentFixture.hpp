@@ -4,9 +4,9 @@
 // quests (the second needs the first) and a dialogue with a branch and a
 // conditional choice.
 
-#include "lantern/content/ContentLibrary.hpp"
+#include "rolo/content/ContentLibrary.hpp"
 
-namespace lantern::test {
+namespace rolo::test {
 
 inline const AssetId kVars{0x1001};
 inline const AssetId kGemsQuest{0x2001};
@@ -120,4 +120,4 @@ inline ContentLibrary makeLibrary()
     return lib;
 }
 
-} // namespace lantern::test
+} // namespace rolo::test

@@ -1,5 +1,5 @@
 {
-  "format": "lantern.tileset",
+  "format": "rolo.tileset",
   "version": 1,
   "image": "5354415254000001",
   "tileSize": [16, 16],

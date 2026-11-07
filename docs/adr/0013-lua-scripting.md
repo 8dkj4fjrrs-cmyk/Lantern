@@ -6,12 +6,12 @@
 
 ## Context
 
-Gameplay code in Lantern was C++ behaviours, compiled into the editor and
+Gameplay code in Rolo was C++ behaviours, compiled into the editor and
 the player (ADR 0007). The brief asked for that first, and to leave
 plugins, hot reload and scripting languages for later. The consequence:
-- a downloaded Lantern runs only built-in behaviours and the example games'
+- a downloaded Rolo runs only built-in behaviours and the example games'
   modules;
-- anything more needs a C++ toolchain and a build of Lantern from source.
+- anything more needs a C++ toolchain and a build of Rolo from source.
 
 The known limitations called this "the main thing to change after the
 alpha". The project owner chose Lua.
@@ -54,7 +54,7 @@ Rejected:
 - **LuaJIT:** faster, but its JIT conflicts with macOS's rules for
   executable memory. It is also at Lua 5.1, and slower to update.
 - **sol2** (the C++ binding library Axmol bundles): very large templates,
-  slow to compile, and hard for beginners to read. Lantern's API is a few
+  slow to compile, and hard for beginners to read. Rolo's API is a few
   dozen functions, written directly against Lua's C API.
 
 ### 2. Scripts are assets; a Script behaviour runs them
@@ -62,7 +62,7 @@ Rejected:
 **Scripts as assets:**
 - `.lua` files are assets of type `script`, with `.meta` IDs like any
   other;
-- the **Script** component (`lantern.Script`) refers to its file by ID, so
+- the **Script** component (`rolo.Script`) refers to its file by ID, so
   renaming the file keeps the link.
 
 **Script as a behaviour:**
@@ -124,7 +124,7 @@ available without a second API to keep in step.
 **Names, not IDs:**
 - scripts refer to scenes, dialogues and objects by the names shown in the
   editor, through `projectNotationNames()`, which moved from the editor's
-  Inspector into `lantern_content` for this;
+  Inspector into `rolo_content` for this;
 - scripts are code, not saved data, so the "IDs, not names" rule for files
   does not apply.
 
@@ -137,7 +137,7 @@ error.
 - New Script in the Assets panel and the Game menu.
 - The script's Inspector page: syntax check, the first lines of the code,
   and **Open in Code Editor** (the system's program for `.lua` files).
-  There is no code editor inside Lantern: VS Code and others do it far
+  There is no code editor inside Rolo: VS Code and others do it far
   better.
 - **Check Content** and exporting compile every script (without running
   it). A syntax error stops an export.
@@ -147,11 +147,11 @@ error.
 ## Consequences
 
 - Games can have custom logic without C++. The known limitation "your own
-  behaviours need Lantern built from source" now applies only to C++.
-- `lantern_gameplay` depends on `lantern_lua` (privately; no public header
+  behaviours need Rolo built from source" now applies only to C++.
+- `rolo_gameplay` depends on `rolo_lua` (privately; no public header
   includes Lua).
 - Every game carries Lua's MIT notice (`licenses/lua.txt`).
-- New asset type `script` in `.meta` files. Older Lanterns list such files
+- New asset type `script` in `.meta` files. Older Rolos list such files
   as unknown; no file format version changes.
 - Left for later:
   - script properties in the Inspector (per-object settings without
@@ -159,4 +159,4 @@ error.
   - several scripts per object;
   - reloading while playing;
   - a debugger;
-  - loading compiled C++ modules into a downloaded Lantern.
+  - loading compiled C++ modules into a downloaded Rolo.

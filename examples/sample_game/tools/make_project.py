@@ -5,7 +5,7 @@ the elder's dialogue and the gem quest).
     python3 make_project.py <project folder>
 
 Run make_art.py first. The output is committed; this script records how it
-was made and can rebuild it. Scenes are ordinary Lantern scene files: open
+was made and can rebuild it. Scenes are ordinary Rolo scene files: open
 the project in the editor to look at or change them (format:
 docs/formats/scene.md).
 """
@@ -45,7 +45,7 @@ def entity_id():
 
 
 def transform(x=0.0, y=0.0, rotation=0.0, scale=(1, 1)):
-    return {"type": "lantern.Transform", "position": [x, y], "rotation": rotation, "scale": list(scale)}
+    return {"type": "rolo.Transform", "position": [x, y], "rotation": rotation, "scale": list(scale)}
 
 
 def entity(name, components, parent=None, active=True):
@@ -62,7 +62,7 @@ def tilemap(width, height, paint):
         values = [paint(x, y) for x in range(width)]
         rows.append([y, 0] + values)
     return {
-        "type": "lantern.Tilemap",
+        "type": "rolo.Tilemap",
         "tileset": IDS["tiles.ltileset"],
         "cellSize": [CELL, CELL],
         "data": {"layers": [{"name": "Ground", "visible": True, "rows": rows}], "solid": []},
@@ -76,7 +76,7 @@ def cell_center(x, y):
 def text(name, x, y, words, parent, source="text", size=18, color="#ffffffff", align="left", width=0):
     return entity(name, [
         transform(x, y),
-        {"type": "lantern.Text", "text": words, "source": source, "font": None, "size": size, "color": color,
+        {"type": "rolo.Text", "text": words, "source": source, "font": None, "size": size, "color": color,
          "align": align, "width": width},
     ], parent=parent)
 
@@ -95,9 +95,9 @@ def interface(camera_id):
     ]
     box = entity("Dialogue Box", [
         transform(0, -262),
-        {"type": "lantern.Shape", "kind": "rectangle", "size": [1000, 166], "color": "#101018e8", "filled": True,
+        {"type": "rolo.Shape", "kind": "rectangle", "size": [1000, 166], "color": "#101018e8", "filled": True,
          "lineWidth": 2},
-        {"type": "lantern.DialogueView", "marker": "> "},
+        {"type": "rolo.DialogueView", "marker": "> "},
     ], parent=camera_id, active=False)   # hidden while editing; the game shows it during dialogues
     items += [box,
               text("Speaker", -480, 68, "", box["id"], source="dialogueSpeaker", size=20),
@@ -110,31 +110,31 @@ def interface(camera_id):
 def player(x, y):
     hero = entity("Player", [
         transform(x, y, scale=(SCALE, SCALE)),
-        {"type": "lantern.Sprite", "image": IDS["hero.png"], "size": [16, 24], "color": "#ffffffff",
+        {"type": "rolo.Sprite", "image": IDS["hero.png"], "size": [16, 24], "color": "#ffffffff",
          "flipX": False, "flipY": False},
         # The PlayerController switches clips: walk_left, idle_up, ...
-        {"type": "lantern.Animator", "animations": IDS["hero.lanim"], "clip": "idle_down", "speed": 1,
+        {"type": "rolo.Animator", "animations": IDS["hero.lanim"], "clip": "idle_down", "speed": 1,
          "playing": True},
         # Only the feet collide, so the head can overlap a wall's top edge.
-        {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
-        {"type": "lantern.Interactor", "key": "E"},
+        {"type": "rolo.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
+        {"type": "rolo.Interactor", "key": "E"},
         {"type": "sample.PlayerController", "speed": 140},
     ])
     # The camera undoes the player's scale, so the interface is drawn 1:1.
-    camera = entity("Camera", [transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "lantern.Camera", "zoom": 1}],
+    camera = entity("Camera", [transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "rolo.Camera", "zoom": 1}],
                     parent=hero["id"])
     return [hero, camera] + interface(camera["id"])
 
 
 def trigger(on, actions, condition=None, prompt="", event="", delay=1.0, once=False):
-    return {"type": "lantern.Trigger", "on": on, "prompt": prompt, "event": event, "delay": delay, "once": once,
+    return {"type": "rolo.Trigger", "on": on, "prompt": prompt, "event": event, "delay": delay, "once": once,
             "data": {"condition": condition, "actions": actions}}
 
 
 def door(name, x, y, target):
     return entity(name, [
         transform(x, y),
-        {"type": "lantern.Collider", "size": [24, 64], "offset": [0, 0], "solid": False},
+        {"type": "rolo.Collider", "size": [24, 64], "offset": [0, 0], "solid": False},
         {"type": "sample.SceneDoor", "scene": IDS[target]},
     ])
 
@@ -148,9 +148,9 @@ def gem(name, x, y, message, with_code=False):
                                     {"type": "destroy", "entity": None}]))
     return entity(name, [
         transform(x, y, rotation=45),
-        {"type": "lantern.Shape", "kind": "rectangle", "size": [14, 14], "color": "#f7d65cff", "filled": True,
+        {"type": "rolo.Shape", "kind": "rectangle", "size": [14, 14], "color": "#f7d65cff", "filled": True,
          "lineWidth": 2},
-        {"type": "lantern.Collider", "size": [14, 14], "offset": [0, 0], "solid": False},
+        {"type": "rolo.Collider", "size": [14, 14], "offset": [0, 0], "solid": False},
         pickup,
         {"type": "sample.Spinner", "speed": 90},
     ])
@@ -159,14 +159,14 @@ def gem(name, x, y, message, with_code=False):
 def elder(x, y):
     body = entity("Elder", [
         transform(x, y, scale=(SCALE, SCALE)),
-        {"type": "lantern.Sprite", "image": IDS["elder.png"], "size": [16, 24], "color": "#ffffffff",
+        {"type": "rolo.Sprite", "image": IDS["elder.png"], "size": [16, 24], "color": "#ffffffff",
          "flipX": True, "flipY": False},
-        {"type": "lantern.Animator", "animations": IDS["elder.lanim"], "clip": "idle", "speed": 1, "playing": True},
-        {"type": "lantern.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
+        {"type": "rolo.Animator", "animations": IDS["elder.lanim"], "clip": "idle", "speed": 1, "playing": True},
+        {"type": "rolo.Collider", "size": [12, 6], "offset": [0, -9], "solid": True},
     ])
     talk = entity("Talk Area", [
         transform(0, -4),
-        {"type": "lantern.Collider", "size": [36, 32], "offset": [0, 0], "solid": False},
+        {"type": "rolo.Collider", "size": [36, 32], "offset": [0, 0], "solid": False},
         trigger("interact", [{"type": "startDialogue", "dialogue": IDS["elder.ldialogue"]}], prompt="Talk"),
     ], parent=body["id"])
     return [body, talk]
@@ -176,16 +176,16 @@ def boulder(x, y):
     """Blocks the way to the cave until the gem quest's reward opens it."""
     return entity("Boulder", [
         transform(x, y),
-        {"type": "lantern.Shape", "kind": "ellipse", "size": [60, 60], "color": "#8a8478ff", "filled": True,
+        {"type": "rolo.Shape", "kind": "ellipse", "size": [60, 60], "color": "#8a8478ff", "filled": True,
          "lineWidth": 2},
-        {"type": "lantern.Collider", "size": [60, 64], "offset": [0, 0], "solid": True},
+        {"type": "rolo.Collider", "size": [60, 64], "offset": [0, 0], "solid": True},
         trigger("conditionMet", [{"type": "log", "text": "The boulder rolls aside."}, {"type": "destroy", "entity": None}],
                 condition={"type": "compare", "variable": "cave_open", "op": "==", "value": True}, once=True),
     ])
 
 
 def scene(name, entities):
-    return {"format": "lantern.scene", "version": 1, "name": name, "entities": entities}
+    return {"format": "rolo.scene", "version": 1, "name": name, "entities": entities}
 
 
 def meadow():
@@ -249,7 +249,7 @@ def gems_at_least(n):
 
 
 def variables():
-    return {"format": "lantern.variables", "version": 1, "variables": [
+    return {"format": "rolo.variables", "version": 1, "variables": [
         {"id": "gems", "type": "int", "initial": 0, "description": "Gems the player carries"},
         {"id": "met_elder", "type": "bool", "initial": False, "description": "Has talked to the elder"},
         {"id": "cave_open", "type": "bool", "initial": False, "description": "The boulder before the cave is gone"},
@@ -267,7 +267,7 @@ def elder_dialogue():
             n["next"] = next_node
         return n
 
-    return {"format": "lantern.dialogue", "version": 1,
+    return {"format": "rolo.dialogue", "version": 1,
             "speakers": [{"id": "elder", "name": "Elder Maren", "color": "#c9a6ffff", "portrait": None}],
             "start": "begin",
             "nodes": [
@@ -295,7 +295,7 @@ def elder_dialogue():
 
 
 def gems_quest():
-    return {"format": "lantern.quest", "version": 1,
+    return {"format": "rolo.quest", "version": 1,
             "name": "Gems for the Elder",
             "description": "Elder Maren needs three gems to move the boulder before the cave.",
             "prerequisites": [], "startWhen": None,
@@ -319,18 +319,18 @@ def hero_animations():
         first = row * 3
         clips.append(clip(f"idle_{facing}", [first], 1))
         clips.append(clip(f"walk_{facing}", [first + 1, first, first + 2, first], 8))
-    return {"format": "lantern.animations", "version": 1, "image": IDS["hero_walk.png"], "frameSize": [16, 24],
+    return {"format": "rolo.animations", "version": 1, "image": IDS["hero_walk.png"], "frameSize": [16, 24],
             "margin": 0, "spacing": 0, "clips": clips}
 
 
 def elder_animations():
     # Eyes open for a while, then a quick blink.
-    return {"format": "lantern.animations", "version": 1, "image": IDS["elder_idle.png"], "frameSize": [16, 24],
+    return {"format": "rolo.animations", "version": 1, "image": IDS["elder_idle.png"], "frameSize": [16, 24],
             "margin": 0, "spacing": 0, "clips": [clip("idle", [0] * 15 + [1], 6)]}
 
 
 def meta(asset_id, kind, extra=None):
-    m = {"format": "lantern.asset", "version": 1, "id": asset_id, "type": kind}
+    m = {"format": "rolo.asset", "version": 1, "id": asset_id, "type": kind}
     m.update(extra or {})
     return m
 
@@ -361,7 +361,7 @@ def write(path, data):
 
 def main():
     root = Path(sys.argv[1])
-    write(root / "project.lantern", {"format": "lantern.project", "version": 1, "name": "Lantern Sample",
+    write(root / "project.rolo", {"format": "rolo.project", "version": 1, "name": "Rolo Sample",
                                      "startScene": "scenes/meadow.lscene"})
     write(root / "assets/tiles.png.meta", meta(IDS["tiles.png"], "image", {"filter": "pixel"}))
     write(root / "assets/hero.png.meta", meta(IDS["hero.png"], "image", {"filter": "pixel"}))
@@ -378,7 +378,7 @@ def main():
     write(root / "content/elder.ldialogue.meta", meta(IDS["elder.ldialogue"], "dialogue"))
     write(root / "content/gems.lquest", gems_quest())
     write(root / "content/gems.lquest.meta", meta(IDS["gems.lquest"], "quest"))
-    write(root / "assets/tiles.ltileset", {"format": "lantern.tileset", "version": 1, "image": IDS["tiles.png"],
+    write(root / "assets/tiles.ltileset", {"format": "rolo.tileset", "version": 1, "image": IDS["tiles.png"],
                                            "tileSize": [CELL, CELL], "margin": 0, "spacing": 0,
                                            "solid": [WALL, WATER, CAVE_WALL]})
     write(root / "assets/tiles.ltileset.meta", meta(IDS["tiles.ltileset"], "tileset"))

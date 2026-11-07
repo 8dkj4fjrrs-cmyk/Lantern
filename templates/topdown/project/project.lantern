@@ -1,6 +1,0 @@
-{
-  "format": "lantern.project",
-  "version": 1,
-  "name": "Top-Down Starter",
-  "startScene": "scenes/meadow.lscene"
-}

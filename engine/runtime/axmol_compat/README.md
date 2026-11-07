@@ -1,12 +1,12 @@
 # Axmol compatibility headers (`axmol_compat`)
 
-Lantern builds Axmol without yasio (see
+Rolo builds Axmol without yasio (see
 [ADR 0012](../../../docs/adr/0012-no-yasio.md)). Axmol's core still includes a
 few yasio headers outside its networking code: a growable buffer, binary
 streams for its settings file, clocks and string helpers. This folder
 provides those headers.
 
-- **It is Lantern's own code** (MIT), written from scratch for Lantern. It
+- **It is Rolo's own code** (MIT), written from scratch for Rolo. It
   contains no yasio code.
 - **It keeps yasio's file and type names** (`yasio/byte_buffer.hpp`,
   `yasio::byte_buffer`, `cxx20::starts_with`, ...), so Axmol's sources compile
@@ -37,11 +37,11 @@ provides those headers.
 
 ## How it is wired in
 
-`cmake/LanternAxmol.cmake` does three things:
+`cmake/RoloAxmol.cmake` does three things:
 1. it deletes `external/axmol/3rdparty/yasio`;
 2. it sets `AX_WITH_YASIO`, `AX_ENABLE_NETWORK` and `AX_ENABLE_CONSOLE`
    off;
-3. it links the `lantern_axmol_compat` interface target into Axmol's
+3. it links the `rolo_axmol_compat` interface target into Axmol's
    `3rdparty` target.
 
 The patch that adds those two switches to Axmol is in

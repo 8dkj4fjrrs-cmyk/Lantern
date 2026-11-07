@@ -1,5 +1,5 @@
 #include "support/TempFolder.hpp"
-#include "lantern/assets/Animation.hpp"
+#include "rolo/assets/Animation.hpp"
 #include "Commands.hpp"
 #include "SceneDocument.hpp"
 
@@ -8,8 +8,8 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
-using namespace lantern::editor;
+using namespace rolo;
+using namespace rolo::editor;
 
 namespace {
 
@@ -53,7 +53,7 @@ TEST_CASE("Deleting restores the whole subtree, IDs and order", "[editor][comman
     const EntityId b = f.make("B");
     const EntityId child = f.make("Child", b);
     f.make("C");
-    f.doc.execute(std::make_unique<SetProperty>(child, "lantern.Transform", "rotation", 45.0f, "Rotation"));
+    f.doc.execute(std::make_unique<SetProperty>(child, "rolo.Transform", "rotation", 45.0f, "Rotation"));
     const std::string before = serialized(f.doc.scene());
 
     REQUIRE(f.doc.execute(std::make_unique<DeleteEntity>(b)));
@@ -92,7 +92,7 @@ TEST_CASE("Property edits undo to the original value and merge while dragging", 
     const EntityId id = f.make("Box");
     f.doc.history().breakMerge();
     for (float x : {1.0f, 2.0f, 3.0f}) {
-        f.doc.execute(std::make_unique<SetProperty>(id, "lantern.Transform", "position", Vec2{x, 0}, "Position"));
+        f.doc.execute(std::make_unique<SetProperty>(id, "rolo.Transform", "position", Vec2{x, 0}, "Position"));
     }
     CHECK(f.doc.scene().find(id)->transform().position.x == 3.0f);
     CHECK(f.doc.history().size() == 2); // create + one merged edit
@@ -102,7 +102,7 @@ TEST_CASE("Property edits undo to the original value and merge while dragging", 
     // After a break, the next edit is its own step.
     f.doc.redo();
     f.doc.history().breakMerge();
-    f.doc.execute(std::make_unique<SetProperty>(id, "lantern.Transform", "position", Vec2{9, 0}, "Position"));
+    f.doc.execute(std::make_unique<SetProperty>(id, "rolo.Transform", "position", Vec2{9, 0}, "Position"));
     CHECK(f.doc.history().size() == 3);
 }
 
@@ -111,9 +111,9 @@ TEST_CASE("Edits that change nothing make no undo step", "[editor][commands]")
     Fixture f;
     const EntityId id = f.make("Box");
     CHECK_FALSE(f.doc.execute(std::make_unique<RenameEntity>(id, "Box")));
-    CHECK_FALSE(f.doc.execute(std::make_unique<SetProperty>(id, "lantern.Transform", "rotation", 0.0f, "Rotation")));
+    CHECK_FALSE(f.doc.execute(std::make_unique<SetProperty>(id, "rolo.Transform", "rotation", 0.0f, "Rotation")));
     CHECK_FALSE(f.doc.execute(std::make_unique<SetEntityActive>(id, true)));
-    CHECK_FALSE(f.doc.execute(std::make_unique<SetProperty>(id, "lantern.Shape", "size", Vec2{}, "Size"))); // no Shape
+    CHECK_FALSE(f.doc.execute(std::make_unique<SetProperty>(id, "rolo.Shape", "size", Vec2{}, "Size"))); // no Shape
     CHECK(f.doc.history().size() == 1);
 }
 
@@ -122,14 +122,14 @@ TEST_CASE("Components can be added and removed, and put back in place", "[editor
     Fixture f;
     const EntityId id = f.make("Box");
     REQUIRE(f.doc.execute(std::make_unique<AddComponent>(id, std::make_unique<Shape>())));
-    f.doc.execute(std::make_unique<SetProperty>(id, "lantern.Shape", "color", Color{1, 2, 3, 4}, "Color"));
-    REQUIRE(f.doc.execute(std::make_unique<RemoveComponent>(id, "lantern.Shape")));
+    f.doc.execute(std::make_unique<SetProperty>(id, "rolo.Shape", "color", Color{1, 2, 3, 4}, "Color"));
+    REQUIRE(f.doc.execute(std::make_unique<RemoveComponent>(id, "rolo.Shape")));
     CHECK(f.doc.scene().find(id)->get<Shape>() == nullptr);
-    CHECK_FALSE(f.doc.execute(std::make_unique<RemoveComponent>(id, "lantern.Transform"))); // required
+    CHECK_FALSE(f.doc.execute(std::make_unique<RemoveComponent>(id, "rolo.Transform"))); // required
     f.doc.undo();
     REQUIRE(f.doc.scene().find(id)->get<Shape>() != nullptr);
     CHECK(f.doc.scene().find(id)->get<Shape>()->color == Color{1, 2, 3, 4}); // values come back too
-    CHECK(f.doc.scene().componentIndex(id, "lantern.Shape") == 1u);
+    CHECK(f.doc.scene().componentIndex(id, "rolo.Shape") == 1u);
 }
 
 TEST_CASE("Renaming, hiding and moving undo cleanly", "[editor][commands]")
@@ -165,7 +165,7 @@ TEST_CASE("A new command clears the redo history", "[editor][commands]")
 
 TEST_CASE("The document knows when it has unsaved changes", "[editor][document]")
 {
-    const auto dir = std::filesystem::temp_directory_path() / "lantern_document_test";
+    const auto dir = std::filesystem::temp_directory_path() / "rolo_document_test";
     std::filesystem::remove_all(dir);
     Fixture f;
     CHECK(f.doc.isUntitled());
@@ -215,8 +215,8 @@ TEST_CASE("A command group undoes as one step, in reverse order", "[editor][comm
     Fixture f;
     const EntityId id = f.make("Box");
     auto group = std::make_unique<CommandGroup>("Reset Transform");
-    group->add(std::make_unique<SetProperty>(id, "lantern.Transform", "rotation", 10.0f, "Rotation"));
-    group->add(std::make_unique<SetProperty>(id, "lantern.Transform", "rotation", 20.0f, "Rotation"));
+    group->add(std::make_unique<SetProperty>(id, "rolo.Transform", "rotation", 10.0f, "Rotation"));
+    group->add(std::make_unique<SetProperty>(id, "rolo.Transform", "rotation", 20.0f, "Rotation"));
     group->add(std::make_unique<RenameEntity>(id, "Box")); // no change: skipped
     REQUIRE(f.doc.execute(std::move(group)));
     CHECK(f.doc.scene().find(id)->transform().rotation == 20.0f);
@@ -247,8 +247,8 @@ TEST_CASE("A tool drag changing several properties is one undo step", "[editor][
         const float w = 100.0f + 10.0f * static_cast<float>(step);
         REQUIRE(f.doc.execute(std::make_unique<SetProperties>(
             box,
-            std::vector<SetProperties::Change>{{"lantern.Shape", "size", Vec2{w, 100.0f}},
-                                               {"lantern.Transform", "position", Vec2{(w - 100.0f) * 0.5f, 0.0f}}},
+            std::vector<SetProperties::Change>{{"rolo.Shape", "size", Vec2{w, 100.0f}},
+                                               {"rolo.Transform", "position", Vec2{(w - 100.0f) * 0.5f, 0.0f}}},
             "Resize Box")));
     }
     f.doc.history().breakMerge();
@@ -263,7 +263,7 @@ TEST_CASE("A tool drag changing several properties is one undo step", "[editor][
 
     // Changing nothing makes no step.
     CHECK_FALSE(f.doc.execute(std::make_unique<SetProperties>(
-        box, std::vector<SetProperties::Change>{{"lantern.Shape", "size", Vec2{150.0f, 100.0f}}}, "Resize Box")));
+        box, std::vector<SetProperties::Change>{{"rolo.Shape", "size", Vec2{150.0f, 100.0f}}}, "Resize Box")));
 }
 
 TEST_CASE("A brush stroke is one undo step; erasing and collision too", "[editor][commands][tilemap]")
@@ -318,10 +318,10 @@ TEST_CASE("Replacing a component (e.g. adding a layer) undoes in place", "[edito
     changed->layers.push_back(TileLayer{"Decor", true, {}});
     REQUIRE(f.doc.execute(std::make_unique<ReplaceComponent>(id, std::move(changed), "Add Layer")));
     CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 2);
-    CHECK(f.scene().componentIndex(id, "lantern.Tilemap") == 2u); // same place in the list
+    CHECK(f.scene().componentIndex(id, "rolo.Tilemap") == 2u); // same place in the list
     f.doc.undo();
     CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 1);
-    CHECK(f.scene().componentIndex(id, "lantern.Tilemap") == 2u);
+    CHECK(f.scene().componentIndex(id, "rolo.Tilemap") == 2u);
     f.doc.redo();
     CHECK(f.scene().find(id)->get<Tilemap>()->layers.size() == 2);
 }
@@ -332,7 +332,7 @@ namespace {
 
 // A project folder with hero.png imported and a tileset made from it.
 struct AssetFixture {
-    std::filesystem::path folder = lantern::test::uniqueTempFolder("asset-commands");
+    std::filesystem::path folder = rolo::test::uniqueTempFolder("asset-commands");
     std::unique_ptr<AssetDatabase> db;
     AssetId image;
     AssetId tileset;
@@ -342,7 +342,7 @@ struct AssetFixture {
         std::filesystem::remove_all(folder);
         std::filesystem::create_directories(folder);
         db = std::make_unique<AssetDatabase>(folder);
-        image = *db->import(std::filesystem::path(LANTERN_TEST_DATA_DIR) / "hero.png", "assets");
+        image = *db->import(std::filesystem::path(ROLO_TEST_DATA_DIR) / "hero.png", "assets");
         tileset = *db->createTileset(image, {8.0f, 8.0f}, "hero");
     }
     ~AssetFixture() { std::filesystem::remove_all(folder); }
@@ -449,8 +449,8 @@ TEST_CASE("The start scene is changed as an undoable step", "[editor][commands]"
     AssetFixture a;
     Fixture f;
     f.doc.history().setAssets(a.db.get());
-    std::ofstream(a.folder / "project.lantern")
-        << R"({"format": "lantern.project", "version": 1, "name": "T", "startScene": "scenes/main.lscene"})";
+    std::ofstream(a.folder / "project.rolo")
+        << R"({"format": "rolo.project", "version": 1, "name": "T", "startScene": "scenes/main.lscene"})";
     const auto startScene = [&] { return Project::open(a.folder)->settings().startScene; };
     REQUIRE(f.doc.execute(std::make_unique<SetStartScene>("scenes/village.lscene")));
     CHECK(startScene() == "scenes/village.lscene");

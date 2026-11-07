@@ -15,12 +15,12 @@
 // it, and the Console shows it with the file and line.
 
 #include "ScriptHost.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/content/Notation.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/scene/Components.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/content/Notation.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/scene/Components.hpp"
 #include "lauxlib.h"
 #include "lua.h"
 
@@ -32,11 +32,11 @@
 #include <string>
 #include <string_view>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
-constexpr const char* kObjectType = "lantern.Object";
+constexpr const char* kObjectType = "rolo.Object";
 constexpr std::string_view kCategory = "script";
 
 // --- Helpers ---------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ Game& gameOf(lua_State* L)
     return ScriptHost::of(L).game();
 }
 
-// Lantern code that throws a C++ exception inside a Lua call must turn it into
+// Rolo code that throws a C++ exception inside a Lua call must turn it into
 // a Lua error, or Lua cannot report it properly. Every binding goes through this.
 template <int (*Function)(lua_State*)> int guarded(lua_State* L)
 {
@@ -712,4 +712,4 @@ void openScriptApi(ScriptHost& host)
     lua_setglobal(L, "require");
 }
 
-} // namespace lantern
+} // namespace rolo

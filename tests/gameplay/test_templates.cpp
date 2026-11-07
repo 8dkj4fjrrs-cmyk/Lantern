@@ -2,20 +2,20 @@
 // copied into a new project as the wizard does, and played.
 
 #include "support/PlayProject.hpp"
-#include "LanternResources.hpp"
+#include "RoloResources.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
 
-using namespace lantern;
-using namespace lantern::editor;
+using namespace rolo;
+using namespace rolo::editor;
 namespace fs = std::filesystem;
 
 namespace {
 
-const fs::path kSource = LANTERN_SOURCE_DIR;
+const fs::path kSource = ROLO_SOURCE_DIR;
 
 ProjectTemplate find(const std::vector<ProjectTemplate>& all, std::string_view id)
 {
@@ -46,7 +46,7 @@ std::string all(const std::vector<std::string>& lines)
 
 TEST_CASE("The wizard offers the templates and the example game", "[templates]")
 {
-    const auto r = findLanternResources("/nowhere/lantern_editor", HostOs::Linux, kSource, {});
+    const auto r = findRoloResources("/nowhere/rolo_editor", HostOs::Linux, kSource, {});
     const auto list = listProjectTemplates(r);
     REQUIRE(list.size() == 3);
     CHECK(list[0].name == "Empty Project");
@@ -57,7 +57,7 @@ TEST_CASE("The wizard offers the templates and the example game", "[templates]")
 
 TEST_CASE("A project made from the Top-Down Starter plays without any C++", "[templates]")
 {
-    const auto list = listProjectTemplates(findLanternResources("/x/lantern_editor", HostOs::Linux, kSource, {}));
+    const auto list = listProjectTemplates(findRoloResources("/x/rolo_editor", HostOs::Linux, kSource, {}));
     NewProject made;
     std::string error;
     REQUIRE(createProjectFromTemplate(find(list, "topdown"), made.folder, "My Game", &error));
@@ -115,7 +115,7 @@ TEST_CASE("A project made from the Top-Down Starter plays without any C++", "[te
 
 TEST_CASE("Projects made from the other templates open and start cleanly", "[templates]")
 {
-    const auto list = listProjectTemplates(findLanternResources("/x/lantern_editor", HostOs::Linux, kSource, {}));
+    const auto list = listProjectTemplates(findRoloResources("/x/rolo_editor", HostOs::Linux, kSource, {}));
     for (const char* id : {"empty", "lantern_keeper"}) {
         INFO(id);
         NewProject made;

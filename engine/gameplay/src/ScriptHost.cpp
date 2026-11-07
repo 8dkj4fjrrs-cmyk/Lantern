@@ -1,9 +1,9 @@
 #include "ScriptHost.hpp"
 
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/Script.hpp"
-#include "lantern/scene/Component.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/Script.hpp"
+#include "rolo/scene/Component.hpp"
 
 // Lua is compiled as C++ (third_party/lua/CMakeLists.txt), so its headers are
 // included directly, without the extern "C" wrapper of lua.hpp.
@@ -16,14 +16,14 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
 constexpr int kNoRef = -2; // LUA_NOREF
 
 // The message handler of every call: adds where the error happened. Lua's
-// traceback also lists Lantern's own C functions ("[C]: in ?"); only the
+// traceback also lists Rolo's own C functions ("[C]: in ?"); only the
 // lines inside scripts help the person who wrote them, so the rest is dropped.
 int addTraceback(lua_State* L)
 {
@@ -395,7 +395,7 @@ void Script::update(Game& game, float dt)
 const ComponentType& Script::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Script>("lantern.Script", "Script")
+        ComponentTypeBuilder<Script>("rolo.Script", "Script")
             .category("Gameplay")
             .description(
                 "Runs a Lua script: its start(self) once, then update(self, dt) every frame. Scripts need "
@@ -456,4 +456,4 @@ std::string newScriptTemplate(std::string_view name)
     return text;
 }
 
-} // namespace lantern
+} // namespace rolo

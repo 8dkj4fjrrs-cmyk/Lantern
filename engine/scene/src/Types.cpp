@@ -1,10 +1,10 @@
-#include "lantern/scene/Types.hpp"
-#include "lantern/scene/EntityId.hpp"
+#include "rolo/scene/Types.hpp"
+#include "rolo/scene/EntityId.hpp"
 
 #include <cmath>
 #include <cstdio>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -171,4 +171,4 @@ std::optional<AssetId> AssetId::parse(std::string_view text)
     return std::nullopt;
 }
 
-} // namespace lantern
+} // namespace rolo

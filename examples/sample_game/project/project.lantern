@@ -1,6 +1,0 @@
-{
-  "format": "lantern.project",
-  "version": 1,
-  "name": "Lantern Sample",
-  "startScene": "scenes/meadow.lscene"
-}

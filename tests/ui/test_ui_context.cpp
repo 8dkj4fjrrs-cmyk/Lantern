@@ -1,11 +1,11 @@
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Box.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Box.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <vector>
 
-using namespace lantern::ui;
+using namespace rolo::ui;
 
 namespace {
 

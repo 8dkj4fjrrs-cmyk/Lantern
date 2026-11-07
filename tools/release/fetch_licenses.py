@@ -1,10 +1,10 @@
-"""Collects the license texts of everything compiled into Lantern's game
-runtime (lantern_player), into licenses/ at the top of the repository.
+"""Collects the license texts of everything compiled into Rolo's game
+runtime (rolo_player), into licenses/ at the top of the repository.
 
     python3 tools/release/fetch_licenses.py
 
 Run it when Axmol or another dependency is updated. Texts come from each
-project's own repository at the version Lantern uses (or from the copy in
+project's own repository at the version Rolo uses (or from the copy in
 external/axmol when Axmol ships one), and the results are committed: builds,
 installs and game exports copy licenses/ and never need the network.
 The list of libraries comes from the runtime's build (its link line and the
@@ -20,9 +20,9 @@ GH = "https://raw.githubusercontent.com/"
 
 # name: (what it is, license, [sources]); a source is a URL or a path under ROOT.
 LIBRARIES = {
-    "lantern": ("Lantern Engine", "MIT", ["LICENSE"]),
+    "rolo": ("Rolo Engine", "MIT", ["LICENSE"]),
     "axmol": ("Axmol Engine 2.11.5", "MIT", ["external/axmol/LICENSE"]),
-    "inter-font": ("Inter font 4.0 (Lantern's default text font)", "SIL OFL 1.1", ["assets/fonts/Inter-LICENSE.txt"]),
+    "inter-font": ("Inter font 4.0 (Rolo's default text font)", "SIL OFL 1.1", ["assets/fonts/Inter-LICENSE.txt"]),
     "lua": ("Lua 5.4.9 (gameplay scripts)", "MIT", ["third_party/lua/LICENSE"]),
     "nlohmann-json": ("nlohmann/json 3.12.0", "MIT", [GH + "nlohmann/json/v3.12.0/LICENSE.MIT"]),
     "stb": ("stb_image, stb_truetype", "MIT or public domain", [GH + "nothings/stb/master/LICENSE"]),
@@ -79,8 +79,8 @@ def fetch(source):
 def main():
     out = ROOT / "licenses"
     out.mkdir(exist_ok=True)
-    index = ["# Licenses of software in games made with Lantern", "",
-             "Every game exported by Lantern contains the programs and libraries below.",
+    index = ["# Licenses of software in games made with Rolo", "",
+             "Every game exported by Rolo contains the programs and libraries below.",
              "Their license texts are in this folder; games carry a copy of it.", "",
              "| File | Software | License |", "|---|---|---|"]
     failed = []

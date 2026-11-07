@@ -1,8 +1,8 @@
-#include "lantern/content/Logic.hpp"
+#include "rolo/content/Logic.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
+using namespace rolo;
 
 TEST_CASE("Conditions read and write as typed JSON", "[content][logic]")
 {

@@ -1,19 +1,19 @@
 #pragma once
 
 // Checking and exporting a project, for the Export Game dialog and for
-// `lantern_editor --project P --export OUT` (which runs without a window).
+// `rolo_editor --project P --export OUT` (which runs without a window).
 
 #include "../model/GameExport.hpp"
-#include "../model/LanternResources.hpp"
+#include "../model/RoloResources.hpp"
 
-#include "lantern/core/Log.hpp"
-#include "lantern/scene/Component.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/scene/Component.hpp"
 
 #include <cstddef>
 #include <filesystem>
 #include <string>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 /// What checking a project found (each problem is also written to the log).
 struct ProjectCheck {
@@ -37,7 +37,7 @@ struct ExportRun {
 /// Checks the project, then exports it if there are no errors (warnings are
 /// reported, not blocking).
 ExportRun exportProject(const std::filesystem::path& project, const std::filesystem::path& output,
-                        const std::string& gameName, const LanternResources& resources,
+                        const std::string& gameName, const RoloResources& resources,
                         const ComponentRegistry& registry, const Logger& log);
 
-} // namespace lantern::editor
+} // namespace rolo::editor

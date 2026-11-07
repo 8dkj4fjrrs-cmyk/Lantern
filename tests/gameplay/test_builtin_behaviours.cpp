@@ -1,14 +1,14 @@
-// The ready-made behaviours (lantern/gameplay/BuiltinBehaviours.hpp) that let
+// The ready-made behaviours (rolo/gameplay/BuiltinBehaviours.hpp) that let
 // a game be made without C++: walking, doors with arrival points, camera bounds.
 
 #include "support/TempFolder.hpp"
 
-#include "lantern/assets/Animation.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/core/Log.hpp"
-#include "lantern/gameplay/BuiltinBehaviours.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/gameplay/BuiltinBehaviours.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -16,7 +16,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -37,7 +37,7 @@ struct Captured {
 EntityId addPlayer(Scene& scene, Vec2 at)
 {
     const EntityId id = scene.create("Player")->id();
-    scene.setProperty(id, "lantern.Transform", "position", at);
+    scene.setProperty(id, "rolo.Transform", "position", at);
     auto collider = std::make_unique<Collider>();
     collider->size = {20, 20};
     scene.addComponent(id, std::move(collider));
@@ -59,7 +59,7 @@ TEST_CASE("The built-in behaviours are registered with the gameplay components",
 {
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     registerGameplayComponents(registry);
-    for (const char* id : {"lantern.TopDownController", "lantern.SceneDoor", "lantern.CameraBounds"}) {
+    for (const char* id : {"rolo.TopDownController", "rolo.SceneDoor", "rolo.CameraBounds"}) {
         CHECK(registry.find(id) != nullptr);
     }
 }
@@ -71,7 +71,7 @@ TEST_CASE("The top-down controller walks, stops at walls and faces the way it go
     const EntityId player = addPlayer(scene, {0, 0});
     scene.addComponent(player, std::make_unique<Sprite>());
     const EntityId wall = scene.create("Wall")->id();
-    scene.setProperty(wall, "lantern.Transform", "position", Vec2{-100, 0});
+    scene.setProperty(wall, "rolo.Transform", "position", Vec2{-100, 0});
     scene.addComponent(wall, std::make_unique<Collider>());   // 32 x 32, solid
 
     Game game(c.log, nullptr);
@@ -91,10 +91,10 @@ TEST_CASE("The top-down controller plays walk and idle clips when the animations
 {
     const auto folder = test::uniqueTempFolder("builtin-anim");
     std::filesystem::create_directories(folder);
-    std::ofstream(folder / "project.lantern") << R"({"format": "lantern.project", "version": 1, "name": "T"})";
+    std::ofstream(folder / "project.rolo") << R"({"format": "rolo.project", "version": 1, "name": "T"})";
     {
         AssetDatabase db(folder);
-        const AssetId image = *db.import(std::filesystem::path(LANTERN_TEST_DATA_DIR) / "tiles_16px.png");
+        const AssetId image = *db.import(std::filesystem::path(ROLO_TEST_DATA_DIR) / "tiles_16px.png");
         const AssetId set = *db.createAnimationSet(image, {16, 16}, "Hero");
         AnimationSet clips = *db.find(set)->animation;
         clips.clips = {AnimationClip{"idle_down", {0}, 1.0f, true}, AnimationClip{"walk_up", {1, 2}, 8.0f, true},
@@ -132,7 +132,7 @@ TEST_CASE("Walking into a scene door arrives at the named object", "[gameplay][b
     const auto makeScene = [&](AssetId id) {
         Scene s(id == village ? "Village" : "Woods");
         const EntityId door = s.create("Door")->id();
-        s.setProperty(door, "lantern.Transform", "position", Vec2{500, 0});
+        s.setProperty(door, "rolo.Transform", "position", Vec2{500, 0});
         auto area = std::make_unique<Collider>();
         area->solid = false;
         s.addComponent(door, std::move(area));
@@ -141,7 +141,7 @@ TEST_CASE("Walking into a scene door arrives at the named object", "[gameplay][b
         sceneDoor->arriveAt = id == village ? "From Village" : "Nowhere";
         s.addComponent(door, std::move(sceneDoor));
         const EntityId spot = s.create("From Village")->id();
-        s.setProperty(spot, "lantern.Transform", "position", Vec2{-300, 40});
+        s.setProperty(spot, "rolo.Transform", "position", Vec2{-300, 40});
         addPlayer(s, {0, 0});
         return s;
     };

@@ -1,9 +1,9 @@
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Menu.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 ui::Row& makePanelToolbar(ui::Widget& parent)
 {
@@ -61,9 +61,9 @@ bool editAnimationSet(EditorServices& editor, AssetId id, const std::string& lab
     }
     if (!done) {
         editor.showMessage("Could Not Save the Animations",
-                           "Lantern could not write " + path + ". Check that the file is not read-only.");
+                           "Rolo could not write " + path + ". Check that the file is not read-only.");
     }
     return done;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

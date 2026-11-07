@@ -17,20 +17,20 @@ and AI assistants.
 ## Architecture rules
 
 - Dependency direction: `editor` → `engine`; never the reverse. Tests may use anything.
-- Public engine headers (`engine/*/include/lantern/...`) must not include backend (Axmol) headers.
-- The editor interface is built with Lantern UI (`engine/ui`, `lantern::ui`). Do not add Dear ImGui or any other third-party UI library (ADR 0004).
+- Public engine headers (`engine/*/include/rolo/...`) must not include backend (Axmol) headers.
+- The editor interface is built with Rolo UI (`engine/ui`, `rolo::ui`). Do not add Dear ImGui or any other third-party UI library (ADR 0004).
 - `engine/ui` must not depend on Axmol, GLFW or any graphics API: it turns widgets into a list of triangles, and `engine/runtime/src/UiHost.*` draws them. Keep it unit-testable without a window.
 - `editor/model/` must not include UI or runtime/backend headers: it is the editor logic, unit-tested without a window.
-- Editor UI code (`editor/application`, `editor/panels`) may use `lantern/ui/*` and `lantern/runtime/*.hpp`, never Axmol headers.
+- Editor UI code (`editor/application`, `editor/panels`) may use `rolo/ui/*` and `rolo/runtime/*.hpp`, never Axmol headers.
 - Editor operations that change scene or project data must go through the undo/redo command system: panels call the editor's `execute()` with a `Command` (`editor/model/Commands.hpp`), never `Scene` setters directly.
-- Scenes are `lantern::Scene` data (`engine/scene`); Axmol nodes are created only by `engine/runtime/src/SceneRenderer.*`. New component types describe their properties with `ComponentTypeBuilder` so the Inspector, files and undo handle them automatically.
+- Scenes are `rolo::Scene` data (`engine/scene`); Axmol nodes are created only by `engine/runtime/src/SceneRenderer.*`. New component types describe their properties with `ComponentTypeBuilder` so the Inspector, files and undo handle them automatically.
 - Gameplay code is C++ `Behaviour` components (`engine/gameplay`) in game modules registered with
-  `LANTERN_GAME_MODULE` / `lantern_add_game_module` (docs/gameplay.md), or Lua scripts run by the
-  `lantern.Script` behaviour (docs/scripting.md, ADR 0013). Lua stays inside `engine/gameplay`
+  `ROLO_GAME_MODULE` / `rolo_add_game_module` (docs/gameplay.md), or Lua scripts run by the
+  `rolo.Script` behaviour (docs/scripting.md, ADR 0013). Lua stays inside `engine/gameplay`
   (ScriptHost, ScriptApi): no other module includes Lua headers. Scripts stay sandboxed: never open
   Lua's io, os, debug or package libraries, and every API function checks its arguments and turns
   C++ exceptions into Lua errors (`guarded`). New script functions need docs/scripting.md and tests. `engine/gameplay` has no
-  backend; the runtime and editor translate their input into `lantern::Input`. A game always plays a
+  backend; the runtime and editor translate their input into `rolo::Input`. A game always plays a
   copy of the scene (`Game::start`), never the scene being edited.
 - RPG content (`engine/content`) is data: conditions and actions are a fixed, typed set, never code or
   free expressions. Authored definitions (variables, dialogues, quests) stay apart from progress
@@ -40,22 +40,22 @@ and AI assistants.
 - File formats (`docs/formats/`) are versioned: changing one means bumping its version, adding an upgrade step and a test with an old file.
 - No global mutable state. Pass `Engine&` / `Logger&` explicitly.
 - Ownership: RAII and `std::unique_ptr` by default; raw pointers only as non-owning observers.
-- Errors: return `lantern::Status` (or a richer result type later) with a user-actionable message. No exceptions across module boundaries.
+- Errors: return `rolo::Status` (or a richer result type later) with a user-actionable message. No exceptions across module boundaries.
 - Stable IDs, not names or addresses, for anything saved to disk.
 - The editor finds its templates, examples, licenses, docs and the game runtime through
-  `LanternResources` (beside the program when installed, the source tree when built); never
+  `RoloResources` (beside the program when installed, the source tree when built); never
   hard-code paths to them. Anything a game contains must have its license text in `licenses/`.
 - Saved files use project-relative paths and an explicit format version.
 - Axmol is used unmodified except for the small patches in `cmake/axmol-patches/` (switches and
-  build fixes only, each explained in its README). Lantern builds Axmol without networking or
+  build fixes only, each explained in its README). Rolo builds Axmol without networking or
   yasio; `engine/runtime/axmol_compat` provides the yasio headers Axmol's core includes, written
-  for Lantern (ADR 0012). Never copy yasio code into it.
+  for Rolo (ADR 0012). Never copy yasio code into it.
 
 ## Code style
 
 - C++20, `.clang-format` in the root. 4-space indent.
-- Namespace `lantern`. Types `PascalCase`, functions `camelCase`, members `m_name`, constants `kName`.
-- Headers in `include/lantern/<module>/`, sources in `src/`.
+- Namespace `rolo`. Types `PascalCase`, functions `camelCase`, members `m_name`, constants `kName`.
+- Headers in `include/rolo/<module>/`, sources in `src/`.
 - Write comments for a reader who is learning engine programming: explain *why*.
 
 ## Commands

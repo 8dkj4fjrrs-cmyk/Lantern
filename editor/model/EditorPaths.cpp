@@ -1,12 +1,12 @@
 #include "EditorPaths.hpp"
 
-#include "lantern/core/Files.hpp"
+#include "rolo/core/Files.hpp"
 
 #include <cstdint>
 #include <cstdlib>
 #include <string>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 std::optional<std::string> realEnvironment(const char* name)
 {
@@ -29,20 +29,20 @@ std::filesystem::path userConfigDirectory(HostOs os, const EnvironmentLookup& en
     switch (os) {
     case HostOs::MacOS:
         if (auto home = env("HOME")) {
-            return std::filesystem::path(*home) / "Library" / "Application Support" / "Lantern Engine" / "Editor";
+            return std::filesystem::path(*home) / "Library" / "Application Support" / "Rolo Engine" / "Editor";
         }
         return {};
     case HostOs::Windows:
         if (auto appData = env("APPDATA")) {
-            return std::filesystem::path(*appData) / "Lantern Engine" / "Editor";
+            return std::filesystem::path(*appData) / "Rolo Engine" / "Editor";
         }
         return {};
     case HostOs::Linux:
         if (auto xdg = env("XDG_CONFIG_HOME")) {
-            return std::filesystem::path(*xdg) / "lantern-engine" / "editor";
+            return std::filesystem::path(*xdg) / "rolo-engine" / "editor";
         }
         if (auto home = env("HOME")) {
-            return std::filesystem::path(*home) / ".config" / "lantern-engine" / "editor";
+            return std::filesystem::path(*home) / ".config" / "rolo-engine" / "editor";
         }
         return {};
     }
@@ -60,7 +60,7 @@ std::filesystem::path defaultProjectsDirectory(HostOs os, const EnvironmentLooku
     if (!home || home->empty()) {
         return {};
     }
-    return std::filesystem::path(*home) / "Documents" / "Lantern Projects";
+    return std::filesystem::path(*home) / "Documents" / "Rolo Projects";
 }
 
 std::filesystem::path defaultProjectsDirectory()
@@ -101,4 +101,4 @@ bool openWithDefaultApp(const std::filesystem::path& file)
     return std::system(command.c_str()) == 0;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

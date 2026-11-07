@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's binary writer, used by Axmol's UserDefault
-// (settings file). Written from scratch for Lantern; it contains no yasio code
+// Rolo's replacement for yasio's binary writer, used by Axmol's UserDefault
+// (settings file). Written from scratch for Rolo; it contains no yasio code
 // (see ../../README.md). ibstream.hpp reads what this writes.
 #pragma once
 

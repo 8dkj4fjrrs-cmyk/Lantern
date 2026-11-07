@@ -1,12 +1,12 @@
-#include "lantern/ui/widgets/DockSpace.hpp"
+#include "rolo/ui/widgets/DockSpace.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Icons.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Icons.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 constexpr float kGap = 3.0f;            // space between groups (also the splitter)
@@ -484,4 +484,4 @@ bool DockSpace::onPointerUp(Context&, const PointerEvent& event)
     return true;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

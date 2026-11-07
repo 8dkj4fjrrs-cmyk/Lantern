@@ -1,6 +1,6 @@
 # Known limitations (0.9.1-alpha)
 
-Lantern is an alpha: it works end to end, from a new project to an
+Rolo is an alpha: it works end to end, from a new project to an
 exported game, but much is missing or untested. This page lists what we
 know. Please report anything else.
 
@@ -29,11 +29,11 @@ Please report what you find.
 - macOS apps are signed only "ad hoc", **not with an Apple Developer ID**,
   and not notarized. The first time, players right-click the app and choose
   **Open** (on newer macOS: **System Settings › Privacy & Security › Open
-  Anyway**). The same goes for Lantern itself.
+  Anyway**). The same goes for Rolo itself.
 - No installer: games are folders (or `.app` bundles) to zip and share.
 - Every game contains the whole runtime (about 16 MB on Linux), even the
   parts a small game does not use.
-- Games cannot use the network: Lantern builds Axmol without HTTP,
+- Games cannot use the network: Rolo builds Axmol without HTTP,
   WebSocket and downloads (ADR 0012).
 
 ## Games
@@ -54,7 +54,7 @@ Please report what you find.
 ## Editor
 
 - **Custom gameplay code:** write it in **Lua** ([scripting guide](scripting.md));
-  a downloaded Lantern runs scripts. **C++** behaviours still need Lantern
+  a downloaded Rolo runs scripts. **C++** behaviours still need Rolo
   built from source: game modules are linked into the editor and the player
   when they are built ([gameplay guide](gameplay.md)).
 - Lua scripts, for now:
@@ -70,14 +70,14 @@ Please report what you find.
 - Dialogue is edited as forms in the Inspector, with one-line text fields.
   There is no visual dialogue graph.
 - No timeline animation: flipbook clips only (see the [roadmap](roadmap.md)).
-- Lantern has its own folder browser, not your system's file dialog.
+- Rolo has its own folder browser, not your system's file dialog.
 - Changes to anything but positions rebuild the drawn scene; fine for
   scenes of hundreds of objects, not tested with thousands.
 
 ## Files
 
 - Formats are versioned and documented ([formats](formats/scene.md)). Until
-  1.0 a format may still change. Lantern will upgrade older files when it
+  1.0 a format may still change. Rolo will upgrade older files when it
   does, as it promises in each format's description.
 - Saves made with one version of a game keep working after the game changes
   (see [content formats](formats/content.md#save-games-lsave)). Saves are

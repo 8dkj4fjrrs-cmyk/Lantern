@@ -1,6 +1,6 @@
-# Contributing to Lantern Engine
+# Contributing to Rolo Engine
 
-Thank you for helping. Lantern is an MIT-licensed C++20 2D game engine and
+Thank you for helping. Rolo is an MIT-licensed C++20 2D game engine and
 editor; by contributing you agree your contribution is licensed under the
 same [MIT License](LICENSE).
 
@@ -51,7 +51,7 @@ cmake --workflow --preset core       # the parts without Axmol
 
 Include:
 - what you did, what you expected and what happened;
-- the Lantern version (Help > About);
+- the Rolo version (Help > About);
 - your system;
 - the Console's messages (the Console panel's **Copy** button copies them).
 

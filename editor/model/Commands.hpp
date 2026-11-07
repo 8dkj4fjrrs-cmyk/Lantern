@@ -20,9 +20,9 @@
 // AssetDatabase to use (setAssets), because the database is replaced when
 // another project opens and a command must never keep a stale pointer.
 
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/Scene.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 class Command {
 public:
@@ -316,7 +316,7 @@ private:
     std::vector<bool> m_applied;
 };
 
-/// Makes another scene the one the game starts with (project.lantern's
+/// Makes another scene the one the game starts with (project.rolo's
 /// startScene, a project-relative path). Saved straight away.
 class SetStartScene final : public Command {
 public:
@@ -429,4 +429,4 @@ private:
     AssetDatabase* m_assets = nullptr;
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

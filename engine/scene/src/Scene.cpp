@@ -1,9 +1,9 @@
-#include "lantern/scene/Scene.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern {
+namespace rolo {
 
 // --- Entity ----------------------------------------------------------------------------
 
@@ -574,7 +574,7 @@ Entity* shapeEntity(Scene& scene, const char* name, EntityId parent, Vec2 positi
                     Color color, bool filled = true, float lineWidth = 2.0f)
 {
     Entity* e = scene.create(name, parent);
-    scene.setProperty(e->id(), "lantern.Transform", "position", position);
+    scene.setProperty(e->id(), "rolo.Transform", "position", position);
     auto shape = std::make_unique<Shape>();
     shape->kind = kind;
     shape->size = size;
@@ -589,36 +589,52 @@ Entity* shapeEntity(Scene& scene, const char* name, EntityId parent, Vec2 positi
 
 Scene makeStartScene(float worldWidth, float worldHeight)
 {
+    // Rolo, the engine's mascot, drawn with Shape components only (later
+    // shapes are drawn on top). y goes up, so positive y is above the centre.
     Scene scene("Start Scene");
-    const Color glow{255, 184, 77, 18};
-    const Color glass{255, 184, 77, 89};
-    const Color flame{255, 184, 77, 255};
-    const Color core{255, 224, 140, 255};
-    const Color frame{56, 51, 61, 255};
+    const Color red{214, 52, 43, 255};
+    const Color shadow{122, 15, 11, 110};
+    const Color ink{20, 20, 20, 255};
+    const Color orange{255, 147, 38, 255};
+    const Color shine{255, 243, 214, 140};
+    const Color white{255, 255, 255, 255};
+    const Color cheek{255, 90, 95, 150};
+    const Color mouth{90, 23, 8, 255};
+    const Color tongue{255, 111, 111, 255};
+    const Color leaf{76, 194, 90, 255};
 
     shapeEntity(scene, "Background", {}, {worldWidth * 0.5f, worldHeight * 0.5f}, ShapeKind::Rectangle,
-                {worldWidth, worldHeight}, Color{15, 18, 28, 255});
+                {worldWidth, worldHeight}, red);
 
-    Entity* lantern = scene.create("Lantern");
-    scene.setProperty(lantern->id(), "lantern.Transform", "position", Vec2{worldWidth * 0.5f, worldHeight * 0.5f});
+    Entity* rolo = scene.create("Rolo");
+    const EntityId r = rolo->id();
+    scene.setProperty(r, "rolo.Transform", "position", Vec2{worldWidth * 0.5f, worldHeight * 0.5f - 10.0f});
 
-    Entity* halo = scene.create("Glow", lantern->id());
-    int ring = 1;
-    for (float radius : {220.0f, 170.0f, 130.0f, 100.0f, 80.0f, 65.0f}) {
-        const std::string name = "Glow " + std::to_string(ring++);
-        shapeEntity(scene, name.c_str(), halo->id(), {}, ShapeKind::Ellipse, {radius * 2.0f, radius * 2.0f}, glow);
+    shapeEntity(scene, "Shadow", r, {0.0f, -170.0f}, ShapeKind::Ellipse, {240.0f, 30.0f}, shadow);
+    // The sprout: a stem and a leaf.
+    shapeEntity(scene, "Stem", r, {4.0f, 160.0f}, ShapeKind::Rectangle, {12.0f, 40.0f}, ink);
+    shapeEntity(scene, "Leaf", r, {38.0f, 176.0f}, ShapeKind::Ellipse, {60.0f, 26.0f}, leaf);
+    // The body: an outline circle, the orange ball and a shine.
+    shapeEntity(scene, "Outline", r, {}, ShapeKind::Ellipse, {312.0f, 312.0f}, ink);
+    shapeEntity(scene, "Body", r, {}, ShapeKind::Ellipse, {288.0f, 288.0f}, orange);
+    shapeEntity(scene, "Shine", r, {-58.0f, 78.0f}, ShapeKind::Ellipse, {84.0f, 44.0f}, shine);
+    // Big eyes looking a little inward, with a glint each.
+    for (const float side : {-1.0f, 1.0f}) {
+        const char* label = side < 0.0f ? "Left Eye" : "Right Eye";
+        Entity* eye = shapeEntity(scene, label, r, {side * 52.0f, 22.0f}, ShapeKind::Ellipse, {86.0f, 102.0f}, ink);
+        shapeEntity(scene, "White", eye->id(), {}, ShapeKind::Ellipse, {68.0f, 84.0f}, white);
+        Entity* pupil = shapeEntity(scene, "Pupil", eye->id(), {-side * 10.0f, -12.0f}, ShapeKind::Ellipse,
+                                    {40.0f, 40.0f}, ink);
+        shapeEntity(scene, "Glint", pupil->id(), {7.0f, 9.0f}, ShapeKind::Ellipse, {14.0f, 14.0f}, white);
+        shapeEntity(scene, side < 0.0f ? "Left Cheek" : "Right Cheek", r, {side * 92.0f, -46.0f},
+                    ShapeKind::Ellipse, {44.0f, 26.0f}, cheek);
     }
-    shapeEntity(scene, "Glass", lantern->id(), {}, ShapeKind::Rectangle, {76.0f, 110.0f}, glass);
-    Entity* fire = shapeEntity(scene, "Flame", lantern->id(), {0.0f, -8.0f}, ShapeKind::Ellipse, {44.0f, 44.0f}, flame);
-    shapeEntity(scene, "Core", fire->id(), {0.0f, 4.0f}, ShapeKind::Ellipse, {24.0f, 24.0f}, core);
-
-    Entity* body = scene.create("Frame", lantern->id());
-    shapeEntity(scene, "Top", body->id(), {0.0f, 61.5f}, ShapeKind::Rectangle, {96.0f, 13.0f}, frame);
-    shapeEntity(scene, "Bottom", body->id(), {0.0f, -61.5f}, ShapeKind::Rectangle, {96.0f, 13.0f}, frame);
-    shapeEntity(scene, "Left Bar", body->id(), {-39.0f, 0.0f}, ShapeKind::Rectangle, {6.0f, 110.0f}, frame);
-    shapeEntity(scene, "Right Bar", body->id(), {39.0f, 0.0f}, ShapeKind::Rectangle, {6.0f, 110.0f}, frame);
-    shapeEntity(scene, "Handle", body->id(), {0.0f, 82.0f}, ShapeKind::Ellipse, {36.0f, 36.0f}, frame, false, 3.0f);
+    // The smile: the lower half of a dark ellipse (an orange bar hides the
+    // upper half), with a tongue.
+    shapeEntity(scene, "Mouth", r, {0.0f, -52.0f}, ShapeKind::Ellipse, {110.0f, 76.0f}, mouth);
+    shapeEntity(scene, "Mouth Top", r, {0.0f, -33.0f}, ShapeKind::Rectangle, {120.0f, 38.0f}, orange);
+    shapeEntity(scene, "Tongue", r, {0.0f, -78.0f}, ShapeKind::Ellipse, {54.0f, 22.0f}, tongue);
     return scene;
 }
 
-} // namespace lantern
+} // namespace rolo

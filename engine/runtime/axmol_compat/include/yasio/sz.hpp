@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's size macros used by Axmol's core.
-// Written from scratch for Lantern; it contains no yasio code (see ../../README.md).
+// Rolo's replacement for yasio's size macros used by Axmol's core.
+// Written from scratch for Rolo; it contains no yasio code (see ../../README.md).
 #pragma once
 
 // Rounds `size` up to a multiple of `alignment`, which must be a power of two.

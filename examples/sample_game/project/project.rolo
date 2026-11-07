@@ -1,0 +1,6 @@
+{
+  "format": "rolo.project",
+  "version": 1,
+  "name": "Rolo Sample",
+  "startScene": "scenes/meadow.lscene"
+}

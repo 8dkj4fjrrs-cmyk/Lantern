@@ -1,20 +1,20 @@
 #include "GameExport.hpp"
 
-#include "lantern/core/Files.hpp"
-#include "lantern/scene/Project.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/scene/Project.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <regex>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace fs = std::filesystem;
 
 namespace {
 
 // Written into every export, so a later export may safely replace it.
-constexpr const char* kMarker = ".lantern-export";
+constexpr const char* kMarker = ".rolo-export";
 
 // Build leftovers that never belong in a game (Windows debug files and the like).
 bool isBuildLeftover(const fs::path& file)
@@ -100,10 +100,10 @@ std::string readme(const ExportOptions& o, const std::string& gameName, const st
                                 : "Run " + program + ".";
     return gameName + "\n" + std::string(gameName.size(), '=') + "\n\n"
            + "To play: " + how + "\n\n"
-           + "Arrow keys or W A S D walk (in most Lantern games), F5 saves, F9 loads, Escape quits.\n"
+           + "Arrow keys or W A S D walk (in most Rolo games), F5 saves, F9 loads, Escape quits.\n"
              "Saved games are kept in your user folder, not here.\n\n"
-           + "Made with Lantern Engine " + o.version + " (MIT License).\n"
-           + "This game contains Lantern and the libraries it is built on; their licenses are in the\n"
+           + "Made with Rolo Engine " + o.version + " (MIT License).\n"
+           + "This game contains Rolo and the libraries it is built on; their licenses are in the\n"
              "licenses folder, which must stay with the game when you share it.\n";
 }
 
@@ -136,17 +136,17 @@ ExportResult exportGame(const ExportOptions& o)
         return result;
     };
     std::error_code ec;
-    if (!fs::exists(o.project / ProjectFormat::kFileName, ec)) {
-        return fail(o.project.string() + " is not a Lantern project (it has no project.lantern).");
+    if (!isProjectFolder(o.project)) {
+        return fail(o.project.string() + " is not a Rolo project (it has no project.rolo).");
     }
     if (o.player.empty() || !fs::exists(o.player, ec)) {
-        return fail("Lantern's game runtime (lantern_player) was not found"
+        return fail("Rolo's game runtime (rolo_player) was not found"
                     + (o.player.empty() ? std::string() : " at " + o.player.string())
-                    + ". Reinstall Lantern, or build the lantern_player target when working from source.");
+                    + ". Reinstall Rolo, or build the rolo_player target when working from source.");
     }
     if (o.licenses.empty() || !fs::exists(o.licenses / "README.md", ec)) {
         return fail("The license texts that must go with every game were not found"
-                    + (o.licenses.empty() ? std::string() : " in " + o.licenses.string()) + ". Reinstall Lantern.");
+                    + (o.licenses.empty() ? std::string() : " in " + o.licenses.string()) + ". Reinstall Rolo.");
     }
     if (o.output.empty()) {
         return fail("Choose a folder to export the game into.");
@@ -179,7 +179,7 @@ ExportResult exportGame(const ExportOptions& o)
             return fail(copy.error);
         }
         resources = result.game / "Contents" / "Resources";
-        result.program = result.game / "Contents" / "MacOS" / "lantern_player";
+        result.program = result.game / "Contents" / "MacOS" / "rolo_player";
         // The app's name (in Finder, the Dock and the menu bar) and identity.
         const fs::path plist = result.game / "Contents" / "Info.plist";
         if (auto text = readTextFile(plist)) {
@@ -191,7 +191,7 @@ ExportResult exportGame(const ExportOptions& o)
             }
             *text = std::regex_replace(*text, std::regex("(<key>CFBundleName</key>\\s*<string>)[^<]*"), "$1" + name);
             *text = std::regex_replace(*text, std::regex("(<key>CFBundleIdentifier</key>\\s*<string>)[^<]*"),
-                                       "$1dev.lantern-engine.game." + (id.empty() ? std::string("game") : id));
+                                       "$1dev.rolo-engine.game." + (id.empty() ? std::string("game") : id));
             if (const Status s = writeTextFileAtomically(plist, *text); !s) {
                 return fail(s.message);
             }
@@ -224,11 +224,11 @@ ExportResult exportGame(const ExportOptions& o)
     if (!copy.tree(o.project, resources / "game", projectFile) || !copy.tree(o.licenses, resources / "licenses", anyFile)) {
         return fail(copy.error);
     }
-    if (const Status s = writeTextFileAtomically(resources / kMarker, "Exported by Lantern " + o.version + "\n"); !s) {
+    if (const Status s = writeTextFileAtomically(resources / kMarker, "Exported by Rolo " + o.version + "\n"); !s) {
         return fail(s.message);
     }
     result.ok = true;
     return result;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

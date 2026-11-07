@@ -1,10 +1,11 @@
-#include "lantern/content/GameState.hpp"
+#include "rolo/content/GameState.hpp"
+#include "rolo/core/Names.hpp"
 
-#include "lantern/content/ContentLibrary.hpp"
+#include "rolo/content/ContentLibrary.hpp"
 
 #include "Json.hpp"
 
-namespace lantern {
+namespace rolo {
 
 using content_detail::Json;
 
@@ -148,8 +149,8 @@ SaveLoadResult parseSave(std::string_view text, const ContentLibrary& content)
     } catch (const nlohmann::json::parse_error&) {
         return fail("The save file is damaged (not valid JSON).");
     }
-    if (!j.is_object() || j.value("format", "") != SaveFormat::kName) {
-        return fail("This is not a Lantern save file.");
+    if (!j.is_object() || !isFormatName(j.value("format", ""), SaveFormat::kName)) {
+        return fail("This is not a Rolo save file.");
     }
     if (!j.contains("version") || !j["version"].is_number_integer() || j["version"].get<int>() < 1) {
         return fail("The save file has no valid format version.");
@@ -219,4 +220,4 @@ SaveLoadResult parseSave(std::string_view text, const ContentLibrary& content)
     return result;
 }
 
-} // namespace lantern
+} // namespace rolo

@@ -1,10 +1,11 @@
-#include "lantern/assets/Tileset.hpp"
+#include "rolo/assets/Tileset.hpp"
+#include "rolo/core/Names.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 using Json = nlohmann::ordered_json;
@@ -83,8 +84,8 @@ std::optional<Tileset> parseTileset(std::string_view text, std::string* error)
         setError(error, "The tileset file is not valid JSON.");
         return std::nullopt;
     }
-    if (!j.is_object() || j.value("format", "") != TilesetFormat::kName) {
-        setError(error, "This is not a Lantern tileset file (\"format\" should be \"lantern.tileset\").");
+    if (!j.is_object() || !isFormatName(j.value("format", ""), TilesetFormat::kName)) {
+        setError(error, "This is not a Rolo tileset file (\"format\" should be \"rolo.tileset\").");
         return std::nullopt;
     }
     if (!j.contains("version") || !j["version"].is_number_integer() || j["version"].get<int>() < 1) {
@@ -92,7 +93,7 @@ std::optional<Tileset> parseTileset(std::string_view text, std::string* error)
         return std::nullopt;
     }
     if (j["version"].get<int>() > TilesetFormat::kVersion) {
-        setError(error, "This tileset was saved by a newer version of Lantern. Update Lantern to use it.");
+        setError(error, "This tileset was saved by a newer version of Rolo. Update Rolo to use it.");
         return std::nullopt;
     }
 
@@ -156,4 +157,4 @@ std::string serializeTileset(const Tileset& t)
     return j.dump(2) + "\n";
 }
 
-} // namespace lantern
+} // namespace rolo

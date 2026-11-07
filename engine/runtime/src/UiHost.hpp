@@ -1,6 +1,6 @@
 #pragma once
 
-// UiHost: connects a lantern::ui::Context to the real window.
+// UiHost: connects a rolo::ui::Context to the real window.
 //
 //   input    GLFW callbacks (keys, typed text, mouse, scroll) → Context events.
 //            Axmol's own GLFW callbacks are kept and still called first.
@@ -8,10 +8,10 @@
 //            textures, clipping), drawn on top of the scene.
 //   extras   clipboard, mouse cursor shapes, the glyph-atlas texture.
 //
-// Internal to lantern_runtime.
+// Internal to rolo_runtime.
 
-#include "lantern/core/Log.hpp"
-#include "lantern/ui/Context.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <axmol.h>                 // must come first: it sets up the OpenGL loader
 #include <platform/RenderViewImpl.h> // brings in GLFW the way Axmol expects
@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 class UiRenderNode;
 
@@ -127,4 +127,4 @@ private:
     friend struct UiHostCallbacks;
 };
 
-} // namespace lantern::detail
+} // namespace rolo::detail

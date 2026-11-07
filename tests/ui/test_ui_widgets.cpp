@@ -1,15 +1,15 @@
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
-#include "lantern/ui/widgets/Box.hpp"
-#include "lantern/ui/widgets/Dialog.hpp"
-#include "lantern/ui/widgets/Menu.hpp"
-#include "lantern/ui/widgets/Scroll.hpp"
-#include "lantern/ui/widgets/TextField.hpp"
-#include "lantern/ui/widgets/Tree.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
+#include "rolo/ui/widgets/Box.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
+#include "rolo/ui/widgets/Scroll.hpp"
+#include "rolo/ui/widgets/TextField.hpp"
+#include "rolo/ui/widgets/Tree.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern::ui;
+using namespace rolo::ui;
 
 namespace {
 
@@ -78,9 +78,9 @@ TEST_CASE("Typing inserts at the caret and replaces a selection", "[ui][text]")
 TEST_CASE("Backspace and Delete by character, word and selection", "[ui][text]")
 {
     TextEditState s;
-    s.setText("make a lantern");
+    s.setText("make a game");
     s.deleteBackward(false);
-    CHECK(s.text() == "make a lanter");
+    CHECK(s.text() == "make a gam");
     s.deleteBackward(true);
     CHECK(s.text() == "make a ");
     s.setCaret(0);
@@ -179,7 +179,7 @@ TEST_CASE("TextField: Enter submits, and the clear button empties it", "[ui][tex
 TEST_CASE("TextField: clicking places the caret, dragging selects", "[ui][text]")
 {
     Harness<TextField> h;
-    h.widget->setText("lantern engine");
+    h.widget->setText("rolo engine");
     h.ctx.render();
     const Rect b = h.widget->bounds();
     h.click({b.x + 9.0f, b.center().y}); // before the first letter
@@ -190,7 +190,7 @@ TEST_CASE("TextField: clicking places the caret, dragging selects", "[ui][text]"
     h.ctx.pointerButton(MouseButton::Left, true, {});
     h.ctx.pointerMove({b.right() - 4.0f, b.center().y});
     h.ctx.pointerButton(MouseButton::Left, false, {});
-    CHECK(h.widget->state().selectedText() == "lantern engine");
+    CHECK(h.widget->state().selectedText() == "rolo engine");
     CHECK(h.widget->cursor(b.center()) == CursorShape::IBeam);
 }
 
@@ -284,7 +284,7 @@ TEST_CASE("TreeView expands, collapses and navigates", "[ui][tree]")
     h.widget->setItems({
         {1, 0, 0, "World", "Node", true},
         {2, 1, 1, "Background", "Shape", false},
-        {3, 1, 1, "Lantern", "Node", true},
+        {3, 1, 1, "Rolo", "Node", true},
         {4, 3, 2, "Glow", "Shape", false},
         {5, 3, 2, "Flame", "Shape", false},
     });
@@ -295,10 +295,10 @@ TEST_CASE("TreeView expands, collapses and navigates", "[ui][tree]")
     std::uint64_t selected = 0;
     h.widget->setOnSelect([&](std::uint64_t id) { selected = id; });
     const Rect b = h.widget->bounds();
-    h.click({b.x + 120.0f, b.y + 2.0f + 24.0f * 2.0f + 8.0f}); // "Lantern" row
+    h.click({b.x + 120.0f, b.y + 2.0f + 24.0f * 2.0f + 8.0f}); // "Rolo" row
     CHECK(selected == 3);
 
-    h.key(Key::Left); // collapse Lantern
+    h.key(Key::Left); // collapse Rolo
     CHECK(h.widget->visibleRows().size() == 3);
     h.key(Key::Left); // go to parent
     CHECK(selected == 1);
@@ -308,7 +308,7 @@ TEST_CASE("TreeView expands, collapses and navigates", "[ui][tree]")
     h.key(Key::Right); // expand again
     CHECK(h.widget->visibleRows().size() == 5);
 
-    h.widget->setItems({{1, 0, 0, "World", "Node", false}}); // Lantern removed
+    h.widget->setItems({{1, 0, 0, "World", "Node", false}}); // Rolo removed
     CHECK(h.widget->selectedId() == 0);
 }
 
@@ -346,7 +346,7 @@ TEST_CASE("Dialogs close with their button, Enter or Escape", "[ui][dialog]")
 {
     Harness<Label> h("background");
     int closes = 0;
-    auto dialog = std::make_unique<Dialog>("About Lantern Engine");
+    auto dialog = std::make_unique<Dialog>("About Rolo Engine");
     dialog->body().emplace<Label>("Version 0.2.0");
     dialog->addButton("Close", Button::Style::Primary, [&] { ++closes; });
     showDialog(h.ctx, std::move(dialog));
@@ -428,7 +428,7 @@ TEST_CASE("Revealing a tree item unfolds its parents", "[ui][tree]")
     h.widget->setAutoExpandDepth(0);
     h.widget->setItems({
         {1, 0, 0, "World", "", true},
-        {2, 1, 1, "Lantern", "", true},
+        {2, 1, 1, "Rolo", "", true},
         {3, 2, 2, "Flame", "", false},
     });
     h.ctx.render();

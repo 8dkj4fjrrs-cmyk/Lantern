@@ -1,13 +1,13 @@
-#include "lantern/gameplay/BuiltinBehaviours.hpp"
+#include "rolo/gameplay/BuiltinBehaviours.hpp"
 
-#include "lantern/assets/Animation.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/Script.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/Script.hpp"
 
 #include <algorithm>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -58,7 +58,7 @@ void TopDownController::update(Game& game, float dt)
 const ComponentType& TopDownController::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<TopDownController>("lantern.TopDownController", "Top-Down Controller")
+        ComponentTypeBuilder<TopDownController>("rolo.TopDownController", "Top-Down Controller")
             .category("Gameplay")
             .description("Walks the object with the arrow keys or W A S D, stopped by anything solid (give it a "
                          "Collider). With an Animator it plays walk_down / walk_left / walk_right / walk_up and "
@@ -88,7 +88,7 @@ void SceneDoor::update(Game& game, float)
 const ComponentType& SceneDoor::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<SceneDoor>("lantern.SceneDoor", "Scene Door")
+        ComponentTypeBuilder<SceneDoor>("rolo.SceneDoor", "Scene Door")
             .category("Gameplay")
             .description("When the player (the object with the Interactor) walks into this object's Collider (make "
                          "it not solid), the game goes to another scene. The player appears at the object named "
@@ -139,7 +139,7 @@ void CameraBounds::update(Game& game, float)
 const ComponentType& CameraBounds::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<CameraBounds>("lantern.CameraBounds", "Camera Bounds")
+        ComponentTypeBuilder<CameraBounds>("rolo.CameraBounds", "Camera Bounds")
             .category("Gameplay")
             .description("Put on the Camera (a child of the player): the view follows the player but stays inside "
                          "the area from Min to Max, so it never shows past the map's edges.")
@@ -159,4 +159,4 @@ void registerBuiltinBehaviours(ComponentRegistry& registry)
     static_cast<void>(registry.add(Script::componentType()));
 }
 
-} // namespace lantern
+} // namespace rolo

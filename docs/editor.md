@@ -1,4 +1,4 @@
-# Lantern Editor guide
+# Rolo Editor guide
 
 > Milestone 6: projects and scenes with sprites, tilemaps, colliders and
 > text, imported assets, a free Scene view camera and transform tools, C++
@@ -10,12 +10,12 @@
 macOS:
 
 ```sh
-./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
+./build/dev/bin/rolo_editor/rolo_editor.app/Contents/MacOS/rolo_editor
 ```
 
-(or `open build/dev/bin/lantern_editor/lantern_editor.app`, without log output)
+(or `open build/dev/bin/rolo_editor/rolo_editor.app`, without log output)
 
-Linux / Windows: `build/dev/bin/lantern_editor/lantern_editor`
+Linux / Windows: `build/dev/bin/rolo_editor/rolo_editor`
 
 ## The workspace
 
@@ -52,15 +52,15 @@ The toolbar's **Build** button exports the game for players (see
 [Playing the game](#playing-the-game)).
 
 The status bar shows the frame rate, how many messages, warnings and errors
-the Console holds, and the Lantern version.
+the Console holds, and the Rolo version.
 
 ## Projects and scenes
 
-A project is a folder holding your game: a `project.lantern` settings file,
+A project is a folder holding your game: a `project.rolo` settings file,
 a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
 
 - **File > New Project…** asks what to start from, a name and a location
-  (by default `Documents/Lantern Projects`; **Browse…** to choose), and
+  (by default `Documents/Rolo Projects`; **Browse…** to choose), and
   creates the project's folder. To start from:
   - **Empty Project**: one empty scene.
   - **Top-Down Starter**: a small game that plays at once. Its parts:
@@ -73,7 +73,7 @@ a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
   - **Example: The Lantern Keeper**: a copy of the demo RPG to study and
     change.
 - **File > Open Project…** lists recently opened projects. **Browse…**
-  finds a project's folder (projects are marked with Lantern's flame), or
+  finds a project's folder (projects are marked with Rolo's flame), or
   type or paste its path. The editor reopens the last project at start.
 - **Welcome**: when the editor starts without a project, it offers to start a
   new project, open the example, or open a project (**Help > Welcome…**
@@ -86,7 +86,7 @@ a `scenes` folder and an `assets` folder (see [file formats](formats/scene.md)).
 - **The start scene** (where the game begins): select the scene row at the
   top of the Hierarchy; the Inspector shows whether this is the start scene,
   and **Make Start Scene** makes it so (undoable, saved in
-  `project.lantern`).
+  `project.rolo`).
 
 A "•" after the scene's name (in the toolbar and the window title) means it
 has unsaved changes. If you quit, close the window or open another scene
@@ -349,9 +349,9 @@ The layout and which panels are open are remembered between sessions.
 
 | OS | Folder |
 |---|---|
-| macOS | `~/Library/Application Support/Lantern Engine/Editor` |
-| Windows | `%APPDATA%\Lantern Engine\Editor` |
-| Linux | `~/.config/lantern-engine/editor` (or `$XDG_CONFIG_HOME/lantern-engine/editor`) |
+| macOS | `~/Library/Application Support/Rolo Engine/Editor` |
+| Windows | `%APPDATA%\Rolo Engine\Editor` |
+| Linux | `~/.config/rolo-engine/editor` (or `$XDG_CONFIG_HOME/rolo-engine/editor`) |
 
 Two files live there: `panels.dock` (panel arrangement, one line of text) and
 `editor.prefs` (open panels, window size, recent projects). Deleting them is safe — the
@@ -367,7 +367,7 @@ without the editor, for the system the editor runs on. Choose:
 - the game's name;
 - the folder to export into (**Browse…**).
 
-Lantern checks the project first: errors stop the export and are listed in
+Rolo checks the project first: errors stop the export and are listed in
 the Console. It then makes a folder (on macOS, an app) holding:
 - the game's program;
 - its files;
@@ -383,7 +383,7 @@ Zip it to share. Details: [exporting](exporting.md).
 ```
 --help                Show all options
 --version             Print version information
---project FOLDER      Open the Lantern project in FOLDER
+--project FOLDER      Open the Rolo project in FOLDER
 --new-project FOLDER  Create a new project in FOLDER and open it
 --template NAME       With --new-project: start from a template (empty, topdown, lantern_keeper)
 --export OUTPUT       With --project: check and export the game into OUTPUT, then quit (no window)

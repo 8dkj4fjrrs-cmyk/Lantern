@@ -13,15 +13,15 @@ loaded, saved and validated, serialization tests, and basic undo and redo.
 
 ## Decisions
 
-### 1. Scenes are Lantern data; Axmol only draws them
+### 1. Scenes are Rolo data; Axmol only draws them
 
-A new library, `lantern_scene` (`engine/scene`), holds scenes as plain C++
+A new library, `rolo_scene` (`engine/scene`), holds scenes as plain C++
 data: a tree of entities, each with an ID, a name, an active switch and
 components. It has no Axmol and no UI, so it is unit-tested in every preset.
 
 The runtime draws a scene through `SceneRenderer` (`engine/runtime/src`),
 which creates and updates Axmol nodes from the data whenever the scene's
-`revision()` changes. Game code and the editor only ever see `lantern::Scene`.
+`revision()` changes. Game code and the editor only ever see `rolo::Scene`.
 The hard-coded start world and the Axmol-node outline used by the Milestone 2
 editor are gone; the start scene is now `makeStartScene()`, built from
 Shape components.
@@ -38,7 +38,7 @@ That single description drives:
 - undo (`SetProperty` works on any property),
 - validation (values are coerced and clamped the same way everywhere).
 
-Version 1 has `lantern.Transform` and `lantern.Shape`. Sprites, cameras and
+Version 1 has `rolo.Transform` and `rolo.Shape`. Sprites, cameras and
 tilemaps follow in Milestone 4, gameplay components in Milestone 5, using the
 same mechanism.
 
@@ -53,9 +53,9 @@ do not clash. The generator can be seeded for repeatable tests.
 
 ### 4. JSON files with versions, using nlohmann/json
 
-Projects (`project.lantern`) and scenes (`.lscene`) are JSON: readable,
+Projects (`project.rolo`) and scenes (`.lscene`) are JSON: readable,
 diff-friendly, editable by hand in an emergency. nlohmann/json 3.12.0 (MIT)
-reads and writes them. It is linked privately into `lantern_scene` and never
+reads and writes them. It is linked privately into `rolo_scene` and never
 appears in a public header, so it could be replaced.
 
 Every file states `format` and `version`. Older versions are upgraded step
@@ -85,15 +85,15 @@ step until the edit ends. The `CommandStack` remembers which step was saved,
 which gives the unsaved-changes marker and the "Save Changes?" prompt on
 quit, close, or switching scenes.
 
-Commands live in `lantern_editor_core` (no UI), so undo is unit-tested
+Commands live in `rolo_editor_core` (no UI), so undo is unit-tested
 without a window, and the brief's rule that editor operations go through
 undo is now enforced by structure: panels call the editor's `execute()`,
 never `Scene` setters directly.
 
 ### 6. Projects without native file dialogs
 
-New Project and Open Project use Lantern's own dialogs: a name plus a
-location (default `Documents/Lantern Projects`), and a list of recently
+New Project and Open Project use Rolo's own dialogs: a name plus a
+location (default `Documents/Rolo Projects`), and a list of recently
 opened projects plus a field for a project folder's path. This avoids per-OS file-dialog code for
 now; native dialogs can be added behind the same commands later.
 

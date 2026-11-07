@@ -1,6 +1,6 @@
 #include "TextureStore.hpp"
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 namespace {
 constexpr std::string_view kCategory = "runtime";
@@ -80,4 +80,4 @@ ax::Texture2D* TextureStore::get(const std::filesystem::path& path, bool pixelAr
     return entry.texture;
 }
 
-} // namespace lantern::detail
+} // namespace rolo::detail

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's object-pool macros, used by Axmol's
-// SimpleTimer. Written from scratch for Lantern; it contains no yasio code
+// Rolo's replacement for yasio's object-pool macros, used by Axmol's
+// SimpleTimer. Written from scratch for Rolo; it contains no yasio code
 // (see ../../README.md).
 //
 // The macros let a class allocate its objects from a pool instead of the

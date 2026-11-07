@@ -1,9 +1,9 @@
 """Builds the Top-Down Starter template (templates/topdown/project).
 
-    lantern_editor --new-project templates/topdown/project
+    rolo_editor --new-project templates/topdown/project
     python3 templates/tools/make_starter.py templates/topdown/project
 
-A small game made only of Lantern's built-in components (no C++): a meadow
+A small game made only of Rolo's built-in components (no C++): a meadow
 and a grove joined by a path, a hero who walks in four directions (Top-Down
 Controller), a camera that stays on the map (Camera Bounds), doors that
 arrive at named spots (Scene Door), a friend and a signpost to talk to, and
@@ -77,26 +77,26 @@ end
 
 
 def meta(name, kind, extra=None):
-    m = {"format": "lantern.asset", "version": 1, "id": IDS[name], "type": kind}
+    m = {"format": "rolo.asset", "version": 1, "id": IDS[name], "type": kind}
     m.update(extra or {})
     return m
 
 
 def transform(x=0.0, y=0.0, scale=(1, 1)):
-    return {"type": "lantern.Transform", "position": [x, y], "rotation": 0, "scale": list(scale)}
+    return {"type": "rolo.Transform", "position": [x, y], "rotation": 0, "scale": list(scale)}
 
 
 def collider(size, offset=(0, 0), solid=True):
-    return {"type": "lantern.Collider", "size": list(size), "offset": list(offset), "solid": solid}
+    return {"type": "rolo.Collider", "size": list(size), "offset": list(offset), "solid": solid}
 
 
 def text(words, size=18, colour="#ffffffff", align="left", width=0, source="text"):
-    return {"type": "lantern.Text", "text": words, "source": source, "font": None, "size": size, "color": colour,
+    return {"type": "rolo.Text", "text": words, "source": source, "font": None, "size": size, "color": colour,
             "align": align, "width": width}
 
 
 def trigger(on, actions, prompt="", once=False):
-    return {"type": "lantern.Trigger", "on": on, "prompt": prompt, "event": "", "delay": 1.0, "once": once,
+    return {"type": "rolo.Trigger", "on": on, "prompt": prompt, "event": "", "delay": 1.0, "once": once,
             "data": {"condition": None, "actions": actions}}
 
 
@@ -118,7 +118,7 @@ class Scene:
         return e["id"]
 
     def json(self):
-        return {"format": "lantern.scene", "version": 1, "name": self.name, "entities": self.entities}
+        return {"format": "rolo.scene", "version": 1, "name": self.name, "entities": self.entities}
 
 
 def grid(w, h, seed):
@@ -135,14 +135,14 @@ def build_scene(name, prefix, g, start, door, spot, extras):
     s = Scene(name, prefix, ["".join(r) for r in g])
     rows = [[s.h - 1 - i, 0] + [TILE[c] for c in line] for i, line in enumerate(s.rows)]
     s.add("Ground", [transform(scale=(SCALE, SCALE)), {
-        "type": "lantern.Tilemap", "tileset": IDS["tiles.ltileset"], "cellSize": [PIXEL, PIXEL],
+        "type": "rolo.Tilemap", "tileset": IDS["tiles.ltileset"], "cellSize": [PIXEL, PIXEL],
         "data": {"layers": [{"name": "Ground", "visible": True, "rows": rows}], "solid": []}}])
     extras(s)
     # The way to the other scene, and where you arrive coming back from it.
     (dname, dcol, drow, target, arrive) = door
     x, y = s.at(dcol, drow)
     s.add(dname, [transform(x, y), collider((CELL, CELL * 2), solid=False),
-                  {"type": "lantern.SceneDoor", "scene": IDS[target], "arriveAt": arrive}])
+                  {"type": "rolo.SceneDoor", "scene": IDS[target], "arriveAt": arrive}])
     (sname, scol, srow) = spot
     x, y = s.at(scol, srow)
     s.add(sname, [transform(x, y)])
@@ -150,15 +150,15 @@ def build_scene(name, prefix, g, start, door, spot, extras):
     x, y = s.at(*start)
     hero = s.add("Player", [
         transform(x, y, (SCALE, SCALE)),
-        {"type": "lantern.Sprite", "image": IDS["hero_walk.png"], "size": [16, 24], "color": "#ffffffff",
+        {"type": "rolo.Sprite", "image": IDS["hero_walk.png"], "size": [16, 24], "color": "#ffffffff",
          "flipX": False, "flipY": False},
-        {"type": "lantern.Animator", "animations": IDS["hero.lanim"], "clip": "idle_down", "speed": 1, "playing": True},
+        {"type": "rolo.Animator", "animations": IDS["hero.lanim"], "clip": "idle_down", "speed": 1, "playing": True},
         collider((10, 5), (0, -9.5)),
-        {"type": "lantern.Interactor", "key": "E"},
-        {"type": "lantern.TopDownController", "speed": 170},
+        {"type": "rolo.Interactor", "key": "E"},
+        {"type": "rolo.TopDownController", "speed": 170},
     ])
-    cam = s.add("Camera", [transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "lantern.Camera", "zoom": 1},
-                           {"type": "lantern.CameraBounds", "min": [0, 0], "max": [s.w * CELL, s.h * CELL],
+    cam = s.add("Camera", [transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "rolo.Camera", "zoom": 1},
+                           {"type": "rolo.CameraBounds", "min": [0, 0], "max": [s.w * CELL, s.h * CELL],
                             "view": list(VIEW)}], parent=hero)
     left, top = -VIEW[0] / 2 + 24, VIEW[1] / 2 - 20
     s.add("Quest Log", [transform(left, top), text("", 16, "#ecececff", source="questLog")], parent=cam)
@@ -167,9 +167,9 @@ def build_scene(name, prefix, g, start, door, spot, extras):
     s.add("Prompt", [transform(0, -120), text("", 20, "#ffc84aff", align="center", source="interactionPrompt")],
           parent=cam)
     box = s.add("Dialogue Box", [transform(0, -VIEW[1] / 2 + 100),
-                                 {"type": "lantern.Shape", "kind": "rectangle", "size": [1040, 168],
+                                 {"type": "rolo.Shape", "kind": "rectangle", "size": [1040, 168],
                                   "color": "#120e1aee", "filled": True, "lineWidth": 2},
-                                 {"type": "lantern.DialogueView", "marker": "> "}], parent=cam, active=False)
+                                 {"type": "rolo.DialogueView", "marker": "> "}], parent=cam, active=False)
     s.add("Speaker", [transform(-496, 68), text("", 20, source="dialogueSpeaker")], parent=box)
     s.add("Line", [transform(-496, 38), text("", 19, width=990, source="dialogueLine")], parent=box)
     s.add("Choices", [transform(-496, -14), text("", 19, "#ffd88aff", source="dialogueChoices")], parent=box)
@@ -180,10 +180,10 @@ def build_scene(name, prefix, g, start, door, spot, extras):
 def talkable(s, name, col, row, image, size, lanim, clip, dialogue, prompt):
     x, y = s.at(col, row)
     comps = [transform(x, y, (SCALE, SCALE)),
-             {"type": "lantern.Sprite", "image": IDS[image], "size": list(size), "color": "#ffffffff",
+             {"type": "rolo.Sprite", "image": IDS[image], "size": list(size), "color": "#ffffffff",
               "flipX": False, "flipY": False}]
     if lanim:
-        comps.append({"type": "lantern.Animator", "animations": IDS[lanim], "clip": clip, "speed": 1, "playing": True})
+        comps.append({"type": "rolo.Animator", "animations": IDS[lanim], "clip": clip, "speed": 1, "playing": True})
     comps.append(collider((10, 4), (0, -size[1] / 2 + 3)))
     body = s.add(name, comps)
     s.add("Talk Area", [transform(0, -size[1] / 2 + 4), collider((24, 20), solid=False),
@@ -227,10 +227,10 @@ def grove():
             x, y = s.at(col, row)
             fly = s.add(f"Firefly {i + 1}", [
                 transform(x, y),
-                {"type": "lantern.Shape", "kind": "ellipse", "size": [12, 12], "color": "#fff2a6ff", "filled": True,
+                {"type": "rolo.Shape", "kind": "ellipse", "size": [12, 12], "color": "#fff2a6ff", "filled": True,
                  "lineWidth": 2},
-                {"type": "lantern.Script", "script": IDS["firefly.lua"]}])
-            s.add("Glow", [transform(), {"type": "lantern.Shape", "kind": "ellipse", "size": [34, 34],
+                {"type": "rolo.Script", "script": IDS["firefly.lua"]}])
+            s.add("Glow", [transform(), {"type": "rolo.Shape", "kind": "ellipse", "size": [34, 34],
                                          "color": "#ffe68055", "filled": True, "lineWidth": 2}], parent=fly)
 
     return build_scene("Grove", "535402", g, (3, 7.5), ("Path to the Meadow", -0.5, 7.5, "meadow.lscene", "From Grove"),
@@ -238,21 +238,21 @@ def grove():
 
 
 def dialogue(speakers, nodes):
-    return {"format": "lantern.dialogue", "version": 1, "speakers": speakers, "start": nodes[0]["id"], "nodes": nodes}
+    return {"format": "rolo.dialogue", "version": 1, "speakers": speakers, "start": nodes[0]["id"], "nodes": nodes}
 
 
 def main():
     root = Path(sys.argv[1])
-    project_file = root / "project.lantern"
+    project_file = root / "project.rolo"
     if not project_file.exists():
-        sys.exit(f"{root} is not a Lantern project. Make one first: lantern_editor --new-project \"{root}\"")
+        sys.exit(f"{root} is not a Rolo project. Make one first: rolo_editor --new-project \"{root}\"")
     project = json.loads(project_file.read_text())
     art = root / "assets" / "art"
     art.mkdir(parents=True, exist_ok=True)
     for name in ("tiles.png", "hero_walk.png", "wren.png", "sign.png"):
         shutil.copyfile(ART / name, art / name)
         write(art / (name + ".meta"), meta(name, "image", {"filter": "pixel"}))
-    write(root / "assets/tiles.ltileset", {"format": "lantern.tileset", "version": 1, "image": IDS["tiles.png"],
+    write(root / "assets/tiles.ltileset", {"format": "rolo.tileset", "version": 1, "image": IDS["tiles.png"],
                                            "tileSize": [16, 16], "margin": 0, "spacing": 0, "solid": SOLID})
     write(root / "assets/tiles.ltileset.meta", meta("tiles.ltileset", "tileset"))
     hero_clips = []
@@ -263,16 +263,16 @@ def main():
     for name, image, frame, clips in [
             ("hero.lanim", "hero_walk.png", (16, 24), hero_clips),
             ("friend.lanim", "wren.png", (16, 24), [{"id": "idle", "frames": [0] * 11 + [1], "fps": 6, "loop": True}])]:
-        write(root / "assets/animations" / name, {"format": "lantern.animations", "version": 1, "image": IDS[image],
+        write(root / "assets/animations" / name, {"format": "rolo.animations", "version": 1, "image": IDS[image],
                                                   "frameSize": list(frame), "margin": 0, "spacing": 0, "clips": clips})
         write(root / "assets/animations" / (name + ".meta"), meta(name, "animation"))
 
     content = root / "content"
-    write(content / "starter.lvars", {"format": "lantern.variables", "version": 1, "variables": [
+    write(content / "starter.lvars", {"format": "rolo.variables", "version": 1, "variables": [
         {"id": "said_hello", "type": "bool", "initial": False, "description": "Talked to the friend"}]})
     write(content / "starter.lvars.meta", meta("starter.lvars", "variables"))
     write(content / "hello.lquest", {
-        "format": "lantern.quest", "version": 1, "name": "Say Hello",
+        "format": "rolo.quest", "version": 1, "name": "Say Hello",
         "description": "A first quest: it starts by itself and is done when you talk to your friend.",
         "prerequisites": [], "startWhen": {"type": "always"},
         "objectives": [{"id": "talk", "text": "Talk to your friend in the meadow",

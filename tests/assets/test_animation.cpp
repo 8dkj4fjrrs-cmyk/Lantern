@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird. MIT licence: see LICENSE.
 
 #include "support/TempFolder.hpp"
-#include "lantern/assets/Animation.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
+using namespace rolo;
 namespace fs = std::filesystem;
 
 namespace {
@@ -95,10 +95,10 @@ TEST_CASE("Animation sets are saved and read back", "[animation]")
 
 TEST_CASE("Broken animation files are refused with a reason", "[animation]")
 {
-    const std::string head = R"({"format": "lantern.animations", "version": 1, "image": "5a4d1e0000000007", )"
+    const std::string head = R"({"format": "rolo.animations", "version": 1, "image": "5a4d1e0000000007", )"
                              R"("frameSize": [16, 16], )";
     std::string error;
-    CHECK_FALSE(parseAnimationSet(R"({"format": "lantern.scene", "version": 1})", &error));
+    CHECK_FALSE(parseAnimationSet(R"({"format": "rolo.scene", "version": 1})", &error));
     CHECK_FALSE(error.empty());
     CHECK_FALSE(parseAnimationSet(head + R"("clips": [{"id": "a b", "frames": [0]}]})", &error));
     CHECK_FALSE(parseAnimationSet(head + R"("clips": [{"id": "a", "frames": [0]}, {"id": "a", "frames": [1]}]})", &error));
@@ -110,13 +110,13 @@ TEST_CASE("Broken animation files are refused with a reason", "[animation]")
 
 TEST_CASE("The asset database creates and reads animation sets", "[animation][assets]")
 {
-    const fs::path root = lantern::test::uniqueTempFolder("animation-db");
+    const fs::path root = rolo::test::uniqueTempFolder("animation-db");
     fs::remove_all(root);
     fs::create_directories(root);
-    std::ofstream(root / "project.lantern") << R"({"format": "lantern.project", "version": 1, "name": "T"})";
+    std::ofstream(root / "project.rolo") << R"({"format": "rolo.project", "version": 1, "name": "T"})";
     {
         AssetDatabase db(root);
-        const AssetId image = *db.import(fs::path(LANTERN_TEST_DATA_DIR) / "tiles_16px.png");
+        const AssetId image = *db.import(fs::path(ROLO_TEST_DATA_DIR) / "tiles_16px.png");
         std::string error;
         const auto id = db.createAnimationSet(image, {16, 16}, "Hero", &error);
         INFO(error);

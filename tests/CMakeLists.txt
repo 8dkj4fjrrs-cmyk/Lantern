@@ -17,7 +17,7 @@ include(Catch)
 # ---------------------------------------------------------------------------
 # Core and editor-logic tests: no backend, no window. Always built.
 # ---------------------------------------------------------------------------
-add_executable(lantern_tests
+add_executable(rolo_tests
     core/test_engine.cpp
     core/test_log.cpp
     core/test_version.cpp
@@ -33,6 +33,7 @@ add_executable(lantern_tests
     editor/test_resources.cpp
     editor/test_export.cpp
     scene/test_scene.cpp
+    scene/test_legacy_names.cpp
     scene/test_scene_file.cpp
     scene/test_project.cpp
     scene/test_tilemap.cpp
@@ -51,64 +52,64 @@ add_executable(lantern_tests
     content/test_content_runner.cpp
     content/test_save.cpp
     content/test_notation.cpp)
-target_link_libraries(lantern_tests PRIVATE lantern::core lantern::scene lantern::assets lantern::content lantern::gameplay lantern::ui lantern_editor_core Catch2::Catch2WithMain)
+target_link_libraries(rolo_tests PRIVATE rolo::core rolo::scene rolo::assets rolo::content rolo::gameplay rolo::ui rolo_editor_core Catch2::Catch2WithMain)
 if(TARGET sample_game)
-    target_sources(lantern_tests PRIVATE gameplay/test_sample_game.cpp gameplay/test_lantern_keeper.cpp
+    target_sources(rolo_tests PRIVATE gameplay/test_sample_game.cpp gameplay/test_lantern_keeper.cpp
         gameplay/test_templates.cpp)
-    lantern_link_game_modules(lantern_tests MODULES sample_game keeper)
-    target_compile_definitions(lantern_tests PRIVATE
-        LANTERN_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project"
+    rolo_link_game_modules(rolo_tests MODULES sample_game keeper)
+    target_compile_definitions(rolo_tests PRIVATE
+        ROLO_SAMPLE_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/sample_game/project"
         LANTERN_KEEPER_PROJECT_DIR="${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project")
 else()
-    lantern_link_game_modules(lantern_tests MODULES)
+    rolo_link_game_modules(rolo_tests MODULES)
 endif()
-target_compile_definitions(lantern_tests PRIVATE LANTERN_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-    LANTERN_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-target_include_directories(lantern_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-lantern_set_warnings(lantern_tests)
-catch_discover_tests(lantern_tests)
+target_compile_definitions(rolo_tests PRIVATE ROLO_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    ROLO_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+target_include_directories(rolo_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+rolo_set_warnings(rolo_tests)
+catch_discover_tests(rolo_tests)
 
 # ---------------------------------------------------------------------------
 # Runtime, player and editor tests: only when the Axmol backend is built.
 # ---------------------------------------------------------------------------
-if(NOT TARGET lantern_player)
+if(NOT TARGET rolo_player)
     return()
 endif()
 
 # Unit tests that need no window.
-add_executable(lantern_runtime_tests
+add_executable(rolo_runtime_tests
     player/test_command_line.cpp
     runtime/test_axmol_compat.cpp
     runtime/test_log_bridge.cpp
     runtime/test_scene_renderer.cpp)
-target_link_libraries(lantern_runtime_tests PRIVATE
-    lantern_player_cli lantern::runtime ${_AX_CORE_LIB} Catch2::Catch2WithMain)
-# These tests check internal headers of lantern_runtime.
-target_include_directories(lantern_runtime_tests PRIVATE "${PROJECT_SOURCE_DIR}/engine/runtime/src" "${CMAKE_CURRENT_SOURCE_DIR}")
-lantern_set_warnings(lantern_runtime_tests)
-catch_discover_tests(lantern_runtime_tests)
+target_link_libraries(rolo_runtime_tests PRIVATE
+    rolo_player_cli rolo::runtime ${_AX_CORE_LIB} Catch2::Catch2WithMain)
+# These tests check internal headers of rolo_runtime.
+target_include_directories(rolo_runtime_tests PRIVATE "${PROJECT_SOURCE_DIR}/engine/runtime/src" "${CMAKE_CURRENT_SOURCE_DIR}")
+rolo_set_warnings(rolo_runtime_tests)
+catch_discover_tests(rolo_runtime_tests)
 
-add_test(NAME player.version COMMAND lantern_player --version)
+add_test(NAME player.version COMMAND rolo_player --version)
 set_tests_properties(player.version PROPERTIES PASS_REGULAR_EXPRESSION "backend: Axmol")
 
-add_test(NAME player.rejects_bad_option COMMAND lantern_player --frames zero)
+add_test(NAME player.rejects_bad_option COMMAND rolo_player --frames zero)
 set_tests_properties(player.rejects_bad_option PROPERTIES WILL_FAIL TRUE)
 
-add_test(NAME player.rejects_missing_scene COMMAND lantern_player --scene "no-such-file.lscene")
+add_test(NAME player.rejects_missing_scene COMMAND rolo_player --scene "no-such-file.lscene")
 set_tests_properties(player.rejects_missing_scene PROPERTIES WILL_FAIL TRUE)
 
-if(TARGET lantern_editor)
-    add_test(NAME editor.version COMMAND lantern_editor --version)
+if(TARGET rolo_editor)
+    add_test(NAME editor.version COMMAND rolo_editor --version)
     set_tests_properties(editor.version PROPERTIES
-        PASS_REGULAR_EXPRESSION "Lantern Editor [0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)? \\(backend: Axmol")
+        PASS_REGULAR_EXPRESSION "Rolo Editor [0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)? \\(backend: Axmol")
 
-    add_test(NAME editor.rejects_unknown_option COMMAND lantern_editor --no-such-flag)
+    add_test(NAME editor.rejects_unknown_option COMMAND rolo_editor --no-such-flag)
     set_tests_properties(editor.rejects_unknown_option PROPERTIES WILL_FAIL TRUE)
 endif()
 
 # Window tests: open a real window for a few frames. They need a screen
 # (on headless Linux CI, run ctest under `xvfb-run`).
-if(NOT LANTERN_WINDOW_TESTS)
+if(NOT ROLO_WINDOW_TESTS)
     return()
 endif()
 
@@ -118,7 +119,7 @@ endif()
 get_property(_tests_without_window DIRECTORY PROPERTY TESTS)
 
 add_test(NAME player.plays_scene_file
-    COMMAND lantern_player --scene "${CMAKE_CURRENT_SOURCE_DIR}/data/test_card.lscene" --frames 30
+    COMMAND rolo_player --scene "${CMAKE_CURRENT_SOURCE_DIR}/data/test_card.lscene" --frames 30
             --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_test_card.png")
 set_tests_properties(player.plays_scene_file PROPERTIES
     PASS_REGULAR_EXPRESSION "Showing scene 'Test Card' \\(4 entities\\).*Screenshot saved"
@@ -126,14 +127,14 @@ set_tests_properties(player.plays_scene_file PROPERTIES
     TIMEOUT 60)
 
 
-add_test(NAME player.window_smoke COMMAND lantern_player --frames 120)
+add_test(NAME player.window_smoke COMMAND rolo_player --frames 120)
 set_tests_properties(player.window_smoke PROPERTIES
     PASS_REGULAR_EXPRESSION "Window closed after 12[0-9] frames"
     FAIL_REGULAR_EXPRESSION "\\[ERROR\\]"
     TIMEOUT 60)
 
 add_test(NAME player.screenshot
-    COMMAND lantern_player --frames 90 --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_screenshot.png")
+    COMMAND rolo_player --frames 90 --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_screenshot.png")
 set_tests_properties(player.screenshot PROPERTIES
     PASS_REGULAR_EXPRESSION "Screenshot saved"
     FAIL_REGULAR_EXPRESSION "\\[ERROR\\]"
@@ -144,7 +145,7 @@ if(TARGET sample_game)
     # the player walks up and right to the elder, talks (E), goes on, and
     # accepts the quest. The screenshot shows the dialogue box.
     add_test(NAME player.plays_sample_game
-        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --frames 200
+        COMMAND rolo_player --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --frames 200
                 --fixed-step --no-stats --save-dir "${CMAKE_CURRENT_BINARY_DIR}/player-test-saves"
                 --tap Up@5-34 --tap Right@40-100 --tap E@120 --tap E@140 --tap E@170
                 --screenshot "${CMAKE_CURRENT_BINARY_DIR}/player_sample_dialogue.png")
@@ -156,7 +157,7 @@ if(TARGET sample_game)
     # The Lantern Keeper, with keys only: read the opening (five lines), walk
     # left and up to Keeper Maren, talk, and accept her request.
     add_test(NAME player.plays_lantern_keeper
-        COMMAND lantern_player --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --frames 240
+        COMMAND rolo_player --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --frames 240
                 --fixed-step --no-stats --save-dir "${CMAKE_CURRENT_BINARY_DIR}/player-test-keeper-saves"
                 --tap E@10 --tap E@20 --tap E@30 --tap E@40 --tap E@50 --tap Left@60-120 --tap Up@125-140
                 --tap E@150 --tap E@170 --tap E@190 --tap E@210
@@ -167,14 +168,14 @@ if(TARGET sample_game)
         TIMEOUT 120)
 endif()
 
-if(TARGET lantern_editor)
+if(TARGET rolo_editor)
     # Editor tests keep their settings in the build folder, never in your real
     # user settings.
     set(_editor_cfg "${CMAKE_CURRENT_BINARY_DIR}/editor-test-settings")
 
     # 1) First run: default layout, then layout + preferences are saved.
     add_test(NAME editor.first_run
-        COMMAND lantern_editor --config-dir "${_editor_cfg}" --no-project --reset-layout --frames 120
+        COMMAND rolo_editor --config-dir "${_editor_cfg}" --no-project --reset-layout --frames 120
                 --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_screenshot.png")
     set_tests_properties(editor.first_run PROPERTIES
         PASS_REGULAR_EXPRESSION "Using the default panel layout.*Screenshot saved"
@@ -184,7 +185,7 @@ if(TARGET lantern_editor)
 
     # 2) Second run: the saved layout must be restored (persistence works).
     add_test(NAME editor.restores_layout
-        COMMAND lantern_editor --config-dir "${_editor_cfg}" --no-project --frames 60)
+        COMMAND rolo_editor --config-dir "${_editor_cfg}" --no-project --frames 60)
     set_tests_properties(editor.restores_layout PROPERTIES
         PASS_REGULAR_EXPRESSION "Restored the saved panel layout"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|Using the default panel layout"
@@ -201,7 +202,7 @@ if(TARGET lantern_editor)
     set_tests_properties(editor.project_cleanup PROPERTIES FIXTURES_SETUP editor_project_clean)
 
     add_test(NAME editor.creates_project
-        COMMAND lantern_editor --config-dir "${_project_cfg}" --new-project "${_project}" --frames 30)
+        COMMAND rolo_editor --config-dir "${_project_cfg}" --new-project "${_project}" --frames 30)
     set_tests_properties(editor.creates_project PROPERTIES
         PASS_REGULAR_EXPRESSION "Created project in.*Opened scene main.lscene.*Showing scene 'Main'"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
@@ -213,7 +214,7 @@ if(TARGET lantern_editor)
     # built-in components (no game module needed).
     set(_starter "${CMAKE_CURRENT_BINARY_DIR}/test-projects/Starter Game")
     add_test(NAME editor.creates_project_from_template
-        COMMAND lantern_editor --config-dir "${_project_cfg}-starter" --new-project "${_starter}" --template topdown
+        COMMAND rolo_editor --config-dir "${_project_cfg}-starter" --new-project "${_starter}" --template topdown
                 --play --frames 60)
     set_tests_properties(editor.creates_project_from_template PROPERTIES
         PASS_REGULAR_EXPRESSION "Created project in.*Playing 'Meadow'.*Quest started: Say Hello.*Stopped playing after"
@@ -223,7 +224,7 @@ if(TARGET lantern_editor)
         TIMEOUT 60)
 
     add_test(NAME editor.reopens_last_project
-        COMMAND lantern_editor --config-dir "${_project_cfg}" --frames 30)
+        COMMAND rolo_editor --config-dir "${_project_cfg}" --frames 30)
     set_tests_properties(editor.reopens_last_project PROPERTIES
         PASS_REGULAR_EXPRESSION "Opened project 'Window Test Game'.*Opened scene main.lscene"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
@@ -234,7 +235,7 @@ if(TARGET lantern_editor)
         # Play mode: the editor opens the sample, plays it, and the game's
         # behaviours run without errors; quitting stops the game.
         add_test(NAME editor.plays_sample_game
-            COMMAND lantern_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-play-settings"
+            COMMAND rolo_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-play-settings"
                     --project "${PROJECT_SOURCE_DIR}/examples/sample_game/project" --play --frames 60
                     --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_playing.png")
         set_tests_properties(editor.plays_sample_game PROPERTIES
@@ -247,7 +248,7 @@ if(TARGET lantern_editor)
         add_test(NAME editor.export_cleanup COMMAND ${CMAKE_COMMAND} -E rm -rf "${_exports}")
         set_tests_properties(editor.export_cleanup PROPERTIES FIXTURES_SETUP export_clean)
         add_test(NAME editor.exports_game
-            COMMAND lantern_editor --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project"
+            COMMAND rolo_editor --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project"
                     --export "${_exports}")
         set_tests_properties(editor.exports_game PROPERTIES
             # macOS exports an app bundle: "Exported The Lantern Keeper.app (163 files ..."
@@ -258,7 +259,7 @@ if(TARGET lantern_editor)
             TIMEOUT 120)
         # The game program: on macOS inside the app bundle (docs/exporting.md).
         if(APPLE)
-            set(_exported_program "${_exports}/The Lantern Keeper.app/Contents/MacOS/lantern_player")
+            set(_exported_program "${_exports}/The Lantern Keeper.app/Contents/MacOS/rolo_player")
         else()
             set(_exported_program "${_exports}/The Lantern Keeper/The Lantern Keeper${CMAKE_EXECUTABLE_SUFFIX}")
         endif()
@@ -273,7 +274,7 @@ if(TARGET lantern_editor)
             TIMEOUT 60)
 
         add_test(NAME editor.plays_lantern_keeper
-            COMMAND lantern_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-keeper-settings"
+            COMMAND rolo_editor --config-dir "${CMAKE_CURRENT_BINARY_DIR}/editor-test-keeper-settings"
                     --project "${PROJECT_SOURCE_DIR}/examples/lantern_keeper/project" --play --frames 60
                     --screenshot "${CMAKE_CURRENT_BINARY_DIR}/editor_playing_keeper.png")
         set_tests_properties(editor.plays_lantern_keeper PROPERTIES
@@ -283,9 +284,9 @@ if(TARGET lantern_editor)
     endif()
 
     add_test(NAME player.plays_project
-        COMMAND lantern_player --project "${_project}" --frames 30)
+        COMMAND rolo_player --project "${_project}" --frames 30)
     set_tests_properties(player.plays_project PROPERTIES
-        PASS_REGULAR_EXPRESSION "Showing scene 'Main' \\(18 entities\\)"
+        PASS_REGULAR_EXPRESSION "Showing scene 'Main' \\(21 entities\\)"
         FAIL_REGULAR_EXPRESSION "\\[ERROR\\]|\\[WARN"
         FIXTURES_REQUIRED editor_project
         TIMEOUT 60)

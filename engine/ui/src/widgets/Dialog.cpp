@@ -1,10 +1,10 @@
-#include "lantern/ui/widgets/Dialog.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 constexpr float kTitleHeight = 44.0f;
@@ -92,4 +92,4 @@ Dialog& showDialog(Context& ctx, std::unique_ptr<Dialog> dialog)
     return static_cast<Dialog&>(w);
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

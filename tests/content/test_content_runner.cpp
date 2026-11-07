@@ -1,13 +1,13 @@
 #include "ContentFixture.hpp"
 
-#include "lantern/content/ContentRunner.hpp"
+#include "rolo/content/ContentRunner.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 namespace {
 

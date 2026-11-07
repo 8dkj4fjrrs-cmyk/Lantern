@@ -3,8 +3,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
-using lantern::detail::SceneRenderer;
+using namespace rolo;
+using rolo::detail::SceneRenderer;
 
 namespace {
 
@@ -28,8 +28,8 @@ TEST_CASE("The renderer mirrors the scene tree as Axmol nodes", "[runtime][rende
     SceneRenderer renderer(*root.node, /*textures=*/nullptr, /*drawContent=*/false);
     auto scene = std::make_shared<Scene>("Test");
     const EntityId parent = scene->create("Parent")->id();
-    scene->setProperty(parent, "lantern.Transform", "position", Vec2{10, 20});
-    scene->setProperty(parent, "lantern.Transform", "rotation", 30.0f);
+    scene->setProperty(parent, "rolo.Transform", "position", Vec2{10, 20});
+    scene->setProperty(parent, "rolo.Transform", "rotation", 30.0f);
     const EntityId child = scene->create("Child", parent)->id();
     scene->addComponent(child, std::make_unique<Shape>());
     scene->create("Hidden");
@@ -81,7 +81,7 @@ TEST_CASE("Moving things moves the nodes without rebuilding", "[runtime][rendere
     REQUIRE(renderer.buildCount() == 1);
 
     // Through a property, and directly (as gameplay code does).
-    scene->setProperty(hero, "lantern.Transform", "position", Vec2{5, 6});
+    scene->setProperty(hero, "rolo.Transform", "position", Vec2{5, 6});
     renderer.update();
     CHECK(renderer.nodeFor(hero)->getPositionX() == 5.0f);
     scene->edit<Transform>(hero)->rotation = 90.0f;
@@ -107,14 +107,14 @@ TEST_CASE("The first active camera decides the view", "[runtime][renderer][camer
     CHECK_FALSE(renderer.camera().has_value());
 
     const EntityId rig = scene->create("Rig")->id();
-    scene->setProperty(rig, "lantern.Transform", "position", Vec2{100, 50});
+    scene->setProperty(rig, "rolo.Transform", "position", Vec2{100, 50});
     const EntityId off = scene->create("Off camera", rig)->id();
     scene->addComponent(off, std::make_unique<Camera>());
     scene->setActive(off, false);
     const EntityId on = scene->create("Main camera", rig)->id();
-    scene->setProperty(on, "lantern.Transform", "position", Vec2{10, 5});
+    scene->setProperty(on, "rolo.Transform", "position", Vec2{10, 5});
     scene->addComponent(on, std::make_unique<Camera>());
-    scene->setProperty(on, "lantern.Camera", "zoom", 2.0f);
+    scene->setProperty(on, "rolo.Camera", "zoom", 2.0f);
 
     const auto view = renderer.camera();
     REQUIRE(view.has_value());
@@ -132,7 +132,7 @@ TEST_CASE("Asset changes trigger a rebuild", "[runtime][renderer]")
     auto scene = std::make_shared<Scene>("S");
     renderer.show(scene);
     renderer.update();
-    const std::filesystem::path folder = lantern::test::uniqueTempFolder("renderer-assets");
+    const std::filesystem::path folder = rolo::test::uniqueTempFolder("renderer-assets");
     std::filesystem::create_directories(folder);
     AssetDatabase assets(folder);
     renderer.setAssets(&assets);

@@ -1,6 +1,6 @@
-# Lantern's patches to Axmol
+# Rolo's patches to Axmol
 
-Lantern uses Axmol 2.11.5 at a pinned commit (`cmake/LanternAxmol.cmake`).
+Rolo uses Axmol 2.11.5 at a pinned commit (`cmake/RoloAxmol.cmake`).
 The patches in this folder are applied to `external/axmol`:
 - after it is downloaded;
 - in order of file name;
@@ -8,12 +8,12 @@ The patches in this folder are applied to `external/axmol`:
 
 | Patch | What it changes | Why |
 |---|---|---|
-| `0001-optional-network-and-yasio.patch` | Adds `AX_ENABLE_NETWORK` (core) and `AX_WITH_YASIO` (3rdparty) switches, both on by default. In `ParticleSystem.cpp`, logs a mask's four-letter code as text instead of through `htonl()`. | Lantern builds without networking and yasio ([ADR 0012](../../docs/adr/0012-no-yasio.md)). `htonl()` only compiled because the network console's socket headers were included. |
-| `0002-keyword-link-delayimp.patch` | `ax_add_delay_load_options` links `delayimp` with `PRIVATE`. | On Windows, Axmol's app setup linked it in CMake's old "plain" form, and CMake refuses to mix that with the keyword form (`PRIVATE`) that Lantern uses for the editor and player. |
+| `0001-optional-network-and-yasio.patch` | Adds `AX_ENABLE_NETWORK` (core) and `AX_WITH_YASIO` (3rdparty) switches, both on by default. In `ParticleSystem.cpp`, logs a mask's four-letter code as text instead of through `htonl()`. | Rolo builds without networking and yasio ([ADR 0012](../../docs/adr/0012-no-yasio.md)). `htonl()` only compiled because the network console's socket headers were included. |
+| `0002-keyword-link-delayimp.patch` | `ax_add_delay_load_options` links `delayimp` with `PRIVATE`. | On Windows, Axmol's app setup linked it in CMake's old "plain" form, and CMake refuses to mix that with the keyword form (`PRIVATE`) that Rolo uses for the editor and player. |
 
 Rules for patches:
 - Keep them **small**: add switches or fix build problems. Do not change
-  Axmol's behaviour. Lantern's own features belong in Lantern.
+  Axmol's behaviour. Rolo's own features belong in Rolo.
 - Make each one with `git diff` inside `external/axmol`, from Axmol's
   pinned commit.
 - Say why in this table.

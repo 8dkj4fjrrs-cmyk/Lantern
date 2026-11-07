@@ -1,13 +1,14 @@
-#include "lantern/scene/Project.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/core/Names.hpp"
 
-#include "lantern/core/Files.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 using Json = nlohmann::ordered_json;
@@ -64,8 +65,8 @@ std::optional<ProjectSettings> Project::parseSettings(std::string_view text, std
         setError(error, "The project file is not valid JSON.");
         return std::nullopt;
     }
-    if (!j.is_object() || j.value("format", "") != ProjectFormat::kName) {
-        setError(error, "This is not a Lantern project file.");
+    if (!j.is_object() || !isFormatName(j.value("format", ""), ProjectFormat::kName)) {
+        setError(error, "This is not a Rolo project file.");
         return std::nullopt;
     }
     if (!j.contains("version") || !j["version"].is_number_integer() || j["version"].get<int>() < 1) {
@@ -73,7 +74,7 @@ std::optional<ProjectSettings> Project::parseSettings(std::string_view text, std
         return std::nullopt;
     }
     if (j["version"].get<int>() > ProjectFormat::kVersion) {
-        setError(error, "This project was saved by a newer version of Lantern. Update Lantern to open it.");
+        setError(error, "This project was saved by a newer version of Rolo. Update Rolo to open it.");
         return std::nullopt;
     }
     ProjectSettings settings;
@@ -101,12 +102,29 @@ std::string Project::serializeSettings(const ProjectSettings& settings)
     return j.dump(2) + "\n";
 }
 
+std::filesystem::path projectFileIn(const std::filesystem::path& folder)
+{
+    std::error_code ec;
+    for (const std::string_view name : {ProjectFormat::kFileName, ProjectFormat::kLegacyFileName}) {
+        const std::filesystem::path file = folder / name;
+        if (std::filesystem::is_regular_file(file, ec)) {
+            return file;
+        }
+    }
+    return {};
+}
+
+bool isProjectFolder(const std::filesystem::path& folder)
+{
+    return !projectFileIn(folder).empty();
+}
+
 std::optional<Project> Project::open(const std::filesystem::path& folder, std::string* error)
 {
-    const std::filesystem::path file = folder / ProjectFormat::kFileName;
-    const auto text = readTextFile(file);
+    const std::filesystem::path file = projectFileIn(folder);
+    const auto text = file.empty() ? std::nullopt : readTextFile(file);
     if (!text) {
-        setError(error, "No Lantern project found in " + folder.string() + " (there is no project.lantern file).");
+        setError(error, "No Rolo project found in " + folder.string() + " (there is no project.rolo file).");
         return std::nullopt;
     }
     auto settings = parseSettings(*text, error);
@@ -158,7 +176,14 @@ std::optional<Project> Project::create(const std::filesystem::path& folder, std:
 
 Status Project::save() const
 {
-    return writeTextFileAtomically(m_folder / ProjectFormat::kFileName, serializeSettings(m_settings));
+    const Status written = writeTextFileAtomically(m_folder / ProjectFormat::kFileName, serializeSettings(m_settings));
+    if (written) {
+        // A project made with Lantern now has its project.rolo: the old file
+        // would only confuse (two project files that could disagree).
+        std::error_code ec;
+        std::filesystem::remove(m_folder / ProjectFormat::kLegacyFileName, ec);
+    }
+    return written;
 }
 
 std::filesystem::path Project::absolute(std::string_view relative) const
@@ -201,4 +226,4 @@ std::vector<std::string> Project::sceneFiles() const
     return scenes;
 }
 
-} // namespace lantern
+} // namespace rolo

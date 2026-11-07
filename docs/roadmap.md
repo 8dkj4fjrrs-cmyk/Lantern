@@ -1,6 +1,6 @@
-# Lantern roadmap
+# Rolo roadmap
 
-Lantern is built milestone by milestone; each one leaves the engine
+Rolo is built milestone by milestone; each one leaves the engine
 building, tested and documented. Milestones 0–8 come from the original
 project brief. Items marked *added* were agreed later and are recorded here
 so the plan stays in one place.
@@ -9,7 +9,7 @@ so the plan stays in one place.
 |---|---|---|
 | 0 | Technical verification and foundation | Done (0.1) — [ADR 0001](adr/0001-runtime-foundation.md) |
 | 1 | Runtime foundation: window, start-up, logging | Done — [ADR 0002](adr/0002-runtime-module-and-axmol-integration.md) |
-| 2 | Minimal custom editor: docking, viewport, panels | Done — [ADR 0003](adr/0003-editor-architecture.md), [ADR 0004](adr/0004-lantern-ui-toolkit.md) |
+| 2 | Minimal custom editor: docking, viewport, panels | Done — [ADR 0003](adr/0003-editor-architecture.md), [ADR 0004](adr/0004-rolo-ui-toolkit.md) |
 | 3 | Scenes and serialization, stable IDs, undo/redo | Done — [ADR 0005](adr/0005-scenes-and-serialization.md) |
 | 4 | Sprites, assets, Scene view camera, tilemaps and collision data | Done (0.4) — [ADR 0006](adr/0006-assets-sprites-and-tilemaps.md) |
 | 5 | C++ gameplay behaviours, game modules, play mode, input, collision queries, scene changes | Done (0.5) — [ADR 0007](adr/0007-gameplay-and-play-mode.md) |
@@ -89,7 +89,7 @@ In rough order of importance:
    Windows builds, passes the unit tests and exports games (its CI
    machines cannot open OpenGL windows). Still to do: using the editor by
    hand on both, and running Windows' window tests somewhere with a screen.
-2. **Custom gameplay without building Lantern**: ~~games' own modules
+2. **Custom gameplay without building Rolo**: ~~games' own modules
    loaded by a downloaded editor~~ — **Lua scripts** do this (ADR 0013).
    Next for scripts:
    - script properties shown in the Inspector;
@@ -123,7 +123,7 @@ property rows, keyframe dragging, curve editing, scrubbing and preview,
 recording changes from the Scene view, undo, file format, runtime
 playback). Before then, walking characters are covered by flipbook clips
 (6.5), small effects by behaviour code, and scripted sequences by
-Milestone 6's events. Lantern's property system means any component property
+Milestone 6's events. Rolo's property system means any component property
 can become a timeline row without extra work per component, which is the
 main thing the earlier milestones should keep true.
 
@@ -134,7 +134,7 @@ main thing the earlier milestones should keep true.
   visual editors).
 - Item and inventory definitions, and localisation of text: listed among
   the brief's eventual content editors, not yet planned in a milestone.
-- Multi-line text fields in Lantern UI (long dialogue lines are edited in
+- Multi-line text fields in Rolo UI (long dialogue lines are edited in
   one-line fields today; they wrap in the game).
 
 Possible later steps for animation, not planned: animation state machines (switching

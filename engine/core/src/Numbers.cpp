@@ -1,11 +1,11 @@
-#include "lantern/core/Numbers.hpp"
+#include "rolo/core/Numbers.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <locale>
 #include <sstream>
 
-namespace lantern {
+namespace rolo {
 
 std::optional<double> parseNumber(std::string_view text)
 {
@@ -65,4 +65,4 @@ std::string formatDecimals(double value, int decimals)
     return text;
 }
 
-} // namespace lantern
+} // namespace rolo

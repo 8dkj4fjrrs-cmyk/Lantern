@@ -10,13 +10,13 @@
 #include <string>
 #include <string_view>
 
-namespace lantern::test {
+namespace rolo::test {
 
 inline std::filesystem::path uniqueTempFolder(std::string_view name)
 {
     std::random_device random;
-    return std::filesystem::temp_directory_path() / "lantern-tests" /
+    return std::filesystem::temp_directory_path() / "rolo-tests" /
            (std::string(name) + "-" + std::to_string(random()));
 }
 
-} // namespace lantern::test
+} // namespace rolo::test

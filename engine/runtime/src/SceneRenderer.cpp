@@ -2,13 +2,13 @@
 
 #include "TextureStore.hpp"
 
-#include "lantern/ui/EmbeddedFonts.hpp"
+#include "rolo/ui/EmbeddedFonts.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 namespace {
 
@@ -305,12 +305,12 @@ const std::string& SceneRenderer::defaultFontPath()
     if (!m_defaultFont.empty()) {
         return m_defaultFont;
     }
-    // Axmol loads fonts from files, so the font compiled into Lantern is
+    // Axmol loads fonts from files, so the font compiled into Rolo is
     // written to the temporary folder once (named by its size, so a changed
     // font gets a new file).
     const auto data = ui::fonts::interRegular();
     std::error_code ec;
-    const std::filesystem::path folder = std::filesystem::temp_directory_path(ec) / "lantern-engine";
+    const std::filesystem::path folder = std::filesystem::temp_directory_path(ec) / "rolo-engine";
     const std::filesystem::path file = folder / ("Inter-Regular-" + std::to_string(data.size()) + ".ttf");
     if (!std::filesystem::exists(file, ec) || std::filesystem::file_size(file, ec) != data.size()) {
         std::filesystem::create_directories(folder, ec);
@@ -395,7 +395,7 @@ void SceneRenderer::rebuild()
         node->setName(entity.name());
         const Transform& t = entity.transform();
         node->setPosition(t.position.x, t.position.y);
-        node->setRotation(t.rotation); // both Axmol and Lantern: degrees, clockwise
+        node->setRotation(t.rotation); // both Axmol and Rolo: degrees, clockwise
         node->setScale(t.scale.x, t.scale.y);
         node->setVisible(entity.isActive());
 
@@ -437,4 +437,4 @@ void SceneRenderer::rebuild()
     m_builtTextures = m_textures != nullptr ? m_textures->generation() : 0;
 }
 
-} // namespace lantern::detail
+} // namespace rolo::detail

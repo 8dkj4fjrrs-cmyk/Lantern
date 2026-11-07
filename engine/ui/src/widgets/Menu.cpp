@@ -1,12 +1,12 @@
-#include "lantern/ui/widgets/Menu.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Icons.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Icons.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 constexpr float kItemHeight = 26.0f;
@@ -272,4 +272,4 @@ void MenuBar::onPointerMove(Context& ctx, const PointerEvent& event)
     }
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

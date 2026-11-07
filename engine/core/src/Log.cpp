@@ -1,10 +1,10 @@
-#include "lantern/core/Log.hpp"
+#include "rolo/core/Log.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <utility>
 
-namespace lantern {
+namespace rolo {
 
 std::string_view toString(LogLevel level) noexcept
 {
@@ -52,4 +52,4 @@ LogSink makeConsoleSink()
     };
 }
 
-} // namespace lantern
+} // namespace rolo

@@ -1,6 +1,6 @@
-#include "lantern/gameplay/GameModule.hpp"
+#include "rolo/gameplay/GameModule.hpp"
 
-namespace lantern {
+namespace rolo {
 
 GameModuleRegistry::GameModuleRegistry(ComponentRegistry& registry, const Logger& log, std::string_view module)
     : m_registry(registry)
@@ -16,4 +16,4 @@ void GameModuleRegistry::add(const ComponentType& type)
     }
 }
 
-} // namespace lantern
+} // namespace rolo

@@ -1,19 +1,19 @@
-// A folder browser made with Lantern UI, for choosing where projects and
-// exported games go, and for opening projects. (Lantern has no system file
+// A folder browser made with Rolo UI, for choosing where projects and
+// exported games go, and for opening projects. (Rolo has no system file
 // dialog: each operating system's is different, and this one behaves the
-// same everywhere.) Folders holding a project are marked with Lantern's flame.
+// same everywhere.) Folders holding a project are marked with Rolo's face.
 
 #include "Panels.hpp"
 
-#include "lantern/scene/Project.hpp"
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Dialog.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <memory>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace fs = std::filesystem;
 
@@ -22,7 +22,7 @@ namespace {
 bool isProject(const fs::path& folder)
 {
     std::error_code ec;
-    return fs::exists(folder / ProjectFormat::kFileName, ec);
+    return isProjectFolder(folder);
 }
 
 std::string lower(std::string s)
@@ -88,17 +88,17 @@ void Picker::refresh()
         return lower(a.filename().string()) < lower(b.filename().string());
     });
     for (const fs::path& f : folders) {
-        addRow(isProject(f) ? ui::Icon::Flame : ui::Icon::Folder, f.filename().string(), f);
+        addRow(isProject(f) ? ui::Icon::Rolo : ui::Icon::Folder, f.filename().string(), f);
     }
     if (folders.empty()) {
         list->emplace<ui::Label>("No folders here.", ui::Label::Style::Faint);
     }
     const bool here = isProject(current);
     if (projectsOnly) {
-        note->setText(here ? "This folder is a Lantern project." : "Choose a folder marked with a flame: a project.");
+        note->setText(here ? "This folder is a Rolo project." : "Choose a folder marked with a flame: a project.");
         choose->setEnabled(here);
     } else {
-        note->setText(here ? "This folder is a Lantern project: choose the folder around it instead."
+        note->setText(here ? "This folder is a Rolo project: choose the folder around it instead."
                            : "Choose this folder, or open one of the folders above.");
         choose->setEnabled(!here);
     }
@@ -145,4 +145,4 @@ void showFolderPicker(ui::Context& ctx, const std::string& title, const fs::path
     picker->go(folder);
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

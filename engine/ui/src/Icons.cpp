@@ -1,10 +1,10 @@
-#include "lantern/ui/Icons.hpp"
+#include "rolo/ui/Icons.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -220,19 +220,20 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
         draw.fillCircle(c, 2.1f * u, color);
         break;
     }
-    case Icon::Flame: {
-        // A teardrop: round bottom, pointed top.
-        std::array<Vec2, 22> drop{};
-        const Vec2 base = g(8.0f, 10.2f);
-        const float r = 4.4f * u;
-        for (std::size_t i = 0; i < 20; ++i) {
-            const float a = -0.55f + (3.1415927f + 1.1f) * static_cast<float>(i) / 19.0f;
-            drop[i] = {base.x + std::cos(a) * r, base.y + std::sin(a) * r};
+    case Icon::Rolo: {
+        // Rolo, the engine's mascot: a round face with two eyes and a smile,
+        // cut out of the ball in a darker shade.
+        const Vec2 c0 = g(8.0f, 8.4f);
+        draw.fillCircle(c0, 6.2f * u, color);
+        const Color cut{0, 0, 0, 150};
+        draw.fillCircle(g(5.9f, 7.2f), 1.25f * u, cut);
+        draw.fillCircle(g(10.1f, 7.2f), 1.25f * u, cut);
+        std::array<Vec2, 9> smile{};
+        for (std::size_t i = 0; i < smile.size(); ++i) {
+            const float a = 0.45f + 2.24f * static_cast<float>(i) / static_cast<float>(smile.size() - 1);
+            smile[i] = {c0.x + std::cos(a) * 3.0f * u, c0.y + 0.6f * u + std::sin(a) * 2.6f * u};
         }
-        drop[20] = g(5.2f, 5.2f);
-        drop[21] = g(8.6f, 1.2f);
-        draw.fillConvexPolygon(drop, color);
-        draw.fillCircle(g(8.0f, 10.6f), 1.9f * u, Color{0, 0, 0, 110});
+        draw.polyline(smile, cut, 1.1f * u);
         break;
     }
     case Icon::Move: {
@@ -345,4 +346,4 @@ void drawIcon(DrawList& draw, Icon icon, Rect area, Color color)
     }
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

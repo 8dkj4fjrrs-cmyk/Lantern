@@ -1,12 +1,12 @@
-# Building Lantern Engine
+# Building Rolo Engine
 
 A full build produces:
 
 | Program | What it is |
 |---|---|
-| `lantern_player` | The game runtime: opens a window and runs the main loop. A `.app` bundle on macOS. |
-| `lantern_editor` | The editor: dockable viewport, hierarchy, inspector and console panels. A `.app` bundle on macOS. See [editor.md](editor.md). |
-| `lantern_tests`, `lantern_runtime_tests` | Automated tests, run by `ctest`. |
+| `rolo_player` | The game runtime: opens a window and runs the main loop. A `.app` bundle on macOS. |
+| `rolo_editor` | The editor: dockable viewport, hierarchy, inspector and console panels. A `.app` bundle on macOS. See [editor.md](editor.md). |
+| `rolo_tests`, `rolo_runtime_tests` | Automated tests, run by `ctest`. |
 
 The window and rendering come from [Axmol](https://github.com/axmolengine/axmol)
 (see `docs/adr/`). CMake downloads Axmol, its shader compiler and the JSON library automatically
@@ -54,23 +54,23 @@ roughly 10–20 minutes. Later builds only recompile what changed.
 To see log messages in Terminal, run the program inside the app bundle:
 
 ```sh
-./build/dev/bin/lantern_player/lantern_player.app/Contents/MacOS/lantern_player
+./build/dev/bin/rolo_player/rolo_player.app/Contents/MacOS/rolo_player
 ```
 
 Or open it like any Mac app (no log output):
 
 ```sh
-open build/dev/bin/lantern_player/lantern_player.app
+open build/dev/bin/rolo_player/rolo_player.app
 ```
 
-A window titled "Lantern Engine" shows a softly pulsing lantern and a
-frame-rate overlay. Press **Escape** or close the window to quit.
+A window titled "Rolo Engine" shows Rolo, the engine's smiling orange
+mascot, and a frame-rate overlay. Press **Escape** or close the window to quit.
 `--help` lists the options.
 
 ### 4. Run the editor
 
 ```sh
-./build/dev/bin/lantern_editor/lantern_editor.app/Contents/MacOS/lantern_editor
+./build/dev/bin/rolo_editor/rolo_editor.app/Contents/MacOS/rolo_editor
 ```
 
 The editor window opens with its panels docked; quit with Cmd+Q or by closing
@@ -89,7 +89,7 @@ Each preset builds into its own folder under `build/`. Downloaded Axmol lives
 in `external/` and is shared by all presets. To start completely fresh,
 delete `build/` (and `external/` to re-download Axmol).
 
-### Packaging Lantern
+### Packaging Rolo
 
 ```sh
 cmake --workflow --preset release      # configure, build, test, package
@@ -97,7 +97,7 @@ cmake --workflow --preset release      # configure, build, test, package
 cmake --build --preset package
 ```
 
-This makes `dist/Lantern-<version>-<system>-<processor>/` and a `.zip` of
+This makes `dist/Rolo-<version>-<system>-<processor>/` and a `.zip` of
 it: the editor, the game runtime used for exports, templates, examples,
 licenses and docs, laid out as the editor expects (see
 [releasing](releasing.md)). On a headless Linux machine, run the test step
@@ -110,11 +110,11 @@ Gameplay is C++ in *game modules* built into the editor and the player
 
 | Option | Default | Meaning |
 |---|---|---|
-| `LANTERN_BUILD_SAMPLE_GAME` | `ON` | Build the example games' modules (`examples/sample_game`, `examples/lantern_keeper`). |
-| `LANTERN_GAME_MODULE_DIRS` | empty | Folders with your own modules, separated by `;`. |
+| `ROLO_BUILD_SAMPLE_GAME` | `ON` | Build the example games' modules (`examples/sample_game`, `examples/lantern_keeper`). |
+| `ROLO_GAME_MODULE_DIRS` | empty | Folders with your own modules, separated by `;`. |
 
 ```sh
-cmake --preset dev -DLANTERN_GAME_MODULE_DIRS="$HOME/Games/MyGame/code"
+cmake --preset dev -DROLO_GAME_MODULE_DIRS="$HOME/Games/MyGame/code"
 cmake --build build/dev
 ```
 
@@ -129,8 +129,8 @@ sudo apt install build-essential cmake ninja-build git pkg-config \
     libgtk-3-dev libwebkit2gtk-4.1-dev libwayland-dev libxkbcommon-dev
 sudo snap install powershell --classic     # or see Microsoft's install guide
 cmake --workflow --preset dev
-./build/dev/bin/lantern_player/lantern_player
-./build/dev/bin/lantern_editor/lantern_editor
+./build/dev/bin/rolo_player/rolo_player
+./build/dev/bin/rolo_editor/rolo_editor
 ```
 
 On a machine without a screen (CI), run the tests under a virtual display:
@@ -152,6 +152,6 @@ cmake --workflow --preset dev
 | `fatal error: 'AppKit/NSColor.h' file not found` (macOS) | Apple's Command Line Tools are damaged. Run `sudo rm -rf /Library/Developer/CommandLineTools`, then reinstall them: `xcode-select --install`, or download "Command Line Tools for Xcode" from developer.apple.com/download/all (pick a version your macOS supports). Then delete `build/` and build again. |
 | `PowerShell 7 ('pwsh') was not found` | Install it (see step 1), open a new Terminal, configure again. |
 | `external/axmol is not at the pinned commit` | Delete the `external/axmol` folder and configure again. |
-| `Could not apply Lantern's Axmol patch` | `external/axmol` was changed, or the patches in `cmake/axmol-patches/` were. Delete the `external/axmol` folder and configure again. |
+| `Could not apply Rolo's Axmol patch` | `external/axmol` was changed, or the patches in `cmake/axmol-patches/` were. Delete the `external/axmol` folder and configure again. |
 | `Could not download Axmol` | Check your internet connection; configure again. |
 | `Failed to download` / `HASH mismatch` for `json.tar.xz` | CMake downloads nlohmann/json (for scene files) from GitHub at configure time and checks it. Check your connection and configure again; a hash mismatch means the download was damaged or tampered with: delete `build/` and retry. |

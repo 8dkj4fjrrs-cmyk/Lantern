@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 constexpr std::string_view kViewport = "panel.viewport";
@@ -75,4 +75,4 @@ void EditorState::saveTo(Preferences& prefs) const
     prefs.setString(kLastScene, lastScene);
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

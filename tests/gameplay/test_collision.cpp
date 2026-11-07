@@ -1,9 +1,9 @@
-#include "lantern/gameplay/Collision.hpp"
+#include "rolo/gameplay/Collision.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
+using namespace rolo;
 using Catch::Approx;
 
 namespace {
@@ -11,7 +11,7 @@ namespace {
 EntityId addBox(Scene& scene, const char* name, Vec2 position, Vec2 size, bool solid = true, EntityId parent = {})
 {
     const EntityId id = scene.create(name, parent)->id();
-    scene.setProperty(id, "lantern.Transform", "position", position);
+    scene.setProperty(id, "rolo.Transform", "position", position);
     auto collider = std::make_unique<Collider>();
     collider->size = size;
     collider->solid = solid;
@@ -25,10 +25,10 @@ TEST_CASE("Collider boxes follow the object, its parents and offset", "[gameplay
 {
     Scene scene;
     const EntityId parent = scene.create("Parent")->id();
-    scene.setProperty(parent, "lantern.Transform", "position", Vec2{100, 0});
-    scene.setProperty(parent, "lantern.Transform", "scale", Vec2{2, 2});
+    scene.setProperty(parent, "rolo.Transform", "position", Vec2{100, 0});
+    scene.setProperty(parent, "rolo.Transform", "scale", Vec2{2, 2});
     const EntityId child = addBox(scene, "Child", {10, 10}, {4, 6}, true, parent);
-    scene.setProperty(child, "lantern.Collider", "offset", Vec2{1, 0});
+    scene.setProperty(child, "rolo.Collider", "offset", Vec2{1, 0});
 
     const auto box = colliderBox(scene, child);
     REQUIRE(box);
@@ -46,7 +46,7 @@ TEST_CASE("A rotated collider counts as the box around it", "[gameplay][collisio
 {
     Scene scene;
     const EntityId id = addBox(scene, "Bar", {0, 0}, {10, 2});
-    scene.setProperty(id, "lantern.Transform", "rotation", 90.0f);
+    scene.setProperty(id, "rolo.Transform", "rotation", 90.0f);
     const auto box = colliderBox(scene, id);
     REQUIRE(box);
     CHECK(box->size().x == Approx(2).margin(1e-4));
@@ -114,7 +114,7 @@ TEST_CASE("Solid tiles block movement: painted collision and solid tileset tiles
 {
     Scene scene;
     const EntityId mapId = scene.create("Map")->id();
-    scene.setProperty(mapId, "lantern.Transform", "position", Vec2{100, 100});
+    scene.setProperty(mapId, "rolo.Transform", "position", Vec2{100, 100});
     auto map = std::make_unique<Tilemap>();
     map->cellSize = {16, 16};
     map->setSolid({2, 0}, true);          // painted: x 132..148, y 100..116
@@ -133,7 +133,7 @@ TEST_CASE("Solid tiles block movement: painted collision and solid tileset tiles
     CHECK(r.hit.isNull());   // a tile, not a collider
 
     // Scaling the map scales its cells.
-    scene.setProperty(mapId, "lantern.Transform", "scale", Vec2{2, 2});
+    scene.setProperty(mapId, "rolo.Transform", "scale", Vec2{2, 2});
     const std::vector<Box> scaled = solidTiles(scene, nullptr, Box{{0, 0}, {300, 300}});
     REQUIRE(scaled.size() == 1);
     CHECK(scaled[0] == Box{{164, 100}, {196, 132}});

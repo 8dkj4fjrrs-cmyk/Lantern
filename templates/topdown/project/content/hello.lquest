@@ -1,5 +1,5 @@
 {
-  "format": "lantern.quest",
+  "format": "rolo.quest",
   "version": 1,
   "name": "Say Hello",
   "description": "A first quest: it starts by itself and is done when you talk to your friend.",

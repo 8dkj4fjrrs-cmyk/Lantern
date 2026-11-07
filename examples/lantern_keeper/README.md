@@ -1,6 +1,6 @@
 # The Lantern Keeper
 
-A small, complete top-down RPG made with Lantern: the demo game of
+A small, complete top-down RPG made with Rolo: the demo game of
 Milestone 7. It takes about ten minutes to play.
 
 > Emberwick, the night after the great storm. For a hundred years the great
@@ -17,9 +17,9 @@ From the repository folder, after building (`cmake --workflow --preset dev`):
 
 ```sh
 # macOS
-./build/dev/bin/lantern_player/lantern_player.app/Contents/MacOS/lantern_player --project examples/lantern_keeper/project
+./build/dev/bin/rolo_player/rolo_player.app/Contents/MacOS/rolo_player --project examples/lantern_keeper/project
 # Linux / Windows
-./build/dev/bin/lantern_player/lantern_player --project examples/lantern_keeper/project
+./build/dev/bin/rolo_player/rolo_player --project examples/lantern_keeper/project
 ```
 
 Arrow keys or W A S D walk. E talks, reads and opens (and moves dialogue
@@ -50,11 +50,11 @@ Project…**) and press ▶.
   - `PlayerController`: walking, plus choosing the walk and idle clips.
   - `SceneDoor` and `SpawnPoint`: arriving at the right place in the next scene.
   - `CameraLimits`: keeps the view inside the map.
-  - `KeeperGame.cpp`: registers them with Lantern.
+  - `KeeperGame.cpp`: registers them with Rolo.
 - **`project/`**: the game itself: scenes, art, tileset, animations,
   variables, dialogues and quests. Open it in the editor to change anything.
 - **`tools/`**: how `project/` was produced. It starts from a fresh project
-  made by the editor (`lantern_editor --new-project`).
+  made by the editor (`rolo_editor --new-project`).
   - `make_art.py` draws the pixel art.
   - `build_project.py` adds everything else.
   - They need Python 3 with Pillow, but not to build or play the game.
@@ -66,14 +66,14 @@ To rebuild `project/` from scratch:
 
 ```sh
 rm -rf examples/lantern_keeper/project
-./build/dev/bin/lantern_editor/lantern_editor --new-project examples/lantern_keeper/project --frames 1
+./build/dev/bin/rolo_editor/rolo_editor --new-project examples/lantern_keeper/project --frames 1
 python3 examples/lantern_keeper/tools/build_project.py examples/lantern_keeper/project
 ```
 
 The module is built into the editor and the player with the other example
-(`LANTERN_BUILD_SAMPLE_GAME=ON`, the default). `tests/gameplay/test_lantern_keeper.cpp`
+(`ROLO_BUILD_SAMPLE_GAME=ON`, the default). `tests/gameplay/test_lantern_keeper.cpp`
 plays the whole story, from the first line to the ending, on every test
 run.
 
-All art and writing here are original and, like the rest of Lantern,
+All art and writing here are original and, like the rest of Rolo,
 MIT-licensed.

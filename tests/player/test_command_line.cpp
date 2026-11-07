@@ -9,9 +9,9 @@
 #include <string_view>
 #include <vector>
 
-using lantern::player::bundledGameFolder;
-using lantern::player::parseCommandLine;
-using lantern::player::ParseResult;
+using rolo::player::bundledGameFolder;
+using rolo::player::parseCommandLine;
+using rolo::player::ParseResult;
 
 namespace {
 ParseResult parse(std::initializer_list<std::string_view> args)
@@ -101,14 +101,14 @@ TEST_CASE("Held keys and fixed steps for gameplay tests", "[player][cli]")
 {
     const ParseResult r = parse({"--hold", "Right", "--hold", "space", "--fixed-step"});
     REQUIRE(r.ok());
-    CHECK(r.options.heldKeys == std::vector<lantern::Key>{lantern::Key::Right, lantern::Key::Space});
+    CHECK(r.options.heldKeys == std::vector<rolo::Key>{rolo::Key::Right, rolo::Key::Space});
     CHECK(r.options.fixedStep);
 
     const ParseResult bad = parse({"--hold", "Rigth"});
     CHECK_FALSE(bad.ok());
     CHECK(bad.error.find("Rigth") != std::string::npos);
-    CHECK(lantern::player::keyFromName("left shift") == lantern::Key::LeftShift);
-    CHECK_FALSE(lantern::player::keyFromName("Unknown"));
+    CHECK(rolo::player::keyFromName("left shift") == rolo::Key::LeftShift);
+    CHECK_FALSE(rolo::player::keyFromName("Unknown"));
 }
 
 TEST_CASE("Tapped keys and the save folder", "[player][cli]")
@@ -116,9 +116,9 @@ TEST_CASE("Tapped keys and the save folder", "[player][cli]")
     const ParseResult r = parse({"--tap", "E@120", "--tap", "down@5-40", "--save-dir", "saves"});
     REQUIRE(r.ok());
     REQUIRE(r.options.tappedKeys.size() == 2);
-    using Tap = lantern::player::PlayerOptions::Tap;
-    CHECK(r.options.tappedKeys[0] == Tap{lantern::Key::E, 120, 121});
-    CHECK(r.options.tappedKeys[1] == Tap{lantern::Key::Down, 5, 40});
+    using Tap = rolo::player::PlayerOptions::Tap;
+    CHECK(r.options.tappedKeys[0] == Tap{rolo::Key::E, 120, 121});
+    CHECK(r.options.tappedKeys[1] == Tap{rolo::Key::Down, 5, 40});
     CHECK_FALSE(parse({"--tap", "E@9-3"}).ok());
     CHECK(r.options.saveDir == "saves");
     CHECK_FALSE(parse({"--tap", "E"}).ok());
@@ -127,18 +127,18 @@ TEST_CASE("Tapped keys and the save folder", "[player][cli]")
 
 TEST_CASE("An exported game is found beside the player", "[player][cli]")
 {
-    const auto root = lantern::test::uniqueTempFolder("bundled");
+    const auto root = rolo::test::uniqueTempFolder("bundled");
     std::filesystem::create_directories(root / "My Game/game");
-    std::ofstream(root / "My Game/game/project.lantern") << "{}";
+    std::ofstream(root / "My Game/game/project.rolo") << "{}";
     CHECK(bundledGameFolder(root / "My Game/My Game") == root / "My Game/game");
     // macOS: inside the app's Resources.
     std::filesystem::create_directories(root / "My Game.app/Contents/Resources/game");
     std::filesystem::create_directories(root / "My Game.app/Contents/MacOS");
-    std::ofstream(root / "My Game.app/Contents/Resources/game/project.lantern") << "{}";
-    CHECK(bundledGameFolder(root / "My Game.app/Contents/MacOS/lantern_player")
+    std::ofstream(root / "My Game.app/Contents/Resources/game/project.rolo") << "{}";
+    CHECK(bundledGameFolder(root / "My Game.app/Contents/MacOS/rolo_player")
           == root / "My Game.app/Contents/Resources/game");
     // A player on its own (a build folder): nothing bundled.
-    CHECK_FALSE(bundledGameFolder(root / "bin/lantern_player").has_value());
+    CHECK_FALSE(bundledGameFolder(root / "bin/rolo_player").has_value());
     std::filesystem::remove_all(root);
 
     const auto stats = parse({"--stats"});

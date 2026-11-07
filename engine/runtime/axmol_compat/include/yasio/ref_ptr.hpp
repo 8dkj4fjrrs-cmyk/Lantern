@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's ref_ptr, used by Axmol's SimpleTimer.
-// Written from scratch for Lantern; it contains no yasio code (see ../../README.md).
+// Rolo's replacement for yasio's ref_ptr, used by Axmol's SimpleTimer.
+// Written from scratch for Rolo; it contains no yasio code (see ../../README.md).
 //
 // A smart pointer for objects that count their own references through
 // retain() and release(). Constructing one from a raw pointer *adopts* the

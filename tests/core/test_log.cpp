@@ -1,12 +1,12 @@
-#include "lantern/core/Log.hpp"
+#include "rolo/core/Log.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <vector>
 
-using lantern::LogLevel;
-using lantern::Logger;
-using lantern::LogMessage;
+using rolo::LogLevel;
+using rolo::Logger;
+using rolo::LogMessage;
 
 TEST_CASE("Messages reach every registered sink", "[core][log]")
 {
@@ -71,7 +71,7 @@ TEST_CASE("Separate loggers do not share sinks", "[core][log]")
 
 TEST_CASE("Log levels have short names", "[core][log]")
 {
-    CHECK(lantern::toString(LogLevel::Info) == "INFO");
-    CHECK(lantern::toString(LogLevel::Warning) == "WARN");
-    CHECK(lantern::toString(LogLevel::Error) == "ERROR");
+    CHECK(rolo::toString(LogLevel::Info) == "INFO");
+    CHECK(rolo::toString(LogLevel::Warning) == "WARN");
+    CHECK(rolo::toString(LogLevel::Error) == "ERROR");
 }

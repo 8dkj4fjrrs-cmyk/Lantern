@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for the string helpers Axmol's core takes from yasio.
-// Written from scratch for Lantern; it contains no yasio code. It keeps yasio's
+// Rolo's replacement for the string helpers Axmol's core takes from yasio.
+// Written from scratch for Rolo; it contains no yasio code. It keeps yasio's
 // header name and the names Axmol calls (cxx17::string_view, cxx20::starts_with,
 // ...) so Axmol compiles without edits. See ../../README.md and ADR 0012.
 //

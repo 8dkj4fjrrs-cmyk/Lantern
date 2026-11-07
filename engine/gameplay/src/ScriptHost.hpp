@@ -1,6 +1,6 @@
 #pragma once
 
-// ScriptHost: the Lua state of one running game (see lantern/gameplay/Script.hpp).
+// ScriptHost: the Lua state of one running game (see rolo/gameplay/Script.hpp).
 //
 // The Game creates it when the first script starts and drops it when the game
 // stops, so every Play begins with fresh state and freshly read script files.
@@ -13,7 +13,7 @@
 //   * Each *object* with a Script gets its own `self` table, kept in the Lua
 //     registry; the component remembers its reference.
 //   * The shared globals are Lua's safe libraries (string, table, math, utf8,
-//     coroutine and most of the base library) plus Lantern's: game, input,
+//     coroutine and most of the base library) plus Rolo's: game, input,
 //     print and require. Nothing reaches files, programs or native code.
 //
 // Limits, so a broken script cannot hang or exhaust the game:
@@ -21,8 +21,8 @@
 //     kInstructionLimit Lua instructions is stopped with an error;
 //   * all scripts together may use at most kMemoryLimit bytes.
 
-#include "lantern/core/Log.hpp"
-#include "lantern/scene/EntityId.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/scene/EntityId.hpp"
 
 #include <cstddef>
 #include <map>
@@ -33,7 +33,7 @@
 struct lua_State;
 struct lua_Debug;
 
-namespace lantern {
+namespace rolo {
 
 class Game;
 struct Script;
@@ -112,4 +112,4 @@ void openScriptApi(ScriptHost& host);
 /// Pushes an object handle (nil for a null ID) (ScriptApi.cpp).
 void pushObjectForScripts(lua_State* L, EntityId id);
 
-} // namespace lantern
+} // namespace rolo

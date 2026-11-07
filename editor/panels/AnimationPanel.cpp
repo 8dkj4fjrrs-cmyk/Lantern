@@ -8,13 +8,13 @@
 
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Dialog.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -714,4 +714,4 @@ void AnimationPanel::showClipNameDialog(bool rename)
     m_editor.ui().setFocus(&name);
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

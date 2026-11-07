@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's pod_vector, the growable array that Axmol's
+// Rolo's replacement for yasio's pod_vector, the growable array that Axmol's
 // core uses for byte buffers, vertex arrays and scheduler lists. Written from
-// scratch for Lantern; it contains no yasio code (see ../../README.md and
+// scratch for Rolo; it contains no yasio code (see ../../README.md and
 // ADR 0012). It keeps yasio's names so Axmol compiles without edits.
 //
 // How it differs from std::vector, and why Axmol wants that:

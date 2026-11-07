@@ -1,13 +1,13 @@
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/DrawList.hpp"
-#include "lantern/ui/EmbeddedFonts.hpp"
-#include "lantern/ui/Font.hpp"
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/DrawList.hpp"
+#include "rolo/ui/EmbeddedFonts.hpp"
+#include "rolo/ui/Font.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern::ui;
+using namespace rolo::ui;
 using Catch::Approx;
 
 // --- UTF-8 ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ TEST_CASE("Font metrics and measurement behave sensibly", "[ui][font]")
     const float wide = atlas.measure(font, 13.0f, "WWWW");
     const float narrow = atlas.measure(font, 13.0f, "iiii");
     CHECK(wide > narrow);
-    CHECK(atlas.measure(font, 26.0f, "Lantern") == Approx(2.0f * atlas.measure(font, 13.0f, "Lantern")).epsilon(0.08));
+    CHECK(atlas.measure(font, 26.0f, "Rolo") == Approx(2.0f * atlas.measure(font, 13.0f, "Rolo")).epsilon(0.08));
     CHECK(atlas.measure(font, 13.0f, "") == 0.0f);
 }
 

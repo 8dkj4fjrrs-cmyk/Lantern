@@ -1,9 +1,9 @@
-#include "lantern/assets/Tileset.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/assets/Tileset.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -75,9 +75,9 @@ TEST_CASE("A tilemap survives save and load, one line per row", "[scene][tilemap
 
 TEST_CASE("Damaged tilemap data keeps what can be read, with a warning", "[scene][tilemap][file]")
 {
-    const std::string text = R"({"format": "lantern.scene", "version": 1, "name": "T", "entities": [
+    const std::string text = R"({"format": "rolo.scene", "version": 1, "name": "T", "entities": [
         {"id": "0000000000000001", "name": "Map", "components": [
-          {"type": "lantern.Tilemap", "tileset": null, "cellSize": [16, 16],
+          {"type": "rolo.Tilemap", "tileset": null, "cellSize": [16, 16],
            "data": {"layers": [{"name": "Ground", "rows": [[0, 0, 1, "x", 2], "bad"]}]}}]}]})";
     const SceneLoadResult r = parseScene(text, registry());
     REQUIRE(r.ok());
@@ -92,7 +92,7 @@ TEST_CASE("A tilemap can be picked where it has tiles", "[scene][tilemap]")
 {
     Scene scene("Pick", EntityIdGenerator(5));
     Entity* e = scene.create("Map");
-    scene.setProperty(e->id(), "lantern.Transform", "position", Vec2{100.0f, 100.0f});
+    scene.setProperty(e->id(), "rolo.Transform", "position", Vec2{100.0f, 100.0f});
     auto map = std::make_unique<Tilemap>();
     map->setTile(0, {0, 0}, 1);
     map->setTile(0, {2, 1}, 1);

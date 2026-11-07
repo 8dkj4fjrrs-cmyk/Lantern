@@ -1,11 +1,11 @@
 # Third-Party Notices
 
-Lantern Engine's own code is MIT-licensed (see `LICENSE`). This file lists
+Rolo Engine's own code is MIT-licensed (see `LICENSE`). This file lists
 third-party software it uses, what for, and whether it ends up inside games
-built with Lantern ("shipped").
+built with Rolo ("shipped").
 
 Large dependencies are not copied into this repository: Axmol is downloaded
-by CMake into `external/` at a pinned commit (see `cmake/LanternAxmol.cmake`).
+by CMake into `external/` at a pinned commit (see `cmake/RoloAxmol.cmake`).
 Small ones are kept in the repository, unmodified and with their license
 files: `third_party/stb/stb_truetype.h`, `third_party/stb/stb_image.h`, Lua's
 sources in `third_party/lua/` and the Inter fonts in `assets/fonts/`.
@@ -14,12 +14,12 @@ sources in `third_party/lua/` and the Inter fonts in `assets/fonts/`.
 
 | Component | Version | License | Shipped? |
 |---|---|---|---|
-| [Axmol Engine](https://github.com/axmolengine/axmol) | 2.11.5 (`6c0dce6`), with Lantern's patches (`cmake/axmol-patches/`) | MIT | Yes |
+| [Axmol Engine](https://github.com/axmolengine/axmol) | 2.11.5 (`6c0dce6`), with Rolo's patches (`cmake/axmol-patches/`) | MIT | Yes |
 | [axslcc](https://github.com/axmolengine/axslcc) shader compiler | 1.14.0 | see upstream | No — build tool only |
 
-### Libraries bundled by Axmol and linked into `lantern_player`
+### Libraries bundled by Axmol and linked into `rolo_player`
 
-Taken from the Linux build: the libraries on `lantern_player`'s link line,
+Taken from the Linux build: the libraries on `rolo_player`'s link line,
 plus the header-only libraries whose headers the compiled sources include
 (checked with `ninja -t deps`, last after removing the networking
 libraries). Versions are from Axmol's
@@ -29,7 +29,7 @@ of Glad/GLFW-on-X11; it is re-checked when a macOS build runs in CI.
 **The full license texts are in [`licenses/`](licenses/README.md)**, collected
 from each project's repository at these versions by
 `tools/release/fetch_licenses.py`. Every exported game, and every installed
-copy of Lantern, carries that folder.
+copy of Rolo, carries that folder.
 
 | Library | Version | License |
 |---|---|---|
@@ -59,23 +59,23 @@ copy of Lantern, carries that folder.
 | xxHash | 0.8.3 | BSD-2-Clause |
 | zlib | 1.3.1 | zlib |
 
-**Not included** in Lantern builds: Axmol's optional extensions (its Dear ImGui
+**Not included** in Rolo builds: Axmol's optional extensions (its Dear ImGui
 integration, inspector, SDF generator, and so on) are switched off.
 **Not included** either: OpenAL Soft (LGPL-2.1), because
 Axmol audio is switched off. It must be dynamically linked or replaced when
 audio is enabled.
 
-**Not included: Axmol's networking.** Lantern games make no network
-connections, so Lantern builds Axmol without its network module (HTTP,
+**Not included: Axmol's networking.** Rolo games make no network
+connections, so Rolo builds Axmol without its network module (HTTP,
 WebSocket, downloader) and without its remote debug console. That leaves out
 **curl, llhttp, websocket-parser and yasio** (ADR 0012).
 
 yasio was also used outside networking, for a few containers and helpers in
-Axmol's core. Lantern replaces those with its own code,
-`engine/runtime/axmol_compat/` (MIT, written for Lantern, no yasio code), and
+Axmol's core. Rolo replaces those with its own code,
+`engine/runtime/axmol_compat/` (MIT, written for Rolo, no yasio code), and
 deletes yasio from its copy of Axmol so nothing builds it. The reason: yasio's
 upstream license adds the "Anti 996" License 1.0 to MIT, a non-standard
-license that Lantern does not want every game to carry.
+license that Rolo does not want every game to carry.
 
 **Windows only: the Microsoft Visual C++ runtime** (`msvcp140.dll`,
 `vcruntime140.dll`, `vcruntime140_1.dll`) is copied beside the editor and the
@@ -96,13 +96,13 @@ copied and built; the io, os, debug and package libraries are left out on
 purpose (see `third_party/lua/README.md` and ADR 0013). Its MIT notice goes
 with every game in `licenses/lua.txt`.
 
-## Lantern UI (the editor's interface toolkit, `engine/ui`)
+## Rolo UI (the editor's interface toolkit, `engine/ui`)
 
-Lantern's UI toolkit is Lantern's own code. It uses:
+Rolo's UI toolkit is Rolo's own code. It uses:
 
 | Component | Version | License | Shipped? |
 |---|---|---|---|
-| [stb_truetype](https://github.com/nothings/stb) (`third_party/stb/stb_truetype.h`) | 1.26 (`003501f6`) | MIT or public domain (Unlicense), at our choice: MIT | Yes — in the editor; in games only once they use Lantern UI |
+| [stb_truetype](https://github.com/nothings/stb) (`third_party/stb/stb_truetype.h`) | 1.26 (`003501f6`) | MIT or public domain (Unlicense), at our choice: MIT | Yes — in the editor; in games only once they use Rolo UI |
 | [Inter](https://rsms.me/inter/) Regular and SemiBold (`assets/fonts/`) | 4.0 (font version 4.001) | SIL Open Font License 1.1 (`assets/fonts/Inter-LICENSE.txt`) | Yes — embedded in the program file |
 
 The fonts are embedded unmodified. The OFL allows bundling and embedding them

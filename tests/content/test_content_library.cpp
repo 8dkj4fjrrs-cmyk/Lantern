@@ -1,7 +1,7 @@
 #include "support/TempFolder.hpp"
 #include "ContentFixture.hpp"
 
-#include "lantern/core/Files.hpp"
+#include "rolo/core/Files.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -9,8 +9,8 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 namespace {
 
@@ -116,15 +116,15 @@ TEST_CASE("Loops that could never finish are found", "[content][library]")
 TEST_CASE("A project's content is loaded from its asset files", "[content][library]")
 {
     namespace fs = std::filesystem;
-    const fs::path folder = lantern::test::uniqueTempFolder("content-library");
+    const fs::path folder = rolo::test::uniqueTempFolder("content-library");
     fs::remove_all(folder);
     fs::create_directories(folder / "content");
-    std::ofstream(folder / "project.lantern") << R"({"format":"lantern.project","version":1,"name":"T"})";
+    std::ofstream(folder / "project.rolo") << R"({"format":"rolo.project","version":1,"name":"T"})";
     std::ofstream(folder / "content/game.lvars")
-        << R"({"format":"lantern.variables","version":1,"variables":[{"id":"gems","type":"int","initial":1}]})";
-    std::ofstream(folder / "content/broken.lquest") << R"({"format":"lantern.quest","version":1})";
+        << R"({"format":"rolo.variables","version":1,"variables":[{"id":"gems","type":"int","initial":1}]})";
+    std::ofstream(folder / "content/broken.lquest") << R"({"format":"rolo.quest","version":1})";
     std::ofstream(folder / "content/hi.ldialogue")
-        << R"({"format":"lantern.dialogue","version":1,"start":"a","nodes":[{"id":"a","text":"You have {gems}."}]})";
+        << R"({"format":"rolo.dialogue","version":1,"start":"a","nodes":[{"id":"a","text":"You have {gems}."}]})";
 
     AssetDatabase assets(folder);
     assets.refresh();

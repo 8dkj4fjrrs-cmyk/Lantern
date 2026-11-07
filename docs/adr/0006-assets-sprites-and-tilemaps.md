@@ -16,7 +16,7 @@ invalid files, project-relative paths and stable asset identifiers.
 
 ### 1. Asset IDs live in `.meta` files beside each asset
 
-A new library, `lantern_assets` (`engine/assets`), keeps an `AssetDatabase`
+A new library, `rolo_assets` (`engine/assets`), keeps an `AssetDatabase`
 of a project's images, tilesets, sounds and fonts. Each asset file gets a
 `.meta` file next to it with a random 64-bit `AssetId` (same form as entity
 IDs). Scenes store the ID, never a path.
@@ -37,13 +37,13 @@ edited image would become a different asset). Sidecar files avoid both.
 
 The database checks images with **stb_image 2.30** (MIT/public domain, the
 same stb commit as the font rasteriser), compiled privately because Axmol
-links its own copy. `lantern_assets` has no backend and is tested in every
+links its own copy. `rolo_assets` has no backend and is tested in every
 preset. Games open it **read-only** (no `.meta` files are written).
 
 ### 2. Sprites and tilemaps are components; sizes live in the scene
 
-`lantern.Sprite` refers to an image by ID and stores its size in points
-(set to the image's pixel size when chosen). `lantern.Tilemap` refers to a
+`rolo.Sprite` refers to an image by ID and stores its size in points
+(set to the image's pixel size when chosen). `rolo.Tilemap` refers to a
 tileset by ID and stores its cell size. Storing sizes in the scene keeps
 picking, outlines and the Rect tool working from scene data alone, without
 loading images, and lets art be swapped without moving everything.
@@ -65,7 +65,7 @@ The editor renders the world into an off-screen image the size of the
 Scene panel **in real pixels** (Retina included), with its own projection,
 rather than stretching the fixed game resolution. Zooming in stays sharp
 and pixel art stays crisp. The camera (centre and zoom) belongs to the
-editor; the game's view is drawn as a frame. The `lantern.Camera`
+editor; the game's view is drawn as a frame. The `rolo.Camera`
 component decides what the player sees; the player applies it every frame.
 
 ### 4. Tools work on scene data, through undo
@@ -101,9 +101,9 @@ later behind the same `importFiles()`.
 
 ## Consequences
 
-- New library `lantern_assets`; the runtime links it and draws sprites and
+- New library `rolo_assets`; the runtime links it and draws sprites and
   tiles from it. New third-party code: stb_image (notices updated).
-- Scene files gain `lantern.Sprite`, `lantern.Camera` and `lantern.Tilemap`
+- Scene files gain `rolo.Sprite`, `rolo.Camera` and `rolo.Tilemap`
   and component `"data"`; format version stays 1, since older files remain
   valid and unknown components are preserved.
 - Collision is data only until Milestone 5 adds movement and collision

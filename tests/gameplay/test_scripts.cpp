@@ -1,13 +1,13 @@
-// Lua scripts (lantern/gameplay/Script.hpp): running, the API scripts call,
+// Lua scripts (rolo/gameplay/Script.hpp): running, the API scripts call,
 // keeping scripts apart, and what happens when a script goes wrong.
 
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/core/Log.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/Script.hpp"
-#include "lantern/scene/Components.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/Script.hpp"
+#include "rolo/scene/Components.hpp"
 #include "support/TempFolder.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-using namespace lantern;
+using namespace rolo;
 using Catch::Matchers::ContainsSubstring;
 
 namespace {
@@ -76,7 +76,7 @@ struct ScriptProject {
 EntityId addScripted(Scene& scene, const std::string& name, AssetId script, Vec2 at = {})
 {
     const EntityId id = scene.create(name)->id();
-    scene.setProperty(id, "lantern.Transform", "position", at);
+    scene.setProperty(id, "rolo.Transform", "position", at);
     auto component = std::make_unique<Script>();
     component->script = script;
     scene.addComponent(id, std::move(component));
@@ -327,7 +327,7 @@ TEST_CASE("Scripts find objects, move them with collisions and destroy them", "[
     const EntityId pusher = addScripted(scene, "Pusher", script);
     scene.addComponent(pusher, std::make_unique<Collider>()); // 32 x 32
     const EntityId wall = scene.create("Wall")->id();
-    scene.setProperty(wall, "lantern.Transform", "position", Vec2{100, 0});
+    scene.setProperty(wall, "rolo.Transform", "position", Vec2{100, 0});
     scene.addComponent(wall, std::make_unique<Collider>());
     const EntityId gem = scene.create("Gem")->id();
     auto gemCollider = std::make_unique<Collider>();
@@ -495,7 +495,7 @@ TEST_CASE("The Script component is registered, saved and shown like any behaviou
 {
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     registerGameplayComponents(registry);
-    const ComponentType* type = registry.find("lantern.Script");
+    const ComponentType* type = registry.find("rolo.Script");
     REQUIRE(type != nullptr);
     CHECK(type->category == "Gameplay");
     REQUIRE(type->properties.size() == 1);
@@ -562,7 +562,7 @@ end
     const EntityId g = addScripted(scene, "Guard", guard, {300, 0});
     scene.addComponent(g, std::make_unique<Collider>());
     const EntityId wall = scene.create("Wall")->id();
-    scene.setProperty(wall, "lantern.Transform", "position", Vec2{360, 0});
+    scene.setProperty(wall, "rolo.Transform", "position", Vec2{360, 0});
     scene.addComponent(wall, std::make_unique<Collider>());
 
     GameSetup setup;

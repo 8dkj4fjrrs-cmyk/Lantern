@@ -1,18 +1,18 @@
-# Releasing Lantern
+# Releasing Rolo
 
-How a version of Lantern is prepared, checked and published. A release is a
+How a version of Rolo is prepared, checked and published. A release is a
 git tag plus one downloadable `.zip` per system, built by CI.
 
 ## 1. Prepare
 
-1. **Version**: set `VERSION` (and `LANTERN_VERSION_SUFFIX`, e.g. `-alpha`,
+1. **Version**: set `VERSION` (and `ROLO_VERSION_SUFFIX`, e.g. `-alpha`,
    or empty for a final release) in the top-level `CMakeLists.txt`.
 2. **Changelog**: move the changes into a section for the version in
    `CHANGELOG.md`.
 3. **Licenses**: if Axmol or another dependency changed version:
    - run `python3 tools/release/fetch_licenses.py`;
    - update `THIRD_PARTY_NOTICES.md` (the libraries are those on
-     `lantern_player`'s link line and the third-party headers its sources
+     `rolo_player`'s link line and the third-party headers its sources
      include: `ninja -t deps` in a build folder lists them).
 4. **Known limitations**: update [known-limitations.md](known-limitations.md),
    especially the table of what was tested where.
@@ -32,10 +32,10 @@ cmake --build --preset asan && ctest --preset asan
 cmake --workflow --preset release    # release build + tests + package into dist/
 ```
 
-Then, by hand, with the **packaged** Lantern from `dist/` (not the build
+Then, by hand, with the **packaged** Rolo from `dist/` (not the build
 folder), so the installed layout is what gets tested:
 
-1. Unzip it somewhere new and start `lantern_editor`. The welcome screen
+1. Unzip it somewhere new and start `rolo_editor`. The welcome screen
    appears.
 2. **New Project… > Top-Down Starter**, press ▶, walk, talk, stop.
 3. **Build > Export**, then move the exported folder elsewhere and start the
@@ -49,7 +49,7 @@ folder), so the installed layout is what gets tested:
    - on GitHub: **Actions › Release › Run workflow**, type the version
      (`0.9.0-alpha`) and press **Run workflow**. The release creates the
      tag `v0.9.0-alpha` on the commit it built;
-   - or tag yourself: `git tag -a v0.9.0-alpha -m "Lantern 0.9.0-alpha"`
+   - or tag yourself: `git tag -a v0.9.0-alpha -m "Rolo 0.9.0-alpha"`
      and push the tag.
 2. The **release** workflow (`.github/workflows/release.yml`):
    - first checks that the version matches `CMakeLists.txt`;
@@ -62,15 +62,15 @@ folder), so the installed layout is what gets tested:
 ## What a package contains
 
 `cmake --build --preset package` (the last step of the release workflow)
-installs the `lantern` component (`cmake/LanternInstall.cmake`) into
-`dist/Lantern-<version>-<system>-<processor>/` and zips it:
+installs the `rolo` component (`cmake/RoloInstall.cmake`) into
+`dist/Rolo-<version>-<system>-<processor>/` and zips it:
 
 ```
-Lantern-0.9.0-alpha-Linux-x86_64/
-  lantern_editor         the editor (lantern_editor.exe on Windows)
+Rolo-0.9.0-alpha-Linux-x86_64/
+  rolo_editor         the editor (rolo_editor.exe on Windows)
   axslc/                 its compiled shaders
   runtime/               the game runtime that exports are made from
-    lantern_player
+    rolo_player
     axslc/
   templates/             New Project templates
   examples/              The Lantern Keeper and the sample game (projects and C++)
@@ -80,12 +80,12 @@ Lantern-0.9.0-alpha-Linux-x86_64/
 ```
 
 On macOS:
-- the editor is `lantern_editor.app`, with everything else inside it, in
-  `Contents/Resources/lantern/` (the runtime is `runtime/lantern_player.app`);
+- the editor is `rolo_editor.app`, with everything else inside it, in
+  `Contents/Resources/rolo/` (the runtime is `runtime/rolo_player.app`);
 - the readme and license files sit beside the app.
 
 The editor finds all of this from its own location
-(`editor/model/LanternResources.hpp`), so the folder can live anywhere.
+(`editor/model/RoloResources.hpp`), so the folder can live anywhere.
 
 ## Not done yet
 
@@ -95,4 +95,4 @@ The editor finds all of this from its own location
   programs need an Authenticode certificate. Neither is set up, so:
   - macOS asks users to right-click **Open** the first time;
   - Windows SmartScreen may warn.
-- **Installers.** Lantern ships as zips, not `.dmg`, `.msi` or packages.
+- **Installers.** Rolo ships as zips, not `.dmg`, `.msi` or packages.

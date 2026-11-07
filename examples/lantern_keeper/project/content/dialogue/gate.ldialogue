@@ -1,5 +1,5 @@
 {
-  "format": "lantern.dialogue",
+  "format": "rolo.dialogue",
   "version": 1,
   "speakers": [],
   "start": "begin",

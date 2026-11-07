@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's set_thread_name, used by Axmol's job system.
-// Written from scratch for Lantern; it contains no yasio code (see ../../README.md).
+// Rolo's replacement for yasio's set_thread_name, used by Axmol's job system.
+// Written from scratch for Rolo; it contains no yasio code (see ../../README.md).
 //
 // Naming threads only helps debuggers and profilers show which thread is which;
 // if the system cannot do it, nothing else changes.

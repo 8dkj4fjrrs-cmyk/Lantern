@@ -5,13 +5,13 @@
 #include "support/TempFolder.hpp"
 #include "KeeperBehaviours.hpp"
 
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/content/Notation.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/GameModule.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/content/Notation.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/GameModule.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <filesystem>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -32,7 +32,7 @@ struct KeeperGame {
     ComponentRegistry registry = ComponentRegistry::withBuiltins();
     AssetDatabase assets{kKeeper, AssetDatabase::Access::ReadOnly};
     ContentLibrary content;
-    FolderSaveStore saves{lantern::test::uniqueTempFolder("keeper-saves")};
+    FolderSaveStore saves{rolo::test::uniqueTempFolder("keeper-saves")};
     std::unique_ptr<Game> game;
 
     KeeperGame()

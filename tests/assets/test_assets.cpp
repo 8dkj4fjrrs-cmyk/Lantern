@@ -1,29 +1,29 @@
 #include "support/TempFolder.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/core/Files.hpp"
-#include "lantern/scene/Scene.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
+using namespace rolo;
 namespace fs = std::filesystem;
 
 namespace {
 
-const fs::path kData = LANTERN_TEST_DATA_DIR;
+const fs::path kData = ROLO_TEST_DATA_DIR;
 
 // A fresh, empty project folder for each test.
 struct TempProject {
     fs::path path;
     explicit TempProject(const char* name)
-        : path(lantern::test::uniqueTempFolder(name))
+        : path(rolo::test::uniqueTempFolder(name))
     {
         fs::remove_all(path);
         fs::create_directories(path / "scenes");
-        std::ofstream(path / "project.lantern") << R"({"format": "lantern.project", "version": 1, "name": "T"})";
+        std::ofstream(path / "project.rolo") << R"({"format": "rolo.project", "version": 1, "name": "T"})";
     }
     ~TempProject() { fs::remove_all(path); }
 };
@@ -195,9 +195,9 @@ TEST_CASE("Tilesets: geometry, collision, files", "[assets][tileset]")
     CHECK_FALSE(back->isSolid(2));
 
     CHECK_FALSE(parseTileset("{}", &error).has_value());
-    CHECK_FALSE(parseTileset(R"({"format": "lantern.tileset", "version": 1, "tileSize": [0, 16]})", &error));
+    CHECK_FALSE(parseTileset(R"({"format": "rolo.tileset", "version": 1, "tileSize": [0, 16]})", &error));
     CHECK(error.find("between 1 and 4096") != std::string::npos);
-    CHECK_FALSE(parseTileset(R"({"format": "lantern.tileset", "version": 9, "tileSize": [16, 16]})", &error));
+    CHECK_FALSE(parseTileset(R"({"format": "rolo.tileset", "version": 9, "tileSize": [16, 16]})", &error));
     CHECK(error.find("newer version") != std::string::npos);
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 // The editor application: owns the open project and scene document, builds
-// the workspace (menu bar, toolbar, dockable panels, status bar) from Lantern
+// the workspace (menu bar, toolbar, dockable panels, status bar) from Rolo
 // UI widgets, runs the file workflow (new/open/save, unsaved-changes
 // prompts), and remembers layout and preferences between sessions.
 
@@ -12,11 +12,11 @@
 #include "../model/SceneDocument.hpp"
 #include "../panels/Panels.hpp"
 
-#include "lantern/core/Engine.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/runtime/Application.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/ui/DockLayout.hpp"
+#include "rolo/core/Engine.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/runtime/Application.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/ui/DockLayout.hpp"
 
 #include <array>
 #include <filesystem>
@@ -24,14 +24,14 @@
 #include <memory>
 #include <optional>
 
-namespace lantern::ui {
+namespace rolo::ui {
 class Context;
 class Button;
 class DockSpace;
 class Label;
-} // namespace lantern::ui
+} // namespace rolo::ui
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 class EditorApp final : public EditorServices {
 public:
@@ -55,7 +55,7 @@ public:
     std::uint64_t documentGeneration() const override { return m_documentGeneration; }
     const ComponentRegistry& registry() const override { return m_registry; }
     const Project* project() const override { return m_project ? &*m_project : nullptr; }
-    const LanternResources& resources() const override { return m_resources; }
+    const RoloResources& resources() const override { return m_resources; }
     ui::Context& ui() override { return *m_ui; }
     EntityId selection() const override;
     bool isSceneSelected() const override { return m_state.selectedNodeId == EditorState::kSceneSelected; }
@@ -160,7 +160,7 @@ private:
     Engine& m_engine;
     ConsoleLog& m_console;
     EditorOptions m_options;
-    LanternResources m_resources;   // templates, examples, licenses, the game runtime
+    RoloResources m_resources;   // templates, examples, licenses, the game runtime
     ComponentRegistry m_registry = ComponentRegistry::withBuiltins();
 
     EditorState m_state;
@@ -168,7 +168,7 @@ private:
     std::filesystem::path m_configDir;   // empty = do not persist anything
 
     std::optional<Project> m_project;
-    std::filesystem::file_time_type m_projectStamp;   // project.lantern when last read
+    std::filesystem::file_time_type m_projectStamp;   // project.rolo when last read
     void syncProjectSettings();
     std::unique_ptr<AssetDatabase> m_assetDb;                       // the project's assets
     std::vector<std::unique_ptr<AssetDatabase>> m_retiredAssetDbs;  // kept until the runtime lets go
@@ -219,4 +219,4 @@ private:
     double m_layoutChangedAt = 0.0;
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

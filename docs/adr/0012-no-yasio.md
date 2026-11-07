@@ -14,9 +14,9 @@ adds the "Anti 996" License 1.0 to MIT. That license:
 
 For the alpha, ADR 0011 kept yasio and disclosed it, because removing it
 meant changing Axmol. That still put a non-standard license into every game
-made with Lantern, which the project owner does not want.
+made with Rolo, which the project owner does not want.
 
-Lantern games never use the network. Axmol builds networking code into its
+Rolo games never use the network. Axmol builds networking code into its
 core regardless:
 - the HTTP client, WebSocket and downloader (with curl, llhttp and
   websocket-parser);
@@ -33,13 +33,13 @@ only a small set:
 
 1. **Switch networking off.**
    - A small patch (`cmake/axmol-patches/0001`) adds `AX_ENABLE_NETWORK` and
-     `AX_WITH_YASIO` switches to Axmol. Lantern sets them off, with
+     `AX_WITH_YASIO` switches to Axmol. Rolo sets them off, with
      `AX_ENABLE_CONSOLE`, `AX_ENABLE_HTTP`, `AX_ENABLE_WEBSOCKET` and the
      curl, llhttp and websocket-parser switches.
    - The same patch removes the one `htonl()` call that only compiled through
      the console's socket headers. That build error is what had kept the
      console on.
-2. **Replace the rest of yasio with Lantern's own headers**
+2. **Replace the rest of yasio with Rolo's own headers**
    (`engine/runtime/axmol_compat/`, MIT).
    - They are written from scratch, from the standard library and from how
      Axmol uses each function.
@@ -47,7 +47,7 @@ only a small set:
      include them need no edits.
    - Unit tests pin the behaviour Axmol relies on, including the exact bytes
      of the settings file.
-3. **Delete `3rdparty/yasio`** from Lantern's copy of Axmol at configure
+3. **Delete `3rdparty/yasio`** from Rolo's copy of Axmol at configure
    time, so nothing can build or include it by accident.
 4. **Patches are a mechanism, not a habit.** `cmake/axmol-patches/*.patch`
    are applied once, in order, after download. The rules are in that
@@ -61,7 +61,7 @@ Considered and rejected:
 - **Fork Axmol.** A fork has to be maintained, and every Axmol update becomes
   a merge. Three changed lines and a header folder do the same job.
 - **Edit Axmol's sources to use different names** (for example
-  `lantern::byte_buffer`). That would mean a large patch over ~50 files to
+  `rolo::byte_buffer`). That would mean a large patch over ~50 files to
   maintain on every Axmol update, for no difference in behaviour.
 - **Copy yasio's needed headers.** They are under the same license, so
   nothing would be gained.
@@ -72,7 +72,7 @@ Considered and rejected:
   license texts leave `licenses/` and the notices.
   - OpenSSL stays: Axmol's core uses its digests and AES (`utils`,
     `UserDefault`). Its license is Apache-2.0.
-- Lantern games cannot use the network. Nothing in Lantern did; a future
+- Rolo games cannot use the network. Nothing in Rolo did; a future
   online feature would need a new decision (and probably a different
   library).
 - Updating Axmol now also means:
@@ -80,8 +80,8 @@ Considered and rejected:
   - adding to `axmol_compat` anything new that Axmol's core takes from yasio.
 
   `engine/runtime/axmol_compat/README.md` says how.
-- The names `yasio/...` remain in Lantern's source tree as header names.
-  The READMEs and every header say the code is Lantern's own.
+- The names `yasio/...` remain in Rolo's source tree as header names.
+  The READMEs and every header say the code is Rolo's own.
 - Tested on Linux only so far (like everything in ADR 0011). The Windows
   and macOS parts of the replacement (`thread_name.hpp`, `wtimer_hres.hpp`,
   the Metal shader loader's use of `fast_ibstream_view`) are first compiled

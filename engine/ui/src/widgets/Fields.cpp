@@ -1,16 +1,16 @@
-#include "lantern/ui/widgets/Fields.hpp"
+#include "rolo/ui/widgets/Fields.hpp"
 
-#include "lantern/core/Numbers.hpp"
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Icons.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
+#include "rolo/core/Numbers.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Icons.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <memory>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -693,4 +693,4 @@ bool ChoiceField::onKeyDown(Context& ctx, const KeyEvent& event)
     return false;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

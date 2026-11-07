@@ -18,7 +18,7 @@ before complex visual node editors.
 
 ### 1. Content is plain data in its own library and asset files
 
-`lantern_content` (no backend, tested in every preset) holds the formats
+`rolo_content` (no backend, tested in every preset) holds the formats
 and their logic. Variables (`.lvars`), dialogues (`.ldialogue`) and quests
 (`.lquest`) are assets with `.meta` IDs like images, so files refer to each
 other by ID and renaming never breaks anything. Inside a file, items
@@ -81,7 +81,7 @@ dialogue graph editor is noted on the roadmap.
 
 ## Consequences
 
-- New library `lantern_content`; `lantern_gameplay` links it. No new
+- New library `rolo_content`; `rolo_gameplay` links it. No new
   third-party code. Text is drawn with Axmol labels; the editor's Inter font
   is reused as games' default font (written to a cache file once).
 - New file formats (documented in docs/formats/content.md) and new scene

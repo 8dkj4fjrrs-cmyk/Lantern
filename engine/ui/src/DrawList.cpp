@@ -1,11 +1,11 @@
-#include "lantern/ui/DrawList.hpp"
+#include "rolo/ui/DrawList.hpp"
 
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <cmath>
 #include <numbers>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -368,4 +368,4 @@ float DrawList::textEllipsized(FontId font, float size, Vec2 topLeft, Color colo
     return drawn + text(font, size, {topLeft.x + drawn, topLeft.y}, color, kEllipsis);
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

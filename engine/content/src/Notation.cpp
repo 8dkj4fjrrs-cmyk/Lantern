@@ -1,9 +1,9 @@
-#include "lantern/content/Notation.hpp"
+#include "rolo/content/Notation.hpp"
 
-#include "lantern/content/Content.hpp"   // isValidContentId
-#include "lantern/core/Numbers.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/scene/Scene.hpp"
+#include "rolo/content/Content.hpp"   // isValidContentId
+#include "rolo/core/Numbers.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -11,7 +11,7 @@
 #include <cmath>
 #include <vector>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -607,7 +607,7 @@ std::optional<Action> parseActionNotation(std::string_view text, const NotationN
                 const Token t = p.next();
                 double seconds = -1.0;
                 if (t.kind == Token::Kind::Number) {
-                    // lantern::parseNumber, not std::from_chars: Apple's standard
+                    // rolo::parseNumber, not std::from_chars: Apple's standard
                     // library has no from_chars for decimals (see Numbers.hpp).
                     seconds = parseNumber(t.text).value_or(-1.0);
                 }
@@ -708,4 +708,4 @@ NotationNames projectNotationNames(const AssetDatabase* assets, const Scene* sce
     return names;
 }
 
-} // namespace lantern
+} // namespace rolo

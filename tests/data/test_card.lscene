@@ -1,5 +1,5 @@
 {
-  "format": "lantern.scene",
+  "format": "rolo.scene",
   "version": 1,
   "name": "Test Card",
   "entities": [
@@ -8,8 +8,8 @@
       "name": "Background",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [640, 360], "rotation": 0, "scale": [1, 1] },
-        { "type": "lantern.Shape", "kind": "rectangle", "size": [1280, 720], "color": "#1b2236ff", "filled": true, "lineWidth": 2 }
+        { "type": "rolo.Transform", "position": [640, 360], "rotation": 0, "scale": [1, 1] },
+        { "type": "rolo.Shape", "kind": "rectangle", "size": [1280, 720], "color": "#1b2236ff", "filled": true, "lineWidth": 2 }
       ]
     },
     {
@@ -17,8 +17,8 @@
       "name": "Sun",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [400, 420], "rotation": 0, "scale": [1, 1] },
-        { "type": "lantern.Shape", "kind": "ellipse", "size": [220, 220], "color": "#f2a93bff", "filled": true, "lineWidth": 2 }
+        { "type": "rolo.Transform", "position": [400, 420], "rotation": 0, "scale": [1, 1] },
+        { "type": "rolo.Shape", "kind": "ellipse", "size": [220, 220], "color": "#f2a93bff", "filled": true, "lineWidth": 2 }
       ]
     },
     {
@@ -26,8 +26,8 @@
       "name": "Tilted Box",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [860, 300], "rotation": 20, "scale": [1.5, 1] },
-        { "type": "lantern.Shape", "kind": "rectangle", "size": [160, 160], "color": "#4fb3a9ff", "filled": false, "lineWidth": 6 }
+        { "type": "rolo.Transform", "position": [860, 300], "rotation": 20, "scale": [1.5, 1] },
+        { "type": "rolo.Shape", "kind": "rectangle", "size": [160, 160], "color": "#4fb3a9ff", "filled": false, "lineWidth": 6 }
       ]
     },
     {
@@ -36,8 +36,8 @@
       "name": "Dot",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [0, 0], "rotation": 0, "scale": [1, 1] },
-        { "type": "lantern.Shape", "kind": "ellipse", "size": [40, 40], "color": "#ffffffff", "filled": true, "lineWidth": 2 }
+        { "type": "rolo.Transform", "position": [0, 0], "rotation": 0, "scale": [1, 1] },
+        { "type": "rolo.Shape", "kind": "ellipse", "size": [40, 40], "color": "#ffffffff", "filled": true, "lineWidth": 2 }
       ]
     }
   ]

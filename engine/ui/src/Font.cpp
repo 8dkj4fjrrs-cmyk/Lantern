@@ -1,6 +1,6 @@
-#include "lantern/ui/Font.hpp"
+#include "rolo/ui/Font.hpp"
 
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <stb_truetype.h>
 
@@ -9,7 +9,7 @@
 #include <cstring>
 #include <unordered_map>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -249,4 +249,4 @@ std::size_t FontAtlas::hitTest(FontId font, float size, std::string_view text, f
     return text.size();
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

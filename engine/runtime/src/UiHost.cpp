@@ -16,7 +16,7 @@
 #include <cwchar>
 #include <cmath>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 namespace {
 
@@ -232,7 +232,7 @@ UiHost::UiHost(const Logger& logger, GLFWwindow* window, ax::Scene& scene, ax::T
     // The node that draws the UI, above the world and anything else.
     m_node = new UiRenderNode(this);
     m_node->init();
-    m_node->setName("LanternUI");
+    m_node->setName("RoloUI");
     scene.addChild(m_node, 1000); // the scene retains it...
     // (m_node keeps its initial reference too, released in ~UiHost)
 
@@ -566,4 +566,4 @@ void UiHost::submit(ax::Renderer* renderer)
     });
 }
 
-} // namespace lantern::detail
+} // namespace rolo::detail

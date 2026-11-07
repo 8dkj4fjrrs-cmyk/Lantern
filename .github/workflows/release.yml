@@ -1,4 +1,4 @@
-# Release: build, test and package Lantern on each system, and attach the
+# Release: build, test and package Rolo on each system, and attach the
 # zips to a draft GitHub release whose notes are that version's section of
 # CHANGELOG.md. See docs/releasing.md.
 #
@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           major_minor_patch=$(sed -n 's/^ *VERSION \([0-9.]*\)$/\1/p' CMakeLists.txt | head -1)
-          suffix=$(sed -n 's/^set(LANTERN_VERSION_SUFFIX "\(.*\)")$/\1/p' CMakeLists.txt)
+          suffix=$(sed -n 's/^set(ROLO_VERSION_SUFFIX "\(.*\)")$/\1/p' CMakeLists.txt)
           if [ "v${major_minor_patch}${suffix}" != "$TAG" ]; then
             echo "Releasing $TAG, but CMakeLists.txt says v${major_minor_patch}${suffix}" >&2
             exit 1
@@ -86,18 +86,18 @@ jobs:
       # while it may still start here (build folders are on the PATH).
       - name: Check the macOS package's signature
         if: runner.os == 'macOS'
-        run: codesign --verify --deep --strict --verbose=2 dist/Lantern-*/lantern_editor.app
+        run: codesign --verify --deep --strict --verbose=2 dist/Rolo-*/rolo_editor.app
 
       - name: Check the Windows package's DLLs
         if: runner.os == 'Windows'
         shell: bash
         run: |
           pip install pefile
-          python tools/release/check_windows_dlls.py "$(ls -d dist/Lantern-*/ | head -1)"
+          python tools/release/check_windows_dlls.py "$(ls -d dist/Rolo-*/ | head -1)"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: lantern-${{ runner.os }}
+          name: rolo-${{ runner.os }}
           path: dist/*.zip
 
   publish:
@@ -133,4 +133,4 @@ jobs:
           if [ "$(gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft --jq .isDraft 2>/dev/null)" = "true" ]; then
             gh release delete "$TAG" --yes --repo "${{ github.repository }}"
           fi
-          gh release create "$TAG" dist/*.zip --draft --target "${{ github.sha }}" --repo "${{ github.repository }}" --title "Lantern $TAG" --notes-file notes.md
+          gh release create "$TAG" dist/*.zip --draft --target "${{ github.sha }}" --repo "${{ github.repository }}" --title "Rolo $TAG" --notes-file notes.md

@@ -1,13 +1,13 @@
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Icons.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Icons.hpp"
 
 #include <cmath>
 #include <cstdio>
 #include <string>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -240,4 +240,4 @@ void ConsolePanel::paintRow(ui::Context& ctx, ui::DrawList& draw, const ui::RowI
     }
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

@@ -1,20 +1,20 @@
 #pragma once
 
-// Plays a real Lantern project in tests, the way the player program does:
+// Plays a real Rolo project in tests, the way the player program does:
 // its assets read-only, its content checked, its behaviours from the linked
 // game modules. Warnings and errors are collected in `errors`.
 
 #include "support/TempFolder.hpp"
 
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/core/Log.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/GameModule.hpp"
-#include "lantern/gameplay/SaveStore.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/GameModule.hpp"
+#include "rolo/gameplay/SaveStore.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::test {
+namespace rolo::test {
 
 struct PlayProject {
     std::filesystem::path folder;
@@ -123,4 +123,4 @@ struct PlayProject {
     }
 };
 
-} // namespace lantern::test
+} // namespace rolo::test

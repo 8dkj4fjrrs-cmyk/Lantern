@@ -1,9 +1,9 @@
-#include "lantern/scene/Scene.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
+using namespace rolo;
 using Catch::Approx;
 
 namespace {
@@ -98,16 +98,16 @@ TEST_CASE("Properties are set by name, with type checks and limits", "[scene][co
     REQUIRE(scene.addComponent(id, std::make_unique<Shape>()) != nullptr);
     CHECK(scene.addComponent(id, std::make_unique<Shape>()) == nullptr); // one per type
 
-    CHECK(scene.setProperty(id, "lantern.Shape", "size", Vec2{-5.0f, 20.0f}));
+    CHECK(scene.setProperty(id, "rolo.Shape", "size", Vec2{-5.0f, 20.0f}));
     CHECK(scene.find(id)->get<Shape>()->size == Vec2{0.0f, 20.0f}); // clamped at 0
-    CHECK(scene.setProperty(id, "lantern.Shape", "lineWidth", 3)); // int accepted for float
+    CHECK(scene.setProperty(id, "rolo.Shape", "lineWidth", 3)); // int accepted for float
     CHECK(scene.find(id)->get<Shape>()->lineWidth == 3.0f);
-    CHECK(scene.setProperty(id, "lantern.Shape", "kind", 1));
+    CHECK(scene.setProperty(id, "rolo.Shape", "kind", 1));
     CHECK(scene.find(id)->get<Shape>()->kind == ShapeKind::Ellipse);
-    CHECK_FALSE(scene.setProperty(id, "lantern.Shape", "kind", 7));            // no such choice
-    CHECK_FALSE(scene.setProperty(id, "lantern.Shape", "size", std::string("big"))); // wrong kind
-    CHECK_FALSE(scene.setProperty(id, "lantern.Shape", "nope", 1.0f));
-    CHECK_FALSE(scene.setProperty(id, "lantern.Sprite", "size", 1.0f));
+    CHECK_FALSE(scene.setProperty(id, "rolo.Shape", "kind", 7));            // no such choice
+    CHECK_FALSE(scene.setProperty(id, "rolo.Shape", "size", std::string("big"))); // wrong kind
+    CHECK_FALSE(scene.setProperty(id, "rolo.Shape", "nope", 1.0f));
+    CHECK_FALSE(scene.setProperty(id, "rolo.Sprite", "size", 1.0f));
 }
 
 TEST_CASE("Transform cannot be removed; other components can", "[scene][components]")
@@ -115,13 +115,13 @@ TEST_CASE("Transform cannot be removed; other components can", "[scene][componen
     Scene scene = seeded();
     const EntityId id = scene.create("Box")->id();
     scene.addComponent(id, std::make_unique<Shape>());
-    CHECK(scene.removeComponent(id, "lantern.Transform") == nullptr);
-    auto removed = scene.removeComponent(id, "lantern.Shape");
+    CHECK(scene.removeComponent(id, "rolo.Transform") == nullptr);
+    auto removed = scene.removeComponent(id, "rolo.Shape");
     REQUIRE(removed != nullptr);
     CHECK(scene.find(id)->get<Shape>() == nullptr);
     // Put back at the same position.
     CHECK(scene.addComponent(id, std::move(removed), 1) != nullptr);
-    CHECK(scene.componentIndex(id, "lantern.Shape") == 1u);
+    CHECK(scene.componentIndex(id, "rolo.Shape") == 1u);
 }
 
 TEST_CASE("Snapshots restore deleted entities with the same IDs", "[scene][snapshot]")
@@ -131,7 +131,7 @@ TEST_CASE("Snapshots restore deleted entities with the same IDs", "[scene][snaps
     const EntityId b = scene.create("B")->id();
     const EntityId child = scene.create("Child", b)->id();
     scene.addComponent(child, std::make_unique<Shape>());
-    scene.setProperty(child, "lantern.Shape", "color", Color{1, 2, 3, 4});
+    scene.setProperty(child, "rolo.Shape", "color", Color{1, 2, 3, 4});
 
     const EntitySnapshot snap = scene.capture(b);
     CHECK(snap.items.size() == 2);
@@ -158,7 +158,7 @@ TEST_CASE("Copying a scene copies its components", "[scene]")
     const EntityId id = scene.create("Box")->id();
     scene.addComponent(id, std::make_unique<Shape>());
     Scene copy = scene;
-    scene.setProperty(id, "lantern.Shape", "size", Vec2{1, 1});
+    scene.setProperty(id, "rolo.Shape", "size", Vec2{1, 1});
     CHECK(copy.find(id)->get<Shape>()->size == Vec2{100, 100});
 }
 
@@ -166,10 +166,10 @@ TEST_CASE("World transforms combine parents; hit tests find the top shape", "[sc
 {
     Scene scene = seeded();
     const EntityId parent = scene.create("Parent")->id();
-    scene.setProperty(parent, "lantern.Transform", "position", Vec2{100, 100});
-    scene.setProperty(parent, "lantern.Transform", "scale", Vec2{2, 2});
+    scene.setProperty(parent, "rolo.Transform", "position", Vec2{100, 100});
+    scene.setProperty(parent, "rolo.Transform", "scale", Vec2{2, 2});
     const EntityId box = scene.create("Box", parent)->id();
-    scene.setProperty(box, "lantern.Transform", "position", Vec2{10, 0});
+    scene.setProperty(box, "rolo.Transform", "position", Vec2{10, 0});
     scene.addComponent(box, std::make_unique<Shape>()); // 100 x 100
 
     const Vec2 centre = scene.worldTransform(box).apply({0, 0});
@@ -184,7 +184,7 @@ TEST_CASE("World transforms combine parents; hit tests find the top shape", "[sc
     CHECK(scene.hitTest({500, 500}).isNull());
 
     // Clockwise rotation by 90 degrees turns +x into -y.
-    scene.setProperty(parent, "lantern.Transform", "rotation", 90.0f);
+    scene.setProperty(parent, "rolo.Transform", "rotation", 90.0f);
     const Vec2 rotated = scene.worldTransform(box).apply({0, 0});
     CHECK(rotated.x == Approx(100).margin(1e-3));
     CHECK(rotated.y == Approx(80).margin(1e-3));
@@ -205,10 +205,10 @@ TEST_CASE("Ellipses are hit inside the curve only", "[scene][geometry]")
     CHECK(scene.hitTest({45, 45}).isNull()); // inside the box, outside the circle
 }
 
-TEST_CASE("The start scene is a lantern made of shapes", "[scene]")
+TEST_CASE("The start scene is Rolo, made of shapes", "[scene]")
 {
     const Scene scene = makeStartScene();
     CHECK(scene.size() > 10);
     CHECK(scene.find(scene.roots().front())->name() == "Background");
-    CHECK(scene.hitTest({640, 352}) != EntityId{}); // the flame, centre of the world
+    CHECK(scene.hitTest({640, 352}) != EntityId{}); // Rolo, centre of the world
 }

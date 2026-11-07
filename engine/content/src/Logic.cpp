@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-namespace lantern {
+namespace rolo {
 
 using content_detail::Json;
 
@@ -682,4 +682,4 @@ std::string describe(const Action& a)
     return "?";
 }
 
-} // namespace lantern
+} // namespace rolo

@@ -1,6 +1,6 @@
 #pragma once
 
-// The editor's panels, built from Lantern UI widgets.
+// The editor's panels, built from Rolo UI widgets.
 //
 // Each panel is a widget that lives in the editor's DockSpace for the whole
 // session. Once per frame the editor calls update(), which refreshes what the
@@ -13,23 +13,23 @@
 
 #include "../model/ConsoleLog.hpp"
 #include "../model/EditorState.hpp"
-#include "../model/LanternResources.hpp"
+#include "../model/RoloResources.hpp"
 #include "../model/SceneDocument.hpp"
 
-#include "lantern/assets/Animation.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/content/Notation.hpp"
-#include "lantern/gameplay/Input.hpp"
-#include "lantern/runtime/Application.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
-#include "lantern/ui/widgets/Box.hpp"
-#include "lantern/ui/widgets/Fields.hpp"
-#include "lantern/ui/widgets/Inspector.hpp"
-#include "lantern/ui/widgets/Scroll.hpp"
-#include "lantern/ui/widgets/TextField.hpp"
-#include "lantern/ui/widgets/Tree.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/content/Notation.hpp"
+#include "rolo/gameplay/Input.hpp"
+#include "rolo/runtime/Application.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
+#include "rolo/ui/widgets/Box.hpp"
+#include "rolo/ui/widgets/Fields.hpp"
+#include "rolo/ui/widgets/Inspector.hpp"
+#include "rolo/ui/widgets/Scroll.hpp"
+#include "rolo/ui/widgets/TextField.hpp"
+#include "rolo/ui/widgets/Tree.hpp"
 
 #include <array>
 #include <cstdint>
@@ -41,7 +41,7 @@
 #include <utility>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 // Panel ids are keys in the saved layout file, so they must never change.
 inline constexpr const char* kViewportPanel = "viewport";
@@ -106,8 +106,8 @@ public:
     virtual void newProject() = 0;
     virtual void openProject() = 0;
     virtual void showMessage(const std::string& title, const std::string& text) = 0;
-    /// Lantern's templates, examples, licenses, docs and game runtime.
-    virtual const LanternResources& resources() const = 0;
+    /// Rolo's templates, examples, licenses, docs and game runtime.
+    virtual const RoloResources& resources() const = 0;
     /// Asks for files to import (the dialog explains drag and drop too).
     virtual void showImportDialog() = 0;
     /// Creates a new content file (Variables, Dialogue or Quest) from a
@@ -145,7 +145,7 @@ ui::Button& addToolButton(ui::Widget& toolbar, ui::Icon icon, std::string toolti
 void openMenuAt(ui::Context& ctx, ui::Rect anchor, std::vector<ui::MenuItem> items);
 
 /// A dialog for choosing a folder by browsing (FolderPicker.cpp). With
-/// `projectsOnly`, only a Lantern project folder can be chosen.
+/// `projectsOnly`, only a Rolo project folder can be chosen.
 void showFolderPicker(ui::Context& ctx, const std::string& title, const std::filesystem::path& start,
                       std::function<void(const std::filesystem::path&)> onChosen, bool projectsOnly = false);
 
@@ -411,4 +411,4 @@ private:
     ui::Checkbox* m_autoScroll = nullptr;
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

@@ -1,11 +1,11 @@
-#include "lantern/ui/widgets/Box.hpp"
+#include "rolo/ui/widgets/Box.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 // Read the main / cross component of a size for the box's axis.
@@ -244,4 +244,4 @@ void Separator::paint(Context& ctx, DrawList& draw)
     draw.fillRect(line, ctx.theme().border);
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

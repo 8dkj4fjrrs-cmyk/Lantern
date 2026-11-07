@@ -21,7 +21,7 @@ project the editor created.
 The game lives in `examples/lantern_keeper`: its game module `keeper`, its
 project, and its tools. The behaviour ids are `keeper.*`. Engine tests keep
 using the small sample, whose shape they rely on. Both modules are linked
-into the editor and the player (`LANTERN_BUILD_SAMPLE_GAME`), which also
+into the editor and the player (`ROLO_BUILD_SAMPLE_GAME`), which also
 proves that several game modules work side by side.
 
 ### 2. As much as possible is content; C++ only where content cannot reach
@@ -46,7 +46,7 @@ This is the balance the engine aims for, and the guide teaches it.
 
 Driving the editor by hand for hundreds of placements is not reproducible.
 Instead:
-1. The shipped project starts as `lantern_editor --new-project`.
+1. The shipped project starts as `rolo_editor --new-project`.
 2. `tools/make_art.py` draws the art.
 3. `tools/build_project.py` adds the rest, writing the same files and
    formats the editor writes, with fixed IDs so the output never changes
@@ -70,7 +70,7 @@ accepting the quest) and the editor's play mode on the project.
 ### 5. Fixing gaps the game revealed, in the engine where they are general
 
 - The editor gained **Make Start Scene**, an undoable `SetStartScene`
-  command. The editor re-reads `project.lantern` when it changes on disk.
+  command. The editor re-reads `project.rolo` when it changes on disk.
 - The editor-hostile night overlay is saved switched off and switched on by
   a `sceneStart` trigger.
 - Smaller gaps are recorded in the roadmap rather than fixed here (scene

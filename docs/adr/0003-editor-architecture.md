@@ -1,6 +1,6 @@
 # ADR 0003 — Editor architecture (Milestone 2)
 
-- **Status:** Accepted. The parts about Dear ImGui are superseded by [ADR 0004](0004-lantern-ui-toolkit.md); the layering, settings and runtime boundary still stand.
+- **Status:** Accepted. The parts about Dear ImGui are superseded by [ADR 0004](0004-rolo-ui-toolkit.md); the layering, settings and runtime boundary still stand.
 - **Date:** 2026-10-29
 - **Milestone:** 2
 
@@ -18,9 +18,9 @@ editor code.
 
 | Layer | Target | Knows about |
 |---|---|---|
-| Editor logic | `lantern_editor_core` (`editor/model/`) | C++ and `lantern_core` only. Console log store, preferences file, settings folders, editor state, command line. |
-| Editor UI | `lantern_editor` (`editor/application/`, `editor/panels/`) | Dear ImGui + `lantern_runtime`'s public API. No Axmol. |
-| Runtime | `lantern_runtime` | Axmol + the Axmol ImGui extension, privately. Knows nothing about the editor. |
+| Editor logic | `rolo_editor_core` (`editor/model/`) | C++ and `rolo_core` only. Console log store, preferences file, settings folders, editor state, command line. |
+| Editor UI | `rolo_editor` (`editor/application/`, `editor/panels/`) | Dear ImGui + `rolo_runtime`'s public API. No Axmol. |
+| Runtime | `rolo_runtime` | Axmol + the Axmol ImGui extension, privately. Knows nothing about the editor. |
 
 Everything worth testing without a window lives in the logic layer (unit
 tests run in every preset, including the backend-free `core` preset). If
@@ -28,12 +28,12 @@ Dear ImGui is ever replaced, only `editor/application` and `editor/panels`
 change.
 
 The editor gets Dear ImGui's **headers only** through an interface target
-(`lantern_imgui_headers`), so editor code cannot include Axmol headers by
-accident. The ImGui library itself is linked through `lantern_runtime`.
+(`rolo_imgui_headers`), so editor code cannot include Axmol headers by
+accident. The ImGui library itself is linked through `rolo_runtime`.
 
 ### 2. What the runtime offers tools (still no backend types)
 
-`PresentationSettings` (in `lantern/runtime/Application.hpp`):
+`PresentationSettings` (in `rolo/runtime/Application.hpp`):
 
 - `worldDisplay = Offscreen`: the game world is rendered each frame into a
   texture of the game's resolution (1280×720 by default) instead of the window.
@@ -58,7 +58,7 @@ and only drawn into the texture. Camera controls and zoom come in Milestone 4.
 
 They show the **live** running scene (names, kinds, transforms) through
 `sceneOutline()`. Ids in the outline are session-only — never saved. Editing
-is deliberately left for Milestone 3, where Lantern's own entities with stable
+is deliberately left for Milestone 3, where Rolo's own entities with stable
 ids and an undo/redo command system arrive, so every edit is undoable from day
 one.
 
@@ -81,7 +81,7 @@ If none is found it falls back to Dear ImGui's built-in font.
 ## Consequences
 
 - One extra Axmol extension (ImGui, MIT) is built and linked into
-  `lantern_runtime`, so the player also contains it (unused there for now).
+  `rolo_runtime`, so the player also contains it (unused there for now).
 - Separate OS windows for panels (ImGui "multi-viewport") are switched off:
   Axmol only supports them with OpenGL, and consistency across platforms
   matters more.

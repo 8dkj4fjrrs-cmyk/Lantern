@@ -1,13 +1,13 @@
-#include "lantern/ui/widgets/TextField.hpp"
+#include "rolo/ui/widgets/TextField.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Utf8.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Utf8.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 // --- TextEditState ---------------------------------------------------------------------
 
@@ -483,4 +483,4 @@ CursorShape TextField::cursor(Vec2 point) const
     return CursorShape::IBeam;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

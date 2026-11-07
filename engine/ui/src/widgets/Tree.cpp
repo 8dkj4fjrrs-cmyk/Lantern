@@ -1,14 +1,14 @@
-#include "lantern/ui/widgets/Tree.hpp"
+#include "rolo/ui/widgets/Tree.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Icons.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Icons.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
 
 #include <algorithm>
 #include <climits>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 // --- TreeView ------------------------------------------------------------------------------
 
@@ -395,4 +395,4 @@ bool PropertyList::onScroll(Context&, const ScrollEvent& event)
     return true;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

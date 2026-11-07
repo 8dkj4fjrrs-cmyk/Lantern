@@ -2,7 +2,7 @@
 
 Exporting makes a copy of your game that runs **without the editor**, to give
 to players. It contains:
-- Lantern's game runtime (the player program, renamed after your game);
+- Rolo's game runtime (the player program, renamed after your game);
 - your project's files;
 - the license texts of the software inside it.
 
@@ -13,7 +13,7 @@ Click **Build** in the toolbar, or **File > Export Game…**:
 | Field | Meaning |
 |---|---|
 | Game name | Names the game's folder (or macOS app) and its program. Letters, digits, spaces, `-` and `_` are kept. |
-| Export into | The folder the game is made in (by default `Documents/Lantern Exports`). It cannot be inside the project. |
+| Export into | The folder the game is made in (by default `Documents/Rolo Exports`). It cannot be inside the project. |
 
 If the open scene has unsaved changes, it is saved first. **Exporting again**
 replaces the earlier export of the same game. A folder of the same name
@@ -21,7 +21,7 @@ that is *not* an export is never touched.
 
 ### Checks before exporting
 
-Lantern first reads everything the game needs, as the player program would.
+Rolo first reads everything the game needs, as the player program would.
 That is:
 - the project file and its start scene;
 - every scene, with its components, the assets it uses, and its triggers'
@@ -37,7 +37,7 @@ it. **Game > Check Content** runs most of the same checks at any time.
 ## From the command line
 
 ```sh
-lantern_editor --project "path/to/My Game" --export "path/to/Exports"
+rolo_editor --project "path/to/My Game" --export "path/to/Exports"
 ```
 
 This runs the same checks and export without opening a window. It prints
@@ -49,7 +49,7 @@ useful in scripts and continuous integration.
 ```
 Linux and Windows                    macOS
 My Game/                             My Game.app/
-  My Game           (My Game.exe)      Contents/MacOS/lantern_player
+  My Game           (My Game.exe)      Contents/MacOS/rolo_player
   axslc/            shaders            Contents/Resources/axslc/
   game/             your project       Contents/Resources/game/
   licenses/         license texts      Contents/Resources/licenses/
@@ -58,7 +58,7 @@ My Game/                             My Game.app/
 
 To share the game, **zip the whole folder** (or the `.app`), not only the
 program, and **keep the `licenses` folder with it**. The licenses of
-Lantern and the libraries in it require that their texts go with every copy;
+Rolo and the libraries in it require that their texts go with every copy;
 see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) and
 [licenses/](../licenses/README.md).
 
@@ -95,11 +95,11 @@ tested.
 
 ## Size
 
-A game made from a **release build** of Lantern (or a downloaded Lantern)
+A game made from a **release build** of Rolo (or a downloaded Rolo)
 is the runtime plus your files: the Top-Down Starter exports to about 16 MB
 on Linux, most of it the rendering engine and its libraries. Zipped, it is
 smaller.
 
 The editor of a *development* build (`--preset dev`) exports its debug
 runtime, which is much larger (about 90 MB), and slower. Use a release
-build, or a downloaded Lantern, for games you share.
+build, or a downloaded Rolo, for games you share.

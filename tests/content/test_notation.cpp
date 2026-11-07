@@ -1,11 +1,11 @@
 #include "ContentFixture.hpp"
 
-#include "lantern/content/Notation.hpp"
+#include "rolo/content/Notation.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 namespace {
 

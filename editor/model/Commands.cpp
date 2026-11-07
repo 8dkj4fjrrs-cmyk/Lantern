@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 // --- CommandStack ---------------------------------------------------------------------------
 
@@ -752,4 +752,4 @@ void SetStartScene::revert(Scene&)
     static_cast<void>(write(m_before));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

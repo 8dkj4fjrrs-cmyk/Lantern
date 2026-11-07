@@ -1,7 +1,7 @@
-# lantern_ui — Lantern's own user-interface toolkit.
+# rolo_ui — Rolo's own user-interface toolkit.
 #
 # Pure C++ with no window, GPU or backend code: widgets produce a DrawList
-# (triangles + textures) and consume Lantern input events. lantern_runtime
+# (triangles + textures) and consume Rolo input events. rolo_runtime
 # connects it to the real window. Because of that, everything here is
 # unit-tested without a display, in every build preset.
 #
@@ -9,9 +9,9 @@
 #   third_party/stb/stb_truetype.h  font rasteriser (public domain / MIT)
 #   assets/fonts/Inter-*.ttf         UI font (SIL Open Font License 1.1)
 
-include(LanternEmbed)
+include(RoloEmbed)
 
-add_library(lantern_ui STATIC
+add_library(rolo_ui STATIC
     src/Context.cpp
     src/DockLayout.cpp
     src/DrawList.cpp
@@ -33,21 +33,21 @@ add_library(lantern_ui STATIC
     src/widgets/TextField.cpp
     src/widgets/Tree.cpp)
 
-add_library(lantern::ui ALIAS lantern_ui)
+add_library(rolo::ui ALIAS rolo_ui)
 
-lantern_embed_files(lantern_ui
-    NAMESPACE lantern::ui::embedded
+rolo_embed_files(rolo_ui
+    NAMESPACE rolo::ui::embedded
     FILES
         inter_regular=${PROJECT_SOURCE_DIR}/assets/fonts/Inter-Regular.ttf
         inter_semibold=${PROJECT_SOURCE_DIR}/assets/fonts/Inter-SemiBold.ttf)
 
-target_include_directories(lantern_ui
+target_include_directories(rolo_ui
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(lantern_ui SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/third_party/stb")
-target_compile_features(lantern_ui PUBLIC cxx_std_20)
-target_link_libraries(lantern_ui PUBLIC lantern::core)   # text <-> number helpers
-lantern_set_warnings(lantern_ui)
+target_include_directories(rolo_ui SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/third_party/stb")
+target_compile_features(rolo_ui PUBLIC cxx_std_20)
+target_link_libraries(rolo_ui PUBLIC rolo::core)   # text <-> number helpers
+rolo_set_warnings(rolo_ui)
 
 # Third-party and generated files are not held to our warning rules.
 set_source_files_properties(src/StbTrueTypeImpl.cpp PROPERTIES COMPILE_OPTIONS "-w")

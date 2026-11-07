@@ -1,11 +1,11 @@
-#include "lantern/core/Engine.hpp"
+#include "rolo/core/Engine.hpp"
 
-#include "lantern/core/Version.hpp"
+#include "rolo/core/Version.hpp"
 
 #include <string>
 #include <utility>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 constexpr std::string_view kCategory = "engine";
@@ -33,7 +33,7 @@ Status Engine::initialize()
         break;
     }
 
-    m_logger.info(kCategory, "Starting '" + m_config.applicationName + "' with Lantern "
+    m_logger.info(kCategory, "Starting '" + m_config.applicationName + "' with Rolo "
                                  + std::string(versionString()) + " (backend: "
                                  + std::string(runtimeBackendName()) + ")");
 
@@ -65,4 +65,4 @@ std::string_view toString(Engine::State state) noexcept
     return "Unknown";
 }
 
-} // namespace lantern
+} // namespace rolo

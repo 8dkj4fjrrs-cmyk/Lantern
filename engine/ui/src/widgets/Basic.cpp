@@ -1,12 +1,12 @@
-#include "lantern/ui/widgets/Basic.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
 
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 IconView::IconView(Icon icon, float size, std::optional<Color> color)
     : m_icon(icon)
@@ -397,4 +397,4 @@ void ImageView::paint(Context& ctx, DrawList& draw)
     paintChildren(ctx, draw);
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

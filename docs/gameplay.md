@@ -1,11 +1,11 @@
 # Writing gameplay in C++
 
-> **New to programming, or using a downloaded Lantern?** Write gameplay in
-> **Lua** instead: no compiler, no rebuilding Lantern. See the
+> **New to programming, or using a downloaded Rolo?** Write gameplay in
+> **Lua** instead: no compiler, no rebuilding Rolo. See the
 > [scripting guide](scripting.md). This guide is for C++, which needs
-> Lantern built from source.
+> Rolo built from source.
 
-Lantern games can be written in C++. You write **behaviours**: small classes
+Rolo games can be written in C++. You write **behaviours**: small classes
 attached to objects, like components, that run every frame while the game
 plays. This guide shows how, using the sample game in
 [`examples/sample_game`](../examples/sample_game) as the running example.
@@ -14,15 +14,15 @@ Design reasons: [ADR 0007](adr/0007-gameplay-and-play-mode.md).
 
 ## Built-in behaviours: games without C++
 
-Lantern comes with three behaviours for top-down games. Add them in the
+Rolo comes with three behaviours for top-down games. Add them in the
 Inspector (**Add Component > Gameplay**). The New Project wizard's
 **Top-Down Starter** uses all three.
 
 | Behaviour | Put it on | What it does |
 |---|---|---|
-| **Top-Down Controller** (`lantern.TopDownController`) | the player (with a Collider and an Interactor) | Walks with the arrow keys or W A S D (*Speed*, points per second), stopped by anything solid, and stands still during dialogues. With an Animator it plays `walk_down`, `walk_left`, `walk_right`, `walk_up` and `idle_…` clips when the animations have them; otherwise it flips the Sprite to face left or right. |
-| **Scene Door** (`lantern.SceneDoor`) | an object with a non-solid Collider at a map's edge | When the player walks into it, the game changes to *Scene*. The player appears at the object named *Arrive At* in that scene: put an empty object a step inside the way back. Empty: where that scene puts the player. |
-| **Camera Bounds** (`lantern.CameraBounds`) | the Camera (a child of the player) | The view follows the player but stays inside *Min*–*Max* (world points, e.g. the map's corners), so it never shows past the map's edges. |
+| **Top-Down Controller** (`rolo.TopDownController`) | the player (with a Collider and an Interactor) | Walks with the arrow keys or W A S D (*Speed*, points per second), stopped by anything solid, and stands still during dialogues. With an Animator it plays `walk_down`, `walk_left`, `walk_right`, `walk_up` and `idle_…` clips when the animations have them; otherwise it flips the Sprite to face left or right. |
+| **Scene Door** (`rolo.SceneDoor`) | an object with a non-solid Collider at a map's edge | When the player walks into it, the game changes to *Scene*. The player appears at the object named *Arrive At* in that scene: put an empty object a step inside the way back. Empty: where that scene puts the player. |
+| **Camera Bounds** (`rolo.CameraBounds`) | the Camera (a child of the player) | The view follows the player but stays inside *Min*–*Max* (world points, e.g. the map's corners), so it never shows past the map's edges. |
 
 From C++, `game.changeScene(scene, "From the Village")` does what a Scene
 Door does.
@@ -33,21 +33,21 @@ behaviours in C++.
 ## A first behaviour
 
 ```cpp
-#include "lantern/gameplay/Behaviour.hpp"
-#include "lantern/gameplay/Game.hpp"
+#include "rolo/gameplay/Behaviour.hpp"
+#include "rolo/gameplay/Game.hpp"
 
-struct Spinner : lantern::BehaviourBase<Spinner> {
+struct Spinner : rolo::BehaviourBase<Spinner> {
     float speed = 90.0f;   // degrees per second
 
-    void update(lantern::Game& game, float dt) override
+    void update(rolo::Game& game, float dt) override
     {
         game.transform(entity())->rotation += speed * dt;
     }
 
-    static const lantern::ComponentType& componentType()
+    static const rolo::ComponentType& componentType()
     {
-        static const lantern::ComponentType type =
-            lantern::ComponentTypeBuilder<Spinner>("mygame.Spinner", "Spinner")
+        static const rolo::ComponentType type =
+            rolo::ComponentTypeBuilder<Spinner>("mygame.Spinner", "Spinner")
                 .category("Gameplay")
                 .description("Turns the object round and round.")
                 .property("speed", "Speed", &Spinner::speed, {.step = 15.0f, .unit = "°/s"})
@@ -57,7 +57,7 @@ struct Spinner : lantern::BehaviourBase<Spinner> {
 };
 ```
 
-- `BehaviourBase<Spinner>` makes it a component Lantern can copy, save and
+- `BehaviourBase<Spinner>` makes it a component Rolo can copy, save and
   show in the Inspector.
 - `componentType()` describes it: an ID that is saved in scene files (choose
   it once and never change it, e.g. `"mygame.Spinner"`), the name shown in
@@ -85,27 +85,27 @@ walls.
 
 ## What `Game` offers
 
-`lantern::Game` is the game being played ([`Game.hpp`](../engine/gameplay/include/lantern/gameplay/Game.hpp)).
+`rolo::Game` is the game being played ([`Game.hpp`](../engine/gameplay/include/rolo/gameplay/Game.hpp)).
 
 **Input** — `game.input()`:
 
 ```cpp
-const lantern::Input& in = game.input();
-in.isDown(lantern::Key::Space);       // held down
-in.wasPressed(lantern::Key::Space);   // went down this frame (a tap)
-in.wasReleased(lantern::Key::Space);  // went up this frame
+const rolo::Input& in = game.input();
+in.isDown(rolo::Key::Space);       // held down
+in.wasPressed(rolo::Key::Space);   // went down this frame (a tap)
+in.wasReleased(rolo::Key::Space);  // went up this frame
 in.moveDirection();                   // arrows or W A S D, length at most 1
-in.isDown(lantern::MouseButton::Left);
+in.isDown(rolo::MouseButton::Left);
 in.pointer();                         // the mouse, in world coordinates
 ```
 
 **Objects:**
 
 ```cpp
-lantern::Transform* t = game.transform(entity());   // move, turn, scale
-t->position = t->position + lantern::Vec2{0, 10};
-game.get<lantern::Sprite>(entity())->flipX = true;  // any component
-lantern::EntityId door = game.find("Door");         // by name
+rolo::Transform* t = game.transform(entity());   // move, turn, scale
+t->position = t->position + rolo::Vec2{0, 10};
+game.get<rolo::Sprite>(entity())->flipX = true;  // any component
+rolo::EntityId door = game.find("Door");         // by name
 auto gems = game.findAll<Collectible>();            // every object with one
 game.worldPosition(entity());                       // parents included
 game.destroy(entity());                             // removed at the end of the frame
@@ -121,7 +121,7 @@ solid tiles in a tilemap:
 ```cpp
 game.move(entity(), {speed * dt, 0});      // moves, stopping at walls and solid tiles
 game.overlapping(entity());                // objects whose colliders overlap this one's
-game.isBlocked(lantern::Box::around(p, {16, 16}));
+game.isBlocked(rolo::Box::around(p, {16, 16}));
 game.colliderBox(entity());                // the collider's box in the world
 ```
 
@@ -172,7 +172,7 @@ moving and `idle_<direction>` while standing.
 ## Story content: dialogue, quests and triggers without code
 
 Much of an RPG is content rather than code: who says what, what quests
-there are, what happens when the player walks somewhere. Lantern keeps this
+there are, what happens when the player walks somewhere. Rolo keeps this
 as data ([content formats](formats/content.md)) and runs it with built-in
 components:
 
@@ -235,17 +235,17 @@ never overwrites a real save. Objects removed with `game.destroy()` (or a
 `destroy` action) stay removed for the rest of the playthrough, also after
 leaving and coming back to a scene.
 
-## Game modules: joining your code to Lantern
+## Game modules: joining your code to Rolo
 
 Behaviours live in a **game module**: a static library linked into the
-editor and the player when Lantern is built. A module has one registration
+editor and the player when Rolo is built. A module has one registration
 function:
 
 ```cpp
 // MyGame.cpp
-#include "lantern/gameplay/GameModule.hpp"
+#include "rolo/gameplay/GameModule.hpp"
 
-LANTERN_GAME_MODULE(my_game)
+ROLO_GAME_MODULE(my_game)
 {
     registry.add(Spinner::componentType());
     registry.add(PlayerController::componentType());
@@ -255,13 +255,13 @@ LANTERN_GAME_MODULE(my_game)
 and a `CMakeLists.txt`:
 
 ```cmake
-lantern_add_game_module(my_game SOURCES MyGame.cpp Spinner.cpp PlayerController.cpp)
+rolo_add_game_module(my_game SOURCES MyGame.cpp Spinner.cpp PlayerController.cpp)
 ```
 
-Build Lantern with your module's folder added:
+Build Rolo with your module's folder added:
 
 ```sh
-cmake --preset dev -DLANTERN_GAME_MODULE_DIRS=/path/to/my_game
+cmake --preset dev -DROLO_GAME_MODULE_DIRS=/path/to/my_game
 cmake --build build/dev
 ```
 
@@ -270,12 +270,12 @@ behaviours appear under *Gameplay* in **Add Component**, and both Play mode
 and the player run them. Several folders can be listed, separated by `;`.
 
 The module name must use only letters, digits and underscores, and must
-match in `LANTERN_GAME_MODULE(...)` and `lantern_add_game_module(...)`.
+match in `ROLO_GAME_MODULE(...)` and `rolo_add_game_module(...)`.
 
 Scenes that use a behaviour from a module that is not linked still open:
 the component is kept unchanged (and saved back), shown as unknown.
 
-**Rebuilding is needed after changing C++ code.** Lantern does not load code
+**Rebuilding is needed after changing C++ code.** Rolo does not load code
 while the editor runs (no hot reload) yet: quit the editor, build, start it
 again. Your scenes are not affected.
 
@@ -286,7 +286,7 @@ again. Your scenes are not affected.
   the keyboard. ⏸ pauses, ⏭ runs one frame, ■ stops. The game plays a copy
   of the scene: stopping always returns to the scene exactly as it was.
   Scene edits are refused while playing.
-- **In the player:** `lantern_player --project path/to/project` plays the
+- **In the player:** `rolo_player --project path/to/project` plays the
   project's start scene in its own window.
 
 ## Errors
@@ -313,7 +313,7 @@ arriving in the right place, `CameraLimits`). Everything else is content.
 step.
 
 ```sh
-./build/dev/bin/lantern_player/lantern_player --project examples/lantern_keeper/project
+./build/dev/bin/rolo_player/rolo_player --project examples/lantern_keeper/project
 ```
 
 **The sample game** [`examples/sample_game`](../examples/sample_game) has four behaviours:
@@ -324,11 +324,11 @@ meadow and a cave, and content: Elder Maren's dialogue, a quest to bring her
 three gems (picked up by Triggers, no code), a boulder that rolls aside as
 the reward, and an on-screen gem count, quest log and dialogue box. It is
 the engine's test bed. Both modules are built in by default
-(`LANTERN_BUILD_SAMPLE_GAME`):
+(`ROLO_BUILD_SAMPLE_GAME`):
 
 ```sh
-./build/dev/bin/lantern_player/lantern_player --project examples/sample_game/project
+./build/dev/bin/rolo_player/rolo_player --project examples/sample_game/project
 ```
 
-(On macOS the program is inside `lantern_player.app/Contents/MacOS/`.)
+(On macOS the program is inside `rolo_player.app/Contents/MacOS/`.)
 Arrow keys or W A S D walk, E talks, F5 saves, F9 loads.

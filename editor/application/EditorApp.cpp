@@ -4,25 +4,25 @@
 
 #include "../model/EditorPaths.hpp"
 
-#include "lantern/core/Version.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Script.hpp"
-#include "lantern/gameplay/GameModule.hpp"
-#include "lantern/scene/SceneFile.hpp"
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
-#include "lantern/ui/widgets/Box.hpp"
-#include "lantern/ui/widgets/Dialog.hpp"
-#include "lantern/ui/widgets/DockSpace.hpp"
-#include "lantern/ui/widgets/Fields.hpp"
-#include "lantern/ui/widgets/Inspector.hpp"
-#include "lantern/ui/widgets/Menu.hpp"
+#include "rolo/core/Version.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Script.hpp"
+#include "rolo/gameplay/GameModule.hpp"
+#include "rolo/scene/SceneFile.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
+#include "rolo/ui/widgets/Box.hpp"
+#include "rolo/ui/widgets/Dialog.hpp"
+#include "rolo/ui/widgets/DockSpace.hpp"
+#include "rolo/ui/widgets/Fields.hpp"
+#include "rolo/ui/widgets/Inspector.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
 
 #include <algorithm>
 #include <string>
 #include <utility>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -98,10 +98,10 @@ EditorApp::EditorApp(Engine& engine, ConsoleLog& console, EditorOptions options)
     : m_engine(engine)
     , m_console(console)
     , m_options(std::move(options))
-    , m_resources(findLanternResources(executablePath(), currentOs(), LANTERN_SOURCE_DIR, LANTERN_DEV_PLAYER))
+    , m_resources(findRoloResources(executablePath(), currentOs(), ROLO_SOURCE_DIR, ROLO_DEV_PLAYER))
     , m_document(std::make_unique<SceneDocument>(makeStartScene()))
 {
-    // The game's behaviours (linked game modules) join Lantern's components:
+    // The game's behaviours (linked game modules) join Rolo's components:
     // the Inspector can add them, scenes using them load, play mode runs them.
     registerGameplayComponents(m_registry);
     registerGameModules(m_registry, m_engine.logger());
@@ -1122,7 +1122,7 @@ void EditorApp::showNewProjectDialog(bool keepCurrentScene, std::function<void()
         });
     } else if (!keepCurrentScene) {
         body.emplace<ui::Label>("No templates were found (" + m_resources.templates.string()
-                                    + "), so the project starts empty. Reinstalling Lantern brings them back.",
+                                    + "), so the project starts empty. Reinstalling Rolo brings them back.",
                                 ui::Label::Style::Faint)
             .setWrap(true);
     }
@@ -1231,7 +1231,7 @@ void EditorApp::showExportDialog()
     auto& folder = folderRow.emplace<ui::TextField>("");
     folder.setStretch(1.0f);
     const std::filesystem::path projects = defaultProjectsDirectory();
-    folder.setText((projects.empty() ? m_project->folder().parent_path() : projects.parent_path() / "Lantern Exports")
+    folder.setText((projects.empty() ? m_project->folder().parent_path() : projects.parent_path() / "Rolo Exports")
                        .string());
     auto& hint = body.emplace<ui::Label>("", ui::Label::Style::Faint);
     hint.setWrap(true);
@@ -1260,9 +1260,9 @@ void EditorApp::showExportDialog()
     std::error_code ec;
     const bool runtimeFound = !m_resources.player.empty() && std::filesystem::exists(m_resources.player, ec);
     if (!runtimeFound) {
-        error.setText("Lantern's game runtime (lantern_player) was not found"
+        error.setText("Rolo's game runtime (rolo_player) was not found"
                       + (m_resources.player.empty() ? std::string() : " at " + m_resources.player.string())
-                      + ". Reinstall Lantern; when working from source, build the lantern_player target.");
+                      + ". Reinstall Rolo; when working from source, build the rolo_player target.");
     }
     dialog->addButton("Cancel");
     ui::Button& ok = dialog->addButton(m_document->isDirty() ? "Save and Export" : "Export",
@@ -1324,7 +1324,7 @@ void EditorApp::showOpenProjectDialog()
         }
         std::error_code ec;
         if (!std::filesystem::exists(std::filesystem::path(folder) / ProjectFormat::kFileName, ec)) {
-            error.setText("There is no Lantern project in " + folder + " (no project.lantern file).");
+            error.setText("There is no Rolo project in " + folder + " (no project.rolo file).");
             return;
         }
         if (openProjectFolder(folder, true)) {
@@ -1345,7 +1345,7 @@ void EditorApp::showOpenProjectDialog()
     }
     body.emplace<ui::Label>("Project folder", ui::Label::Style::Dim);
     auto& pathRow = body.emplace<ui::Row>(6.0f);
-    auto& path = pathRow.emplace<ui::TextField>("Path to the folder containing project.lantern");
+    auto& path = pathRow.emplace<ui::TextField>("Path to the folder containing project.rolo");
     path.setStretch(1.0f);
     if (m_state.recentProjects.empty()) {
         path.setText(defaultProjectsDirectory().string());
@@ -1417,7 +1417,7 @@ void EditorApp::buildMenus(ui::Widget& root)
                       menuItem("Revert to Saved", "", [this] { reloadScene(); },
                                [this] { return !m_document->isUntitled() && m_document->isDirty(); }),
                       ui::MenuItem::divider(),
-                      menuItem("Quit Lantern Editor", key("Q"), [this] { closeRequested(); })}});
+                      menuItem("Quit Rolo Editor", key("Q"), [this] { closeRequested(); })}});
 
     ui::MenuItem undo = menuItem("Undo", key("Z"), [this] { this->undo(); },
                                  [this] { return m_document->history().canUndo(); });
@@ -1491,7 +1491,7 @@ void EditorApp::buildMenus(ui::Widget& root)
                               menuItem("Exporting Games", "", [this] { showGuide("exporting.md"); }),
                               menuItem("Scripting Guide (Lua)", "", [this] { showGuide("scripting.md"); }),
                               ui::MenuItem::divider(),
-                              menuItem("About Lantern Engine…", "", [this] { showAbout(); })}});
+                              menuItem("About Rolo Engine…", "", [this] { showAbout(); })}});
 }
 
 void EditorApp::buildToolbar(ui::Widget& root)
@@ -1695,12 +1695,12 @@ void EditorApp::updateStatusBar(UiFrame& frame)
 
 void EditorApp::updateTitle(UiFrame& frame)
 {
-    // Title bar: "main.lscene • — My Game — Lantern Editor" (• = unsaved changes).
+    // Title bar: "main.lscene • — My Game — Rolo Editor" (• = unsaved changes).
     std::string title = m_document->displayName() + (m_document->isDirty() ? " •" : "");
     if (m_project) {
         title += " — " + m_project->settings().name;
     }
-    title += " — Lantern Editor";
+    title += " — Rolo Editor";
     if (title != m_shownTitle) {
         frame.setWindowTitle(title);
         m_shownTitle = title;
@@ -1738,11 +1738,11 @@ void EditorApp::showGuide(const std::string& file)
     const std::filesystem::path guide = m_resources.docs / file;
     std::error_code ec;
     if (!std::filesystem::exists(guide, ec)) {
-        showMessage("Guide Not Found", "The documentation is missing (" + guide.string() + "). Reinstall Lantern.");
+        showMessage("Guide Not Found", "The documentation is missing (" + guide.string() + "). Reinstall Rolo.");
         return;
     }
     log().info(kCategory, "Guide: " + guide.string());
-    showMessage("Lantern Documentation", "The guide is a text file you can read in any editor or web browser:\n"
+    showMessage("Rolo Documentation", "The guide is a text file you can read in any editor or web browser:\n"
                                              + guide.string() + "\n\nIts folder opens now.");
     revealInFileManager(guide.parent_path());
 }
@@ -1753,7 +1753,7 @@ void EditorApp::openExampleCopy()
     const auto it = std::find_if(templates.begin(), templates.end(), [](const ProjectTemplate& t) { return t.example; });
     if (it == templates.end()) {
         showMessage("No Example Found", "The example game was not found in " + m_resources.examples.string()
-                                            + ". Reinstall Lantern.");
+                                            + ". Reinstall Rolo.");
         return;
     }
     // A copy of its own in the projects folder, so the original stays as it is.
@@ -1779,9 +1779,9 @@ void EditorApp::openExampleCopy()
 
 void EditorApp::showWelcome()
 {
-    auto dialog = std::make_unique<ui::Dialog>("Welcome to Lantern", 520.0f);
+    auto dialog = std::make_unique<ui::Dialog>("Welcome to Rolo", 520.0f);
     ui::Column& body = dialog->body();
-    body.emplace<ui::Label>("Lantern " + std::string(versionString())
+    body.emplace<ui::Label>("Rolo " + std::string(versionString())
                                 + " is an editor for 2D games: top-down RPGs, pixel-art adventures, tile-based and "
                                   "story-driven games.",
                             ui::Label::Style::Dim)
@@ -1791,7 +1791,7 @@ void EditorApp::showWelcome()
                             "a new project to a game you can share.",
                             ui::Label::Style::Dim)
         .setWrap(true);
-    auto& again = body.emplace<ui::Checkbox>("Show this window when Lantern starts without a project",
+    auto& again = body.emplace<ui::Checkbox>("Show this window when Rolo starts without a project",
                                              m_preferences.getBool(kShowWelcomeKey, true));
     again.setOnChange([this](bool on) {
         m_preferences.setBool(kShowWelcomeKey, on);
@@ -1806,9 +1806,9 @@ void EditorApp::showWelcome()
 
 void EditorApp::showAbout()
 {
-    auto dialog = std::make_unique<ui::Dialog>("About Lantern Engine", 400.0f);
+    auto dialog = std::make_unique<ui::Dialog>("About Rolo Engine", 400.0f);
     ui::Column& body = dialog->body();
-    body.emplace<ui::Label>("Lantern Engine " + std::string(versionString()), ui::Label::Style::Strong);
+    body.emplace<ui::Label>("Rolo Engine " + std::string(versionString()), ui::Label::Style::Strong);
     body.emplace<ui::Label>("A C++-first 2D game engine and editor.", ui::Label::Style::Dim);
     // The runtime backend is an implementation detail, so it is not named here.
     // It is still reported by --version and in the Console, for bug reports.
@@ -1867,7 +1867,7 @@ bool EditorApp::closeRequested()
     return false;
 }
 
-// project.lantern can change under us (Set Start Scene, its undo, or another
+// project.rolo can change under us (Set Start Scene, its undo, or another
 // program): read the settings again when the file's time stamp changes.
 void EditorApp::syncProjectSettings()
 {
@@ -1985,7 +1985,7 @@ Status EditorApp::run()
     presentation.onCloseRequested = [this] { return closeRequested(); };
 
     Application app(m_engine,
-                    WindowSettings{.title = "Lantern Editor",
+                    WindowSettings{.title = "Rolo Editor",
                                    .width = m_state.windowWidth,
                                    .height = m_state.windowHeight,
                                    .resizable = true},
@@ -2002,4 +2002,4 @@ Status EditorApp::run()
     return status;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

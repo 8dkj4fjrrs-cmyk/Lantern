@@ -1,6 +1,6 @@
 # RPG content formats: variables, dialogues, quests, saves
 
-Lantern keeps a game's story content as data: game variables, dialogues and
+Rolo keeps a game's story content as data: game variables, dialogues and
 quests, each in its own asset file (with a `.meta` ID like any asset, see
 [scene formats](scene.md#asset-ids-meta-files)). This page describes format
 **version 1** of each, the conditions and actions they use, and save games.
@@ -25,7 +25,7 @@ digits, from the other file's `.meta`).
 
 ```json
 {
-  "format": "lantern.variables",
+  "format": "rolo.variables",
   "version": 1,
   "variables": [
     { "id": "gems", "type": "int", "initial": 0, "description": "Gems carried" },
@@ -98,7 +98,7 @@ quests.
 
 ```json
 {
-  "format": "lantern.dialogue",
+  "format": "rolo.dialogue",
   "version": 1,
   "speakers": [
     { "id": "elder", "name": "Village Elder", "color": "#f2a93bff", "portrait": null }
@@ -141,7 +141,7 @@ quests.
 
 ```json
 {
-  "format": "lantern.quest",
+  "format": "rolo.quest",
   "version": 1,
   "name": "Gems for the Elder",
   "description": "The elder needs three gems.",
@@ -170,7 +170,7 @@ completing and failing are reported in the log and to gameplay code.
 
 ## Checks
 
-When content is loaded (in the editor and in the player), Lantern checks:
+When content is loaded (in the editor and in the player), Rolo checks:
 
 - each file's shape: known fields, required fields, values of the right
   kind, unique ids (a file with an error is not loaded; unknown fields are
@@ -192,9 +192,9 @@ A save holds progress only, never content:
 
 ```json
 {
-  "format": "lantern.save",
+  "format": "rolo.save",
   "version": 1,
-  "game": "Lantern Sample",
+  "game": "Rolo Sample",
   "scene": "5a4d1e0000000004",
   "player": [212, 480],
   "variables": { "gems": 2, "met_elder": true, "hero_name": "Ana" },

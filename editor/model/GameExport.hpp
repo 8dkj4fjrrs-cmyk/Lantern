@@ -2,14 +2,14 @@
 
 // Exporting a project as a game that runs without the editor.
 //
-// An exported game is Lantern's game runtime (lantern_player, renamed after
+// An exported game is Rolo's game runtime (rolo_player, renamed after
 // the game) with the project's files bundled beside it, plus the license
 // texts of everything inside it. The runtime finds the bundled game by
 // itself (see player/runtime/main.cpp), so players just open it:
 //
 //   Linux, Windows                      macOS
 //   My Game/                            My Game.app/
-//     My Game(.exe)    the runtime        Contents/MacOS/lantern_player
+//     My Game(.exe)    the runtime        Contents/MacOS/rolo_player
 //     axslc/           its shaders        Contents/Resources/axslc/
 //     (*.dll)          (Windows)          Contents/Resources/game/
 //     game/            the project        Contents/Resources/licenses/
@@ -27,16 +27,16 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 struct ExportOptions {
     std::filesystem::path project;   // the project folder
     std::filesystem::path output;    // the folder the game is created in
     std::string gameName;            // names the game's folder / app and program
-    std::filesystem::path player;    // lantern_player(.exe), or lantern_player.app on macOS
-    std::filesystem::path licenses;  // Lantern's licenses/ folder
+    std::filesystem::path player;    // rolo_player(.exe), or rolo_player.app on macOS
+    std::filesystem::path licenses;  // Rolo's licenses/ folder
     HostOs os = currentOs();
-    std::string version;             // Lantern's version, written in README.txt
+    std::string version;             // Rolo's version, written in README.txt
 };
 
 struct ExportResult {
@@ -56,4 +56,4 @@ std::string exportFileName(const std::string& gameName);
 /// replaced; any other existing folder of that name is left alone (an error).
 ExportResult exportGame(const ExportOptions& options);
 
-} // namespace lantern::editor
+} // namespace rolo::editor

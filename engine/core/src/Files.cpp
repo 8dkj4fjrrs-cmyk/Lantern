@@ -1,4 +1,4 @@
-#include "lantern/core/Files.hpp"
+#include "rolo/core/Files.hpp"
 
 #include <cstdint>
 #include <cstdlib>
@@ -15,7 +15,7 @@
 #include <windows.h>
 #endif
 
-namespace lantern {
+namespace rolo {
 
 std::optional<std::string> readTextFile(const std::filesystem::path& path)
 {
@@ -110,4 +110,4 @@ std::optional<std::string> environmentVariable(const char* name)
     return value;
 }
 
-} // namespace lantern
+} // namespace rolo

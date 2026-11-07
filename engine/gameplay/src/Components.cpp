@@ -1,8 +1,8 @@
-#include "lantern/gameplay/Components.hpp"
+#include "rolo/gameplay/Components.hpp"
 
-#include "lantern/gameplay/BuiltinBehaviours.hpp"
+#include "rolo/gameplay/BuiltinBehaviours.hpp"
 
-namespace lantern {
+namespace rolo {
 
 Key toKey(InteractKey key)
 {
@@ -18,7 +18,7 @@ Key toKey(InteractKey key)
 const ComponentType& Interactor::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Interactor>("lantern.Interactor", "Interactor")
+        ComponentTypeBuilder<Interactor>("rolo.Interactor", "Interactor")
             .category("Gameplay")
             .description("Marks the player: Triggers notice it walking into their area and pressing the interact "
                          "key. Needs a Collider.")
@@ -46,7 +46,7 @@ std::string Trigger::loadData(std::string_view json)
 const ComponentType& Trigger::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Trigger>("lantern.Trigger", "Trigger")
+        ComponentTypeBuilder<Trigger>("rolo.Trigger", "Trigger")
             .category("Gameplay")
             .description("When something happens, runs actions (if its condition is true). Interact and area "
                          "triggers use this object's Collider as the area: make it not solid.")
@@ -68,7 +68,7 @@ const ComponentType& Trigger::componentType()
 const ComponentType& DialogueView::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<DialogueView>("lantern.DialogueView", "Dialogue View")
+        ComponentTypeBuilder<DialogueView>("rolo.DialogueView", "Dialogue View")
             .category("Gameplay")
             .description("Shown only while a dialogue is going on: put it on the dialogue box. Text objects inside "
                          "it with a dialogue Source show the speaker, the line and the choices.")
@@ -86,4 +86,4 @@ void registerGameplayComponents(ComponentRegistry& registry)
     registerBuiltinBehaviours(registry);
 }
 
-} // namespace lantern
+} // namespace rolo

@@ -1,12 +1,12 @@
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <map>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -39,7 +39,7 @@ std::vector<std::string> listProject(const std::filesystem::path& root)
             continue; // half-written files from a save in progress
         }
         if (leaf.size() > 5 && leaf.compare(leaf.size() - 5, 5, ".meta") == 0) {
-            continue; // asset IDs: Lantern's business, not the user's
+            continue; // asset IDs: Rolo's business, not the user's
         }
         paths.push_back(it->path().lexically_relative(root).generic_string() + (it->is_directory(ec) ? "/" : ""));
     }
@@ -210,9 +210,9 @@ void AssetsPanel::rebuild()
             item.icon = ui::Icon::Folder;
             folderIds[path] = item.id;
         } else if (name.size() > 7 && name.compare(name.size() - 7, 7, ".lscene") == 0) {
-            item.icon = ui::Icon::Flame;
+            item.icon = ui::Icon::Rolo;
             item.detail = "Scene";
-        } else if (name == "project.lantern") {
+        } else if (name == "project.rolo" || name == "project.lantern") {
             item.icon = ui::Icon::Sliders;
             item.detail = "Project settings";
         } else if (const AssetRecord* asset = m_editor.assets() != nullptr ? m_editor.assets()->findByPath(path) : nullptr) {
@@ -226,7 +226,7 @@ void AssetsPanel::rebuild()
             case AssetType::Tileset: item.icon = ui::Icon::Grid; item.detail = "Tileset"; break;
             case AssetType::Audio: item.icon = ui::Icon::Dot; item.detail = "Sound"; break;
             case AssetType::Font: item.icon = ui::Icon::Dot; item.detail = "Font"; break;
-            case AssetType::Scene: item.icon = ui::Icon::Flame; item.detail = "Scene"; break;
+            case AssetType::Scene: item.icon = ui::Icon::Rolo; item.detail = "Scene"; break;
             case AssetType::Variables: item.icon = ui::Icon::Sliders; item.detail = "Variables"; break;
             case AssetType::Dialogue: item.icon = ui::Icon::Terminal; item.detail = "Dialogue"; break;
             case AssetType::Quest: item.icon = ui::Icon::Check; item.detail = "Quest"; break;
@@ -268,12 +268,12 @@ void AssetsPanel::rebuild()
     m_tree->setItems(std::move(items));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor
 
 // ---------------------------------------------------------------------------
 // Assets Preview: the selected folder as a grid of thumbnails
 // ---------------------------------------------------------------------------
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 constexpr float kTileWidth = 92.0f;
@@ -495,8 +495,8 @@ void AssetsPreviewPanel::update(UiFrame& frame)
             e.path += "/";
             e.icon = ui::Icon::Folder;
         } else if (item.path().extension() == ".lscene") {
-            e.icon = ui::Icon::Flame;
-        } else if (e.name == "project.lantern") {
+            e.icon = ui::Icon::Rolo;
+        } else if (e.name == "project.rolo" || e.name == "project.lantern") {
             e.icon = ui::Icon::Sliders;
         } else if (const AssetRecord* asset = db != nullptr ? db->findByPath(e.path) : nullptr) {
             e.asset = asset->id;
@@ -521,4 +521,4 @@ void AssetsPreviewPanel::update(UiFrame& frame)
     }
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

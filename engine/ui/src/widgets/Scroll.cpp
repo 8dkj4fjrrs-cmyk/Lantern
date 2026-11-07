@@ -1,11 +1,11 @@
-#include "lantern/ui/widgets/Scroll.hpp"
+#include "rolo/ui/widgets/Scroll.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 // --- ScrollState ---------------------------------------------------------------------
 
@@ -363,4 +363,4 @@ bool ListView::onKeyDown(Context& ctx, const KeyEvent& event)
     return true;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

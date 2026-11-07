@@ -1,8 +1,8 @@
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <algorithm>
 
-namespace lantern::ui::utf8 {
+namespace rolo::ui::utf8 {
 
 namespace {
 bool isContinuation(unsigned char c)
@@ -175,4 +175,4 @@ std::size_t nextWordEnd(std::string_view text, std::size_t index)
     return i;
 }
 
-} // namespace lantern::ui::utf8
+} // namespace rolo::ui::utf8

@@ -4,7 +4,7 @@
 
 namespace sample {
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 

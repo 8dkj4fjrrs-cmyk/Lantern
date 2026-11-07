@@ -4,16 +4,16 @@
 #include "support/TempFolder.hpp"
 #include "../content/ContentFixture.hpp"
 
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 namespace {
 
@@ -23,7 +23,7 @@ const AssetId kSceneB{0x5002};
 EntityId addBox(Scene& scene, const char* name, Vec2 at, Vec2 size, EntityId parent = {})
 {
     const EntityId id = scene.create(name, parent)->id();
-    scene.setProperty(id, "lantern.Transform", "position", at);
+    scene.setProperty(id, "rolo.Transform", "position", at);
     auto collider = std::make_unique<Collider>();
     collider->size = size;
     collider->solid = false;
@@ -107,7 +107,7 @@ struct Run {
         log.addSink([this](const LogMessage& m) { lines.push_back(m.text); });
         lib.addScene(kSceneA, "a.lscene");
         lib.addScene(kSceneB, "b.lscene");
-        saves = std::make_unique<FolderSaveStore>(lantern::test::uniqueTempFolder("saves"));
+        saves = std::make_unique<FolderSaveStore>(rolo::test::uniqueTempFolder("saves"));
         std::filesystem::remove_all(saves->folder());
         GameSetup setup;
         setup.content = &lib;

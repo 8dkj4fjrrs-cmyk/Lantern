@@ -7,7 +7,7 @@ index 653f4b8..6a152b7 100644
  
    if(CMAKE_GENERATOR MATCHES "Ninja")
 -    target_link_libraries(${target} delayimp)
-+    # Lantern patch: keyword form, so apps that use target_link_libraries(... PRIVATE ...)
++    # Rolo patch: keyword form, so apps that use target_link_libraries(... PRIVATE ...)
 +    # can call ax_setup_app_config (CMake forbids mixing the two forms on one target).
 +    target_link_libraries(${target} PRIVATE delayimp)
    endif()

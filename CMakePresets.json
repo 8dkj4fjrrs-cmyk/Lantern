@@ -13,8 +13,8 @@
             "binaryDir": "${sourceDir}/build/dev",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "LANTERN_RUNTIME_BACKEND": "axmol",
-                "LANTERN_WARNINGS_AS_ERRORS": "ON"
+                "ROLO_RUNTIME_BACKEND": "axmol",
+                "ROLO_WARNINGS_AS_ERRORS": "ON"
             },
             "warnings": {
                 "dev": false
@@ -27,7 +27,7 @@
             "binaryDir": "${sourceDir}/build/release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "LANTERN_RUNTIME_BACKEND": "axmol"
+                "ROLO_RUNTIME_BACKEND": "axmol"
             },
             "warnings": {
                 "dev": false
@@ -40,8 +40,8 @@
             "binaryDir": "${sourceDir}/build/core",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "LANTERN_RUNTIME_BACKEND": "none",
-                "LANTERN_WARNINGS_AS_ERRORS": "ON"
+                "ROLO_RUNTIME_BACKEND": "none",
+                "ROLO_WARNINGS_AS_ERRORS": "ON"
             },
             "warnings": {
                 "dev": false
@@ -53,7 +53,7 @@
             "inherits": "core",
             "binaryDir": "${sourceDir}/build/asan",
             "cacheVariables": {
-                "LANTERN_ENABLE_SANITIZERS": "ON"
+                "ROLO_ENABLE_SANITIZERS": "ON"
             }
         }
     ],
@@ -76,10 +76,10 @@
         },
         {
             "name": "package",
-            "displayName": "Package Lantern (dist/)",
+            "displayName": "Package Rolo (dist/)",
             "configurePreset": "release",
             "targets": [
-                "lantern_package"
+                "rolo_package"
             ]
         }
     ],

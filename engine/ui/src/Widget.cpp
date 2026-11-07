@@ -1,10 +1,10 @@
-#include "lantern/ui/Widget.hpp"
+#include "rolo/ui/Widget.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 Widget::~Widget()
 {
@@ -179,4 +179,4 @@ bool Widget::hasPointerCapture() const noexcept
     return m_context != nullptr && m_context->captured() == this;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

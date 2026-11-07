@@ -1,11 +1,11 @@
 #pragma once
 
-// Command-line options for lantern_player.
+// Command-line options for rolo_player.
 //
 // Kept separate from main.cpp (and free of any backend code) so the parsing
 // rules can be unit-tested without opening a window.
 
-#include "lantern/gameplay/Input.hpp"
+#include "rolo/gameplay/Input.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -16,19 +16,19 @@
 #include <utility>
 #include <vector>
 
-namespace lantern::player {
+namespace rolo::player {
 
 struct PlayerOptions {
     // What to do.
     bool showHelp = false;
     bool showVersion = false;
 
-    // What to show (both empty: Lantern's start scene).
+    // What to show (both empty: Rolo's start scene).
     std::string projectPath;   // a project folder: plays its start scene
     std::string scenePath;     // a .lscene file
 
     // Window.
-    std::string title = "Lantern Engine";
+    std::string title = "Rolo Engine";
     int width = 1280;
     int height = 720;
 
@@ -51,7 +51,7 @@ struct PlayerOptions {
     std::string saveDir;          // --save-dir: where save slots go (default: the user's data folder)
 };
 
-/// A key by its name ("Right", "space", "W"; see lantern::keyName), ignoring case.
+/// A key by its name ("Right", "space", "W"; see rolo::keyName), ignoring case.
 std::optional<Key> keyFromName(std::string_view name);
 
 /// Result of parsing: either options, or an error message for the user.
@@ -72,4 +72,4 @@ std::optional<std::filesystem::path> bundledGameFolder(const std::filesystem::pa
 /// Text printed by --help.
 std::string helpText();
 
-} // namespace lantern::player
+} // namespace rolo::player

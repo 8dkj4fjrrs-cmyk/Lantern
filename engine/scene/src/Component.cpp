@@ -1,10 +1,11 @@
-#include "lantern/scene/Component.hpp"
-#include "lantern/scene/Components.hpp"
+#include "rolo/scene/Component.hpp"
+#include "rolo/core/Names.hpp"
+#include "rolo/scene/Components.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -123,7 +124,7 @@ const ComponentType& UnknownComponent::type() const
         ComponentType t;
         t.id = std::string(kTypeId);
         t.displayName = "Unknown Component";
-        t.description = "A component this version of Lantern does not recognise. Its data is kept "
+        t.description = "A component this version of Rolo does not recognise. Its data is kept "
                         "unchanged and saved again with the scene.";
         return t;
     }();
@@ -165,6 +166,11 @@ const ComponentType* ComponentRegistry::find(std::string_view id) const
             return t;
         }
     }
+    // Files saved by Lantern (Rolo's old name) say "lantern.Transform" where
+    // Rolo says "rolo.Transform" (rolo/core/Names.hpp).
+    if (const auto upgraded = upgradeLegacyName(id)) {
+        return find(*upgraded);
+    }
     return nullptr;
 }
 
@@ -173,7 +179,7 @@ const ComponentType* ComponentRegistry::find(std::string_view id) const
 const ComponentType& Transform::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Transform>("lantern.Transform", "Transform")
+        ComponentTypeBuilder<Transform>("rolo.Transform", "Transform")
             .description("Where the object is, relative to its parent. Position is in points from the "
                          "parent's origin (y points up), rotation in degrees clockwise, and scale "
                          "multiplies the size (1 is normal size).")
@@ -189,7 +195,7 @@ const ComponentType& Transform::componentType()
 const ComponentType& Shape::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Shape>("lantern.Shape", "Shape")
+        ComponentTypeBuilder<Shape>("rolo.Shape", "Shape")
             .description("Draws a rectangle or an ellipse centred on the object, filled or as an outline.")
             .property("kind", "Kind", &Shape::kind, {.choices = {"rectangle", "ellipse"}})
             .property("size", "Size", &Shape::size, {.min = 0.0f, .step = 1.0f})
@@ -204,7 +210,7 @@ const ComponentType& Shape::componentType()
 const ComponentType& Sprite::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Sprite>("lantern.Sprite", "Sprite")
+        ComponentTypeBuilder<Sprite>("rolo.Sprite", "Sprite")
             .description("Draws an image centred on the object, stretched to Size. Color tints the image "
                          "(white keeps its own colours); its alpha makes it see-through.")
             .property("image", "Image", &Sprite::image,
@@ -220,7 +226,7 @@ const ComponentType& Sprite::componentType()
 const ComponentType& Camera::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Camera>("lantern.Camera", "Camera")
+        ComponentTypeBuilder<Camera>("rolo.Camera", "Camera")
             .description("Decides what the player sees: the game view is centred on this object. The first "
                          "active Camera in the scene is used. Rotation and scale of the object are ignored.")
             .property("zoom", "Zoom", &Camera::zoom,
@@ -232,7 +238,7 @@ const ComponentType& Camera::componentType()
 const ComponentType& Collider::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Collider>("lantern.Collider", "Collider")
+        ComponentTypeBuilder<Collider>("rolo.Collider", "Collider")
             .description("A box for collision. Solid colliders block movement; any collider can be found by "
                          "gameplay code, e.g. to notice the player walking through a door.")
             .property("size", "Size", &Collider::size, {.min = 0.0f, .help = "The box's width and height, in points."})
@@ -247,7 +253,7 @@ const ComponentType& Collider::componentType()
 const ComponentType& Text::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Text>("lantern.Text", "Text")
+        ComponentTypeBuilder<Text>("rolo.Text", "Text")
             .description("Text in the world, or on screen as a child of the Camera. {variable} shows a game "
                          "variable's value while playing. Source fills it from the game instead: the dialogue, "
                          "the interaction prompt or the quest log.")
@@ -256,7 +262,7 @@ const ComponentType& Text::componentType()
                       {.choices = {"text", "dialogueSpeaker", "dialogueLine", "dialogueChoices", "interactionPrompt",
                                    "questLog"},
                        .help = "Where the words come from while the game runs."})
-            .property("font", "Font", &Text::font, {.help = "A font file (.ttf). None: Lantern's own font.", .assetType = "font"})
+            .property("font", "Font", &Text::font, {.help = "A font file (.ttf). None: Rolo's own font.", .assetType = "font"})
             .property("size", "Size", &Text::size, {.min = 4.0f, .max = 512.0f, .unit = "pt"})
             .property("color", "Color", &Text::color)
             .property("align", "Align", &Text::align, {.choices = {"left", "center", "right"}})
@@ -269,7 +275,7 @@ const ComponentType& Text::componentType()
 const ComponentType& Animator::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Animator>("lantern.Animator", "Animator")
+        ComponentTypeBuilder<Animator>("rolo.Animator", "Animator")
             .description("Plays a flipbook clip on the object's Sprite (the Sprite keeps its size, colour and "
                          "flipping). Clips come from an animation asset (.lanim); gameplay code switches clips.")
             .property("animations", "Animations", &Animator::animations,
@@ -282,4 +288,4 @@ const ComponentType& Animator::componentType()
     return type;
 }
 
-} // namespace lantern
+} // namespace rolo

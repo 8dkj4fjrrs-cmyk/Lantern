@@ -1,4 +1,4 @@
-// Tests for engine/runtime/axmol_compat: Lantern's replacement for the yasio
+// Tests for engine/runtime/axmol_compat: Rolo's replacement for the yasio
 // headers Axmol's core includes (ADR 0012). Axmol relies on the exact behaviour
 // checked here: buffers that hand their memory to free(), the byte layout of its
 // settings file, and the order of equal-priority scheduler entries.
@@ -263,8 +263,8 @@ TEST_CASE("Clock helpers count in their stated units", "[runtime][compat]")
 TEST_CASE("Axmol's own code works with the replacement buffers", "[runtime][compat]")
 {
     // base64 and gzip in Axmol's core return and fill these buffers.
-    const yasio::byte_buffer decoded = ax::utils::base64Decode("TGFudGVybg==");
-    CHECK(std::string(decoded.begin(), decoded.end()) == "Lantern");
+    const yasio::byte_buffer decoded = ax::utils::base64Decode("Um9sbw==");
+    CHECK(std::string(decoded.begin(), decoded.end()) == "Rolo");
 
     const std::string text(1000, 'L');
     const auto packed = ax::ZipUtils::compressGZ(text.data(), text.size());

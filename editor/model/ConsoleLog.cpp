@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -127,4 +127,4 @@ std::string ConsoleLog::toText(const ConsoleFilter& filter) const
     return text;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

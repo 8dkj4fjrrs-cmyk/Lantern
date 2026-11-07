@@ -1,13 +1,13 @@
-# Licenses of software in games made with Lantern
+# Licenses of software in games made with Rolo
 
-Every game exported by Lantern contains the programs and libraries below.
+Every game exported by Rolo contains the programs and libraries below.
 Their license texts are in this folder; games carry a copy of it.
 
 | File | Software | License |
 |---|---|---|
-| `lantern.txt` | Lantern Engine | MIT |
+| `rolo.txt` | Rolo Engine | MIT |
 | `axmol.txt` | Axmol Engine 2.11.5 | MIT |
-| `inter-font.txt` | Inter font 4.0 (Lantern's default text font) | SIL OFL 1.1 |
+| `inter-font.txt` | Inter font 4.0 (Rolo's default text font) | SIL OFL 1.1 |
 | `lua.txt` | Lua 5.4.9 (gameplay scripts) | MIT |
 | `nlohmann-json.txt` | nlohmann/json 3.12.0 | MIT |
 | `stb.txt` | stb_image, stb_truetype | MIT or public domain |

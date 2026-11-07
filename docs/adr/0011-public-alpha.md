@@ -17,7 +17,7 @@ The brief's last milestone is a public alpha:
 - an honest list of known limitations.
 
 The brief's goal is that someone can:
-1. download Lantern;
+1. download Rolo;
 2. create a project in the editor;
 3. build a small game;
 4. export a playable application.
@@ -31,7 +31,7 @@ Two facts shaped the work:
 
 ### 1. Built-in behaviours make code-free games possible
 
-`lantern_gameplay` gains `TopDownController`, `SceneDoor` and
+`rolo_gameplay` gains `TopDownController`, `SceneDoor` and
 `CameraBounds`. These are general versions of what The Lantern Keeper's
 module had. `Game::changeScene(scene, arriveAt)` puts arrival points in the
 engine: the player is placed at the named object when the new scene
@@ -54,13 +54,13 @@ games with a `template.json` are offered the same way.
 
 ### 3. The editor finds its own files from where it is
 
-`LanternResources` locates templates, examples, licenses, docs and the game
+`RoloResources` locates templates, examples, licenses, docs and the game
 runtime:
 - beside the editor (an installed folder);
 - in the macOS app's Resources;
 - else in the source tree and build folder (a development build).
 
-The program's own path comes from `executablePath()` in `lantern_core`,
+The program's own path comes from `executablePath()` in `rolo_core`,
 the one place with per-OS code for it. Tests cover all three layouts with
 stand-in folders.
 
@@ -89,10 +89,10 @@ would need every system's runtime in each download.
 
 ### 5. One install layout, used by the package and the editor alike
 
-`cmake/LanternInstall.cmake` installs only a `lantern` component: Axmol's
-bundled libraries come with install rules of their own. `lantern_package`
+`cmake/RoloInstall.cmake` installs only a `rolo` component: Axmol's
+bundled libraries come with install rules of their own. `rolo_package`
 installs into `dist/<name>/` and zips it, with `cmake -E tar` so it works the
-same everywhere. The layout is exactly what `LanternResources` looks for, so
+same everywhere. The layout is exactly what `RoloResources` looks for, so
 an installed editor finds its templates and runtime without configuration.
 The release preset and `.github/workflows/release.yml` build, test and
 package on all three systems from a tag.
@@ -101,7 +101,7 @@ package on all three systems from a tag.
 
 `licenses/` holds the full texts of everything compiled into the runtime,
 fetched by `tools/release/fetch_licenses.py` from each project at the
-version Lantern uses. The list comes from the build's link line and from
+version Rolo uses. The list comes from the build's link line and from
 the third-party headers its sources include (`ninja -t deps`). That second
 source found six header-only libraries the notices had missed. Exports and
 installs copy the folder.
@@ -118,14 +118,14 @@ upstream, not MIT.
 The onboarding pieces:
 - a welcome window on start without a project (new project, try the
   example, open);
-- a folder browser in Lantern UI (Browse… in New Project, Open Project and
+- a folder browser in Rolo UI (Browse… in New Project, Open Project and
   Export), so nobody types paths;
 - Help menu entries for the guides.
 
 The documentation: getting started, exporting, releasing, known
 limitations, CONTRIBUTING and CHANGELOG. Messages say what to do, not only
-what failed, for example: a missing runtime ("reinstall Lantern, or build
-lantern_player"), a missing arrival point, an export into the project
+what failed, for example: a missing runtime ("reinstall Rolo, or build
+rolo_player"), a missing arrival point, an export into the project
 folder.
 
 ### 8. Platform support is stated as tested, not as written
@@ -139,7 +139,7 @@ is `0.8.0-alpha`.
 
 - No file format changes. The project format and every content format stay
   at version 1.
-- The version gains a suffix (`LANTERN_VERSION_SUFFIX`, shown as
+- The version gains a suffix (`ROLO_VERSION_SUFFIX`, shown as
   `0.8.0-alpha`).
 - New command-line options: `--template`, `--export` (editor) and `--stats`
   (player).
@@ -148,6 +148,6 @@ is `0.8.0-alpha`.
 - Open for after the alpha:
   - running CI on GitHub and fixing what macOS and Windows reveal;
   - code signing;
-  - custom C++ without building Lantern from source;
+  - custom C++ without building Rolo from source;
   - sound;
   - removing Axmol's unused networking libraries.

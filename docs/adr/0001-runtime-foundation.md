@@ -76,11 +76,11 @@ with the brief's "native macOS ARM64" priority. Not recommended.
 pinned to commit `6c0dce6db4660feafe29dabb1ab3506ee76b0931`.
 
 Milestone 0 ships with no runtime backend linked
-(`LANTERN_RUNTIME_BACKEND=none`); Milestone 1 wires Axmol in.
+(`ROLO_RUNTIME_BACKEND=none`); Milestone 1 wires Axmol in.
 
 ## Consequences (if Option A is accepted)
 
 - Backend is consumed as a pinned Git dependency, never copied into our source tree.
-- Public Lantern headers never include `axmol` headers; backend code lives in `engine/platform` / `engine/renderer` implementation files.
+- Public Rolo headers never include `axmol` headers; backend code lives in `engine/platform` / `engine/renderer` implementation files.
 - `THIRD_PARTY_NOTICES.md` is extended with Axmol and its bundled licenses before any build is distributed.
 - macOS arm64 must be verified on the owner's Mac in Milestone 1; Windows and Linux via CI.

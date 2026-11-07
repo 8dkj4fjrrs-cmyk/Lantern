@@ -1,12 +1,12 @@
-#include "lantern/ui/DockLayout.hpp"
+#include "rolo/ui/DockLayout.hpp"
 
-#include "lantern/core/Numbers.hpp"
+#include "rolo/core/Numbers.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -354,7 +354,7 @@ void DockLayout::computeRects(Rect rect, float gap, std::vector<GroupRect>& grou
 
 std::string DockLayout::serialize() const
 {
-    std::string out = "lantern-dock " + std::to_string(kFormatVersion) + " ";
+    std::string out = "rolo-dock " + std::to_string(kFormatVersion) + " ";
     std::function<void(const Node&)> write = [&](const Node& n) {
         if (n.isSplit) {
             char ratio[16];
@@ -517,7 +517,7 @@ std::unique_ptr<Node> prune(std::unique_ptr<Node> n)
 
 std::optional<DockLayout> DockLayout::parse(std::string_view text, const std::function<bool(std::string_view)>& isKnownPanel)
 {
-    constexpr std::string_view kMagic = "lantern-dock";
+    constexpr std::string_view kMagic = "rolo-dock";
     while (!text.empty() && (text.front() == ' ' || text.front() == '\n')) {
         text.remove_prefix(1);
     }
@@ -551,4 +551,4 @@ std::optional<DockLayout> DockLayout::parse(std::string_view text, const std::fu
     return layout;
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

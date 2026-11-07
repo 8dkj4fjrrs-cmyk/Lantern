@@ -1,13 +1,13 @@
 #pragma once
 
-// Command-line options for lantern_editor. No UI code, so it is unit-tested.
+// Command-line options for rolo_editor. No UI code, so it is unit-tested.
 
 #include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 struct EditorOptions {
     bool showHelp = false;
@@ -51,4 +51,4 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
 
 std::string editorHelpText();
 
-} // namespace lantern::editor
+} // namespace rolo::editor

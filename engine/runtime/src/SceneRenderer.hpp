@@ -1,8 +1,8 @@
 #pragma once
 
-// SceneRenderer: shows a lantern::Scene with Axmol nodes.
+// SceneRenderer: shows a rolo::Scene with Axmol nodes.
 //
-// Lantern scenes are plain data; Axmol draws node trees. The renderer keeps
+// Rolo scenes are plain data; Axmol draws node trees. The renderer keeps
 // an Axmol node tree that mirrors the scene: one node per entity, carrying
 // the entity's transform, with its visible content (a Shape's DrawNode, a
 // Sprite's image) as a child drawn below the entity's own children.
@@ -19,11 +19,11 @@
 // moves the rectangle only when the frame changed. Switching clips needs no
 // rebuild either, because the Animator is read again every frame.
 //
-// Internal to lantern_runtime.
+// Internal to rolo_runtime.
 
-#include "lantern/assets/Animation.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/scene/Scene.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <axmol.h>
 
@@ -33,7 +33,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 class TextureStore;
 
@@ -68,7 +68,7 @@ public:
     void update();
 
     /// Shows each Animator's frame for the animation clock `clock` (seconds;
-    /// see lantern::Animator). Call every frame, after update().
+    /// see rolo::Animator). Call every frame, after update().
     void animate(double clock);
 
     /// The first active Camera in the scene, if there is one.
@@ -86,7 +86,7 @@ private:
     ax::Node* makeTilemapNode(const Tilemap& map);
     ax::Node* makeAnimatedNode(EntityId id, const Animator& animator, const Sprite* sprite);
     ax::Node* makeTextNode(const Text& text);
-    /// Lantern's built-in font as a file Axmol can load (written once).
+    /// Rolo's built-in font as a file Axmol can load (written once).
     const std::string& defaultFontPath();
 
     ax::Node& m_root;
@@ -122,4 +122,4 @@ private:
     double m_clock = 0.0;   // the last clock passed to animate()
 };
 
-} // namespace lantern::detail
+} // namespace rolo::detail

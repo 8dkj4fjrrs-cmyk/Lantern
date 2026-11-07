@@ -1,16 +1,16 @@
 #include "Exporting.hpp"
 
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/content/ContentLibrary.hpp"
-#include "lantern/core/Version.hpp"
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/gameplay/Script.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/content/ContentLibrary.hpp"
+#include "rolo/core/Version.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/gameplay/Script.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <cstdio>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 constexpr const char* kCategory = "export";
@@ -37,7 +37,7 @@ ProjectCheck checkProject(const std::filesystem::path& folder, const ComponentRe
     check.startScene = project->settings().startScene;
     std::error_code ec;
     if (!std::filesystem::exists(project->absolute(check.startScene), ec)) {
-        report({FileIssue::Severity::Error, "project.lantern",
+        report({FileIssue::Severity::Error, "project.rolo",
                 "The start scene " + check.startScene + " does not exist. Open a scene and choose Make Start Scene "
                 "(select the scene row in the Hierarchy)."});
     }
@@ -125,7 +125,7 @@ bool signAdHoc(const std::filesystem::path& app, std::string& error)
 #endif
 
 ExportRun exportProject(const std::filesystem::path& project, const std::filesystem::path& output,
-                        const std::string& gameName, const LanternResources& resources,
+                        const std::string& gameName, const RoloResources& resources,
                         const ComponentRegistry& registry, const Logger& log)
 {
     ExportRun run;
@@ -176,4 +176,4 @@ ExportRun exportProject(const std::filesystem::path& project, const std::filesys
     return run;
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

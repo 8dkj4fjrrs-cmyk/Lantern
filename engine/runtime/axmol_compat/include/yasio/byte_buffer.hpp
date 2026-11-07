@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's byte buffers, used throughout Axmol's core
+// Rolo's replacement for yasio's byte buffers, used throughout Axmol's core
 // (file contents, decoded images, shader uniforms). Written from scratch for
-// Lantern; it contains no yasio code (see ../../README.md).
+// Rolo; it contains no yasio code (see ../../README.md).
 #pragma once
 
 #include "yasio/pod_vector.hpp"

@@ -1,8 +1,8 @@
-#include "lantern/gameplay/Input.hpp"
+#include "rolo/gameplay/Input.hpp"
 
 #include <cmath>
 
-namespace lantern {
+namespace rolo {
 
 std::string_view keyName(Key key)
 {
@@ -112,4 +112,4 @@ void Input::endFrame() noexcept
     }
 }
 
-} // namespace lantern
+} // namespace rolo

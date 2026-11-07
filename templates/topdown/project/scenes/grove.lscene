@@ -1,5 +1,5 @@
 {
-  "format": "lantern.scene",
+  "format": "rolo.scene",
   "version": 1,
   "name": "Grove",
   "entities": [
@@ -9,13 +9,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [3, 3]
         },
         {
-          "type": "lantern.Tilemap",
+          "type": "rolo.Tilemap",
           "tileset": "5354415254000005",
           "cellSize": [16, 16],
           "data": {
@@ -54,13 +54,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [744, 456],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [12, 12],
           "color": "#fff2a6ff",
@@ -68,7 +68,7 @@
           "lineWidth": 2
         },
         {
-          "type": "lantern.Script",
+          "type": "rolo.Script",
           "script": "535441525400000e"
         }
       ]
@@ -80,13 +80,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [34, 34],
           "color": "#ffe68055",
@@ -101,13 +101,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [888, 336],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [12, 12],
           "color": "#fff2a6ff",
@@ -115,7 +115,7 @@
           "lineWidth": 2
         },
         {
-          "type": "lantern.Script",
+          "type": "rolo.Script",
           "script": "535441525400000e"
         }
       ]
@@ -127,13 +127,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [34, 34],
           "color": "#ffe68055",
@@ -148,13 +148,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [816, 264],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [12, 12],
           "color": "#fff2a6ff",
@@ -162,7 +162,7 @@
           "lineWidth": 2
         },
         {
-          "type": "lantern.Script",
+          "type": "rolo.Script",
           "script": "535441525400000e"
         }
       ]
@@ -174,13 +174,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
           "size": [34, 34],
           "color": "#ffe68055",
@@ -195,19 +195,19 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 384],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Collider",
+          "type": "rolo.Collider",
           "size": [48, 96],
           "offset": [0, 0],
           "solid": false
         },
         {
-          "type": "lantern.SceneDoor",
+          "type": "rolo.SceneDoor",
           "scene": "5354415254000008",
           "arriveAt": "From Grove"
         }
@@ -219,7 +219,7 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [144, 384],
           "rotation": 0,
           "scale": [1, 1]
@@ -232,13 +232,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [168, 384],
           "rotation": 0,
           "scale": [3, 3]
         },
         {
-          "type": "lantern.Sprite",
+          "type": "rolo.Sprite",
           "image": "5354415254000002",
           "size": [16, 24],
           "color": "#ffffffff",
@@ -246,24 +246,24 @@
           "flipY": false
         },
         {
-          "type": "lantern.Animator",
+          "type": "rolo.Animator",
           "animations": "5354415254000006",
           "clip": "idle_down",
           "speed": 1,
           "playing": true
         },
         {
-          "type": "lantern.Collider",
+          "type": "rolo.Collider",
           "size": [10, 5],
           "offset": [0, -9.5],
           "solid": true
         },
         {
-          "type": "lantern.Interactor",
+          "type": "rolo.Interactor",
           "key": "E"
         },
         {
-          "type": "lantern.TopDownController",
+          "type": "rolo.TopDownController",
           "speed": 170
         }
       ]
@@ -275,17 +275,17 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [0.333333, 0.333333]
         },
         {
-          "type": "lantern.Camera",
+          "type": "rolo.Camera",
           "zoom": 1
         },
         {
-          "type": "lantern.CameraBounds",
+          "type": "rolo.CameraBounds",
           "min": [0, 0],
           "max": [1152, 768],
           "view": [1280, 720]
@@ -299,13 +299,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [-616, 340],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "",
           "source": "questLog",
           "font": null,
@@ -323,13 +323,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [616, 340],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "Arrows / WASD walk · E talk · F5 save · F9 load",
           "source": "text",
           "font": null,
@@ -347,13 +347,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, -120],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "",
           "source": "interactionPrompt",
           "font": null,
@@ -371,13 +371,13 @@
       "active": false,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, -260],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "rectangle",
           "size": [1040, 168],
           "color": "#120e1aee",
@@ -385,7 +385,7 @@
           "lineWidth": 2
         },
         {
-          "type": "lantern.DialogueView",
+          "type": "rolo.DialogueView",
           "marker": "> "
         }
       ]
@@ -397,13 +397,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [-496, 68],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "",
           "source": "dialogueSpeaker",
           "font": null,
@@ -421,13 +421,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [-496, 38],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "",
           "source": "dialogueLine",
           "font": null,
@@ -445,13 +445,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [-496, -14],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "",
           "source": "dialogueChoices",
           "font": null,
@@ -469,13 +469,13 @@
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [500, -62],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Text",
+          "type": "rolo.Text",
           "text": "E / Space",
           "source": "text",
           "font": null,

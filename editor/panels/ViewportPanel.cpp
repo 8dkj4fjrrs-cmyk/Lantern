@@ -2,8 +2,8 @@
 
 #include "../model/Commands.hpp"
 
-#include "lantern/gameplay/Collision.hpp"
-#include "lantern/ui/Context.hpp"
+#include "rolo/gameplay/Collision.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <climits>
@@ -13,7 +13,7 @@
 #include <cmath>
 #include <string>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -68,10 +68,10 @@ std::string percentText(float zoom)
 const char* sizeComponentOf(const Entity& entity)
 {
     if (entity.get<Shape>() != nullptr) {
-        return "lantern.Shape";
+        return "rolo.Shape";
     }
     if (entity.get<Sprite>() != nullptr) {
-        return "lantern.Sprite";
+        return "rolo.Sprite";
     }
     return nullptr;
 }
@@ -109,12 +109,12 @@ Key toGameKey(ui::Key key)
     }
 }
 
-std::optional<lantern::MouseButton> toGameButton(ui::MouseButton button)
+std::optional<rolo::MouseButton> toGameButton(ui::MouseButton button)
 {
     switch (button) {
-    case ui::MouseButton::Left: return lantern::MouseButton::Left;
-    case ui::MouseButton::Right: return lantern::MouseButton::Right;
-    case ui::MouseButton::Middle: return lantern::MouseButton::Middle;
+    case ui::MouseButton::Left: return rolo::MouseButton::Left;
+    case ui::MouseButton::Right: return rolo::MouseButton::Right;
+    case ui::MouseButton::Middle: return rolo::MouseButton::Middle;
     }
     return std::nullopt;
 }
@@ -942,17 +942,17 @@ private:
             origin = {roundTo(origin.x, step), roundTo(origin.y, step)};
             const Vec2 position = d.parentInverse.apply(origin);
             m_editor.execute(std::make_unique<SetProperties>(
-                d.id, std::vector<C>{{"lantern.Transform", "position", position}}, "Move " + what));
+                d.id, std::vector<C>{{"rolo.Transform", "position", position}}, "Move " + what));
             break;
         }
         case Handle::Rotate: {
             const float angle = std::atan2(screen.y - d.screenOrigin.y, screen.x - d.screenOrigin.x);
-            // Screen angles grow clockwise (y points down), like Lantern's rotation.
+            // Screen angles grow clockwise (y points down), like Rolo's rotation.
             float degrees = d.rotation + (angle - d.startAngle) * 180.0f / kPi;
             degrees = std::remainder(degrees, 360.0f);
             degrees = mods.shift ? roundTo(degrees, 15.0f) : roundTo(degrees, 0.1f);
             m_editor.execute(std::make_unique<SetProperties>(
-                d.id, std::vector<C>{{"lantern.Transform", "rotation", degrees}}, "Rotate " + what));
+                d.id, std::vector<C>{{"rolo.Transform", "rotation", degrees}}, "Rotate " + what));
             break;
         }
         case Handle::ScaleX:
@@ -980,7 +980,7 @@ private:
             const float step = mods.shift ? 0.1f : 0.001f;
             scale = {roundTo(scale.x, step), roundTo(scale.y, step)};
             m_editor.execute(std::make_unique<SetProperties>(
-                d.id, std::vector<C>{{"lantern.Transform", "scale", scale}}, "Scale " + what));
+                d.id, std::vector<C>{{"rolo.Transform", "scale", scale}}, "Scale " + what));
             break;
         }
         default: {
@@ -1034,7 +1034,7 @@ private:
             const Vec2 position = d.parentInverse.apply(d.world.apply(centerLocal));
             m_editor.execute(std::make_unique<SetProperties>(
                 d.id,
-                std::vector<C>{{d.sizeComponent, "size", size}, {"lantern.Transform", "position", position}},
+                std::vector<C>{{d.sizeComponent, "size", size}, {"rolo.Transform", "position", position}},
                 "Resize " + what));
             break;
         }
@@ -1053,7 +1053,7 @@ private:
         const Affine2 parentInverse = parentWorld.inverse().value_or(Affine2{});
         const Vec2 origin = scene.worldTransform(e->id()).apply({0.0f, 0.0f}) + delta;
         m_editor.execute(std::make_unique<SetProperties>(
-            e->id(), std::vector<SetProperties::Change>{{"lantern.Transform", "position", parentInverse.apply(origin)}},
+            e->id(), std::vector<SetProperties::Change>{{"rolo.Transform", "position", parentInverse.apply(origin)}},
             "Move " + (e->name().empty() ? std::string("Object") : e->name())));
     }
 
@@ -1398,4 +1398,4 @@ void ViewportPanel::update(UiFrame& frame)
     m_zoom->setText(percentText(m_view->zoom()));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

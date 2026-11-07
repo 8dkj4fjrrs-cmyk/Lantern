@@ -1,6 +1,7 @@
-#include "lantern/assets/Animation.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/core/Names.hpp"
 
-#include "lantern/core/Numbers.hpp"
+#include "rolo/core/Numbers.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -8,7 +9,7 @@
 #include <cmath>
 #include <set>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -33,7 +34,7 @@ Json fpsJson(float fps)
 
 } // namespace
 
-// Same rule as content ids (lantern_content's isValidContentId).
+// Same rule as content ids (rolo_content's isValidContentId).
 bool isValidClipId(std::string_view id)
 {
     if (id.empty() || id.size() > 64) {
@@ -120,8 +121,8 @@ std::optional<AnimationSet> parseAnimationSet(std::string_view text, std::string
         setError(error, "The animation file is not valid JSON.");
         return std::nullopt;
     }
-    if (!j.is_object() || j.value("format", "") != AnimationFormat::kName) {
-        setError(error, "This is not a Lantern animation file (\"format\" should be \"lantern.animations\").");
+    if (!j.is_object() || !isFormatName(j.value("format", ""), AnimationFormat::kName)) {
+        setError(error, "This is not a Rolo animation file (\"format\" should be \"rolo.animations\").");
         return std::nullopt;
     }
     if (!j.contains("version") || !j["version"].is_number_integer() || j["version"].get<int>() < 1) {
@@ -129,7 +130,7 @@ std::optional<AnimationSet> parseAnimationSet(std::string_view text, std::string
         return std::nullopt;
     }
     if (j["version"].get<int>() > AnimationFormat::kVersion) {
-        setError(error, "This animation file was saved by a newer version of Lantern. Update Lantern to use it.");
+        setError(error, "This animation file was saved by a newer version of Rolo. Update Rolo to use it.");
         return std::nullopt;
     }
     AnimationSet set;
@@ -250,4 +251,4 @@ int animatorFrame(const AnimationSet& set, const Animator& animator, double cloc
     return clip != nullptr ? clip->frameAt(animatorTime(animator, clock)) : -1;
 }
 
-} // namespace lantern
+} // namespace rolo

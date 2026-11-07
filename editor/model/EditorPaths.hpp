@@ -3,7 +3,7 @@
 // Where the editor keeps per-user files.
 // Operating-system differences live here and nowhere else in the editor.
 
-#include "lantern/core/Files.hpp"   // executablePath
+#include "rolo/core/Files.hpp"   // executablePath
 
 #include <filesystem>
 #include <functional>
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 /// Looks up an environment variable (injectable so tests need not touch the real environment).
 using EnvironmentLookup = std::function<std::optional<std::string>(const char* name)>;
@@ -25,16 +25,16 @@ enum class HostOs { MacOS, Windows, Linux };
 HostOs currentOs() noexcept;
 
 /// The folder for the editor's per-user settings (layout, preferences):
-///   macOS:   ~/Library/Application Support/Lantern Engine/Editor
-///   Windows: %APPDATA%\Lantern Engine\Editor
-///   Linux:   $XDG_CONFIG_HOME/lantern-engine/editor (default ~/.config/...)
+///   macOS:   ~/Library/Application Support/Rolo Engine/Editor
+///   Windows: %APPDATA%\Rolo Engine\Editor
+///   Linux:   $XDG_CONFIG_HOME/rolo-engine/editor (default ~/.config/...)
 /// Returns an empty path if the home folder cannot be determined.
 std::filesystem::path userConfigDirectory(HostOs os, const EnvironmentLookup& env);
 
 /// Same, for the current OS and real environment.
 std::filesystem::path userConfigDirectory();
 
-/// Where new projects are suggested: <Documents>/Lantern Projects
+/// Where new projects are suggested: <Documents>/Rolo Projects
 /// (Windows: %USERPROFILE%\Documents). Empty if the home folder is unknown.
 std::filesystem::path defaultProjectsDirectory(HostOs os, const EnvironmentLookup& env);
 std::filesystem::path defaultProjectsDirectory();
@@ -49,4 +49,4 @@ bool openWithDefaultApp(const std::filesystem::path& file);
 inline constexpr const char* kPreferencesFileName = "editor.prefs";
 inline constexpr const char* kLayoutFileName = "panels.dock"; // "layout.dock" held the 4-panel layout of 0.2.0 previews
 
-} // namespace lantern::editor
+} // namespace rolo::editor

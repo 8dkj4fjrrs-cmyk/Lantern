@@ -1,18 +1,18 @@
 #pragma once
 
-// Internal to lantern_content: JSON reading and writing shared by the
+// Internal to rolo_content: JSON reading and writing shared by the
 // content formats (conditions and actions appear inside dialogues, quests,
 // triggers and so on).
 
-#include "lantern/content/Logic.hpp"
-#include "lantern/scene/Types.hpp"
+#include "rolo/content/Logic.hpp"
+#include "rolo/scene/Types.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <optional>
 #include <string>
 
-namespace lantern::content_detail {
+namespace rolo::content_detail {
 
 using Json = nlohmann::ordered_json;
 
@@ -35,4 +35,4 @@ inline Json toJson(AssetId id)
     return id.isNull() ? Json() : Json(id.toString());
 }
 
-} // namespace lantern::content_detail
+} // namespace rolo::content_detail

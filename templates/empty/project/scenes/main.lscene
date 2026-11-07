@@ -1,375 +1,457 @@
 {
-  "format": "lantern.scene",
+  "format": "rolo.scene",
   "version": 1,
   "name": "Main",
   "entities": [
     {
-      "id": "5697995ae7f37ffe",
+      "id": "f2d7af1b39f54a2c",
       "name": "Background",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [640, 360],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "rectangle",
           "size": [1280, 720],
-          "color": "#0f121cff",
+          "color": "#d6342bff",
           "filled": true,
           "lineWidth": 2
         }
       ]
     },
     {
-      "id": "b3960b190d724f20",
-      "name": "Lantern",
+      "id": "de57a9919904871b",
+      "name": "Rolo",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
-          "position": [640, 360],
+          "type": "rolo.Transform",
+          "position": [640, 350],
           "rotation": 0,
           "scale": [1, 1]
         }
       ]
     },
     {
-      "id": "98278b69e0036aec",
-      "parent": "b3960b190d724f20",
-      "name": "Glow",
+      "id": "cd90f2d97d97691c",
+      "parent": "de57a9919904871b",
+      "name": "Shadow",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        }
-      ]
-    },
-    {
-      "id": "23bee7055721b059",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 1",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
+          "type": "rolo.Transform",
+          "position": [0, -170],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
-          "size": [440, 440],
-          "color": "#ffb84d12",
+          "size": [240, 30],
+          "color": "#7a0f0b6e",
           "filled": true,
           "lineWidth": 2
         }
       ]
     },
     {
-      "id": "8db6190bcbfc66ef",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 2",
+      "id": "ac9c7e303c05b6e0",
+      "parent": "de57a9919904871b",
+      "name": "Stem",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
-          "position": [0, 0],
+          "type": "rolo.Transform",
+          "position": [4, 160],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [340, 340],
-          "color": "#ffb84d12",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "e11a8b095980f4e5",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 3",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [260, 260],
-          "color": "#ffb84d12",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "6823ce80816f0042",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 4",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [200, 200],
-          "color": "#ffb84d12",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "73f3ae7aeb40670a",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 5",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [160, 160],
-          "color": "#ffb84d12",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "f14a40f8a88db622",
-      "parent": "98278b69e0036aec",
-      "name": "Glow 6",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [130, 130],
-          "color": "#ffb84d12",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "0b7f380f225fc5ae",
-      "parent": "b3960b190d724f20",
-      "name": "Glass",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "rectangle",
-          "size": [76, 110],
-          "color": "#ffb84d59",
+          "size": [12, 40],
+          "color": "#141414ff",
           "filled": true,
           "lineWidth": 2
         }
       ]
     },
     {
-      "id": "6fe37ccdff5f62d0",
-      "parent": "b3960b190d724f20",
-      "name": "Flame",
+      "id": "c24fc18ef48f0fa9",
+      "parent": "de57a9919904871b",
+      "name": "Leaf",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
-          "position": [0, -8],
+          "type": "rolo.Transform",
+          "position": [38, 176],
           "rotation": 0,
           "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
-          "size": [44, 44],
-          "color": "#ffb84dff",
+          "size": [60, 26],
+          "color": "#4cc25aff",
           "filled": true,
           "lineWidth": 2
         }
       ]
     },
     {
-      "id": "a3bb3c59dc7c7dca",
-      "parent": "6fe37ccdff5f62d0",
-      "name": "Core",
+      "id": "6341a688a1ce6e0d",
+      "parent": "de57a9919904871b",
+      "name": "Outline",
       "active": true,
       "components": [
         {
-          "type": "lantern.Transform",
-          "position": [0, 4],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "ellipse",
-          "size": [24, 24],
-          "color": "#ffe08cff",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "393f04884ba90f87",
-      "parent": "b3960b190d724f20",
-      "name": "Frame",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
+          "type": "rolo.Transform",
           "position": [0, 0],
           "rotation": 0,
           "scale": [1, 1]
-        }
-      ]
-    },
-    {
-      "id": "867e752848da2d46",
-      "parent": "393f04884ba90f87",
-      "name": "Top",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 61.5],
-          "rotation": 0,
-          "scale": [1, 1]
         },
         {
-          "type": "lantern.Shape",
-          "kind": "rectangle",
-          "size": [96, 13],
-          "color": "#38333dff",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "78bb846faadb4cee",
-      "parent": "393f04884ba90f87",
-      "name": "Bottom",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, -61.5],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "rectangle",
-          "size": [96, 13],
-          "color": "#38333dff",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "0bce4f473f96e7f7",
-      "parent": "393f04884ba90f87",
-      "name": "Left Bar",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [-39, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "rectangle",
-          "size": [6, 110],
-          "color": "#38333dff",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "b1eb6bb74765cfc1",
-      "parent": "393f04884ba90f87",
-      "name": "Right Bar",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [39, 0],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
-          "kind": "rectangle",
-          "size": [6, 110],
-          "color": "#38333dff",
-          "filled": true,
-          "lineWidth": 2
-        }
-      ]
-    },
-    {
-      "id": "e79f92876750a6e4",
-      "parent": "393f04884ba90f87",
-      "name": "Handle",
-      "active": true,
-      "components": [
-        {
-          "type": "lantern.Transform",
-          "position": [0, 82],
-          "rotation": 0,
-          "scale": [1, 1]
-        },
-        {
-          "type": "lantern.Shape",
+          "type": "rolo.Shape",
           "kind": "ellipse",
-          "size": [36, 36],
-          "color": "#38333dff",
-          "filled": false,
-          "lineWidth": 3
+          "size": [312, 312],
+          "color": "#141414ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "4a58cfeff8bb7fd2",
+      "parent": "de57a9919904871b",
+      "name": "Body",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [288, 288],
+          "color": "#ff9326ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "63e9405c08dd9c2c",
+      "parent": "de57a9919904871b",
+      "name": "Shine",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [-58, 78],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [84, 44],
+          "color": "#fff3d68c",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "470c961eada08f74",
+      "parent": "de57a9919904871b",
+      "name": "Left Eye",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [-52, 22],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [86, 102],
+          "color": "#141414ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "aa2430dbbf9d913d",
+      "parent": "470c961eada08f74",
+      "name": "White",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [68, 84],
+          "color": "#ffffffff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "34d641b44e38fdba",
+      "parent": "470c961eada08f74",
+      "name": "Pupil",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [10, -12],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [40, 40],
+          "color": "#141414ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "16cc0c4f44ada664",
+      "parent": "34d641b44e38fdba",
+      "name": "Glint",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [7, 9],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [14, 14],
+          "color": "#ffffffff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "e13437afa4bf5538",
+      "parent": "de57a9919904871b",
+      "name": "Left Cheek",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [-92, -46],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [44, 26],
+          "color": "#ff5a5f96",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "7829c1ce9559e8e8",
+      "parent": "de57a9919904871b",
+      "name": "Right Eye",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [52, 22],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [86, 102],
+          "color": "#141414ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "8cb169cc261164c9",
+      "parent": "7829c1ce9559e8e8",
+      "name": "White",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, 0],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [68, 84],
+          "color": "#ffffffff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "d0598531524bd4eb",
+      "parent": "7829c1ce9559e8e8",
+      "name": "Pupil",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [-10, -12],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [40, 40],
+          "color": "#141414ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "f905b8e3376fbd43",
+      "parent": "d0598531524bd4eb",
+      "name": "Glint",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [7, 9],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [14, 14],
+          "color": "#ffffffff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "6fd561e0681bb327",
+      "parent": "de57a9919904871b",
+      "name": "Right Cheek",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [92, -46],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [44, 26],
+          "color": "#ff5a5f96",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "2b6bbbbe64665948",
+      "parent": "de57a9919904871b",
+      "name": "Mouth",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, -52],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [110, 76],
+          "color": "#5a1708ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "06487ce5a89f318e",
+      "parent": "de57a9919904871b",
+      "name": "Mouth Top",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, -33],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "rectangle",
+          "size": [120, 38],
+          "color": "#ff9326ff",
+          "filled": true,
+          "lineWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "23096c539031a0ed",
+      "parent": "de57a9919904871b",
+      "name": "Tongue",
+      "active": true,
+      "components": [
+        {
+          "type": "rolo.Transform",
+          "position": [0, -78],
+          "rotation": 0,
+          "scale": [1, 1]
+        },
+        {
+          "type": "rolo.Shape",
+          "kind": "ellipse",
+          "size": [54, 22],
+          "color": "#ff6f6fff",
+          "filled": true,
+          "lineWidth": 2
         }
       ]
     }

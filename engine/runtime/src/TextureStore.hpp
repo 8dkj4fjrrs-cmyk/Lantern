@@ -7,9 +7,9 @@
 // changes on disk (checked on each request), so an image edited in another
 // program updates in the editor. Textures stay loaded until clear().
 //
-// Internal to lantern_runtime.
+// Internal to rolo_runtime.
 
-#include "lantern/core/Log.hpp"
+#include "rolo/core/Log.hpp"
 
 #include <axmol.h>
 
@@ -18,7 +18,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
 class TextureStore {
 public:
@@ -51,4 +51,4 @@ private:
     std::uint64_t m_generation = 1;
 };
 
-} // namespace lantern::detail
+} // namespace rolo::detail

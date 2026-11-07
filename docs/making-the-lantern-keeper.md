@@ -1,6 +1,6 @@
 # Making The Lantern Keeper
 
-This guide rebuilds [The Lantern Keeper](../examples/lantern_keeper), Lantern's
+This guide rebuilds [The Lantern Keeper](../examples/lantern_keeper), Rolo's
 demo RPG, from an empty project, in the order a game usually comes
 together. Each step says what to do in the editor and which engine feature
 it uses. The finished game is in `examples/lantern_keeper/project`. Open it
@@ -8,7 +8,7 @@ next to your own copy whenever you want to see exactly how something was
 set up.
 
 You need:
-- Lantern built (see [building](building.md));
+- Rolo built (see [building](building.md));
 - the art: copy the PNG files from `examples/lantern_keeper/project/assets/art`,
   or draw your own at the same sizes;
 - the game's C++ module, `keeper` (four small behaviours, described in
@@ -20,7 +20,7 @@ and the [gameplay guide](gameplay.md) explains triggers, dialogue and C++.
 ## 1. A fresh project
 
 **File > New Project…**, name it *The Lantern Keeper*. You get a folder with
-`project.lantern`, `scenes/main.lscene` and an empty `assets` folder.
+`project.rolo`, `scenes/main.lscene` and an empty `assets` folder.
 
 ## 2. Art
 
@@ -206,7 +206,7 @@ content cannot express:
   never leaves the map.
 
 A game module registers them (`KeeperGame.cpp`), and CMake links the module
-into the editor and the player (`lantern_add_game_module`; see the
+into the editor and the player (`rolo_add_game_module`; see the
 [gameplay guide](gameplay.md#game-modules-joining-your-code-to-lantern)).
 
 ## 8. Whisperwood and the old mine
@@ -239,12 +239,12 @@ when you come back, and in saved games.
 Talk to Maren and Wren, find Biscuit, get the key from Wren, rest at the
 wayshrine, open the gate, find the flames, and light the lantern.
 `tests/gameplay/test_lantern_keeper.cpp` does exactly this automatically on
-every test run, so the game stays finishable as Lantern changes.
+every test run, so the game stays finishable as Rolo changes.
 
 ## How the shipped project was produced
 
 `examples/lantern_keeper/project` was made the same way, but with scripts:
-1. `lantern_editor --new-project` made the fresh project.
+1. `rolo_editor --new-project` made the fresh project.
 2. `tools/make_art.py` drew the art.
 3. `tools/build_project.py` added everything above, writing the same files
    the editor writes.

@@ -1,12 +1,12 @@
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
-#include "lantern/ui/EmbeddedFonts.hpp"
-#include "lantern/ui/Utf8.hpp"
+#include "rolo/ui/EmbeddedFonts.hpp"
+#include "rolo/ui/Utf8.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 constexpr double kDoubleClickSeconds = 0.4;
@@ -557,4 +557,4 @@ bool Context::isInOverlay(const Widget* widget) const
                        [top](const Overlay& o) { return o.widget.get() == top; });
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

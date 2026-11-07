@@ -1,16 +1,16 @@
 # Scripting with Lua
 
-Lantern games can be programmed in **Lua**, a small language made for
+Rolo games can be programmed in **Lua**, a small language made for
 exactly this. Lua scripts need no compiler and no special setup: write a
-`.lua` file, attach it to an object, press ▶. A downloaded Lantern runs them,
+`.lua` file, attach it to an object, press ▶. A downloaded Rolo runs them,
 and so does every game you export.
 
-(Lantern also accepts gameplay code in C++; see the [gameplay guide](gameplay.md).
-C++ needs Lantern built from source. Lua does not.)
+(Rolo also accepts gameplay code in C++; see the [gameplay guide](gameplay.md).
+C++ needs Rolo built from source. Lua does not.)
 
 ## Your first script
 
-1. In the **Assets** panel, click **+** and choose **New Script**. Lantern
+1. In the **Assets** panel, click **+** and choose **New Script**. Rolo
    makes `scripts/new_script.lua` with a small example in it. Rename it in
    the Inspector if you like, for example to `spinner.lua`.
 2. Select the file and click **Open in Code Editor**. Any text editor works.
@@ -40,7 +40,7 @@ That is the quickest way to see what a script is doing.
 
 ## How a script runs
 
-A script file defines functions with special names. Lantern calls them for
+A script file defines functions with special names. Rolo calls them for
 each object that has a **Script** component pointing at the file:
 
 | Function | When |
@@ -236,5 +236,5 @@ Lua is small: the basics take an afternoon.
   same).
 - The [Lua 5.4 reference manual](https://www.lua.org/manual/5.4/).
 
-Lantern uses **Lua 5.4.9**. It is built into Lantern; you do not need to
+Rolo uses **Lua 5.4.9**. It is built into Rolo; you do not need to
 install it.

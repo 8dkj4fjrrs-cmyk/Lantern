@@ -1,21 +1,21 @@
 #pragma once
 
-// Routes Axmol's internal log messages into a lantern::Logger so that every
+// Routes Axmol's internal log messages into a rolo::Logger so that every
 // message — ours and the backend's — goes through one place (terminal today,
 // the editor console later).
 //
-// Internal to lantern_runtime: never include this from a public header.
+// Internal to rolo_runtime: never include this from a public header.
 
-#include "lantern/core/Log.hpp"
+#include "rolo/core/Log.hpp"
 
 #include <axmol.h>
 
 #include <string_view>
 
-namespace lantern::detail {
+namespace rolo::detail {
 
-/// Maps an Axmol log level onto Lantern's levels.
-LogLevel toLanternLevel(ax::LogLevel level) noexcept;
+/// Maps an Axmol log level onto Rolo's levels.
+LogLevel toRoloLevel(ax::LogLevel level) noexcept;
 
 /// Removes trailing newline characters (Axmol messages end with '\n').
 std::string_view trimTrailingNewlines(std::string_view text) noexcept;
@@ -36,4 +36,4 @@ private:
     const Logger& m_logger;
 };
 
-} // namespace lantern::detail
+} // namespace rolo::detail

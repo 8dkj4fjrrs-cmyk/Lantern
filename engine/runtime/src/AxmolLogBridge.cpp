@@ -1,8 +1,8 @@
 #include "AxmolLogBridge.hpp"
 
-namespace lantern::detail {
+namespace rolo::detail {
 
-LogLevel toLanternLevel(ax::LogLevel level) noexcept
+LogLevel toRoloLevel(ax::LogLevel level) noexcept
 {
     switch (level) {
     case ax::LogLevel::Verbose: return LogLevel::Trace;
@@ -38,7 +38,7 @@ AxmolLogBridge::~AxmolLogBridge()
 
 void AxmolLogBridge::write(ax::LogItem& item, const char* /*tag*/)
 {
-    m_logger.log(toLanternLevel(item.level()), "axmol", trimTrailingNewlines(item.message()));
+    m_logger.log(toRoloLevel(item.level()), "axmol", trimTrailingNewlines(item.message()));
 }
 
-} // namespace lantern::detail
+} // namespace rolo::detail

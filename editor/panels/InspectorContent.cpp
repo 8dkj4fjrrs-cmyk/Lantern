@@ -2,7 +2,7 @@
 // and the condition and actions of a Trigger.
 //
 // Content files are edited as forms. Conditions and actions are typed in
-// their short written form (see lantern/content/Notation.hpp), checked as
+// their short written form (see rolo/content/Notation.hpp), checked as
 // soon as a field is left; a mistake is shown under the field and nothing is
 // changed. Every change is one undo step (ChangeAssetText for content files,
 // ReplaceComponent for triggers) and is saved to the file at once.
@@ -11,15 +11,15 @@
 
 #include "../model/Commands.hpp"
 
-#include "lantern/gameplay/Components.hpp"
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/widgets/Menu.hpp"
+#include "rolo/gameplay/Components.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/widgets/Menu.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <set>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -257,7 +257,7 @@ void InspectorPanel::buildContentAsset(ui::Column& content, const AssetRecord& a
         buildQuestPage(content, asset.id, *quest);
     } else {
         auto& note = content.emplace<ui::Label>("The file cannot be read until the errors above are fixed (in a text "
-                                                "editor). Lantern does not change it meanwhile.",
+                                                "editor). Rolo does not change it meanwhile.",
                                                 ui::Label::Style::Dim);
         note.setWrap(true);
     }
@@ -688,4 +688,4 @@ void InspectorPanel::buildTriggerEditor(ui::Section& section, EntityId id)
                [change](std::vector<Action> a) { change("Change Trigger Actions", [&](Trigger& t) { t.reaction.actions = std::move(a); }); });
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

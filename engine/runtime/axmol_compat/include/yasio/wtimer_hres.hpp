@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's wtimer_hres, used by Axmol's Windows main loop.
-// Written from scratch for Lantern; it contains no yasio code (see ../../README.md).
+// Rolo's replacement for yasio's wtimer_hres, used by Axmol's Windows main loop.
+// Written from scratch for Rolo; it contains no yasio code (see ../../README.md).
 //
 // Windows wakes sleeping threads on a timer that ticks every 15.6 ms by default,
 // so a game that sleeps between frames would miss its frame time. While one of

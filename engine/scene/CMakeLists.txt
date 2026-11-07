@@ -1,4 +1,4 @@
-# lantern_scene — scenes, entities, components and the files they are saved in.
+# rolo_scene — scenes, entities, components and the files they are saved in.
 #
 # No backend and no UI: scenes are plain data that the runtime draws and the
 # editor edits. Always built and unit-tested (also in the `core` preset).
@@ -15,27 +15,27 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(nlohmann_json)
 
-add_library(lantern_scene STATIC
+add_library(rolo_scene STATIC
     src/Component.cpp
     src/Project.cpp
     src/Scene.cpp
     src/Tilemap.cpp
     src/SceneFile.cpp
     src/Types.cpp)
-add_library(lantern::scene ALIAS lantern_scene)
+add_library(rolo::scene ALIAS rolo_scene)
 
-target_include_directories(lantern_scene PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(lantern_scene
-    PUBLIC lantern::core
+target_include_directories(rolo_scene PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(rolo_scene
+    PUBLIC rolo::core
     PRIVATE nlohmann_json::nlohmann_json)   # JSON stays an implementation detail
-lantern_set_warnings(lantern_scene)
+rolo_set_warnings(rolo_scene)
 
 # Axmol turns off C++20's char8_t for the whole build (-fno-char8_t,
 # /Zc:char8_t-), but nlohmann/json 3.12 relies on it in C++20 mode. JSON is
 # private to this library and its public headers use no char8_t, so turning
 # it back on here is safe.
 if(MSVC)
-    target_compile_options(lantern_scene PRIVATE /Zc:char8_t)
+    target_compile_options(rolo_scene PRIVATE /Zc:char8_t)
 else()
-    target_compile_options(lantern_scene PRIVATE -fchar8_t)
+    target_compile_options(rolo_scene PRIVATE -fchar8_t)
 endif()

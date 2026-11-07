@@ -1,13 +1,13 @@
-#include "lantern/ui/Context.hpp"
-#include "lantern/ui/DockLayout.hpp"
-#include "lantern/ui/widgets/Basic.hpp"
-#include "lantern/ui/widgets/DockSpace.hpp"
+#include "rolo/ui/Context.hpp"
+#include "rolo/ui/DockLayout.hpp"
+#include "rolo/ui/widgets/Basic.hpp"
+#include "rolo/ui/widgets/DockSpace.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <set>
 
-using namespace lantern::ui;
+using namespace rolo::ui;
 
 namespace {
 
@@ -117,7 +117,7 @@ TEST_CASE("Layouts survive a save and load", "[ui][dock]")
     layout.dock("inspector", "hierarchy", DockSide::Center);
     layout.activate("hierarchy");
     const std::string text = layout.serialize();
-    CHECK(text.rfind("lantern-dock 1 ", 0) == 0);
+    CHECK(text.rfind("rolo-dock 1 ", 0) == 0);
 
     const auto loaded = DockLayout::parse(text, known({"viewport", "console", "hierarchy", "inspector"}));
     REQUIRE(loaded.has_value());
@@ -134,10 +134,10 @@ TEST_CASE("Unknown panels are dropped and bad files rejected", "[ui][dock]")
     CHECK(withoutConsole->panels().size() == 3);
 
     CHECK_FALSE(DockLayout::parse("", known({"viewport"})).has_value());
-    CHECK_FALSE(DockLayout::parse("lantern-dock 99 [0|viewport]", known({"viewport"})).has_value());
-    CHECK_FALSE(DockLayout::parse("lantern-dock 1 (h 0.5 [0|viewport]", known({"viewport"})).has_value());
+    CHECK_FALSE(DockLayout::parse("rolo-dock 99 [0|viewport]", known({"viewport"})).has_value());
+    CHECK_FALSE(DockLayout::parse("rolo-dock 1 (h 0.5 [0|viewport]", known({"viewport"})).has_value());
     CHECK_FALSE(DockLayout::parse("garbage", known({"viewport"})).has_value());
-    CHECK_FALSE(DockLayout::parse("lantern-dock 1 [0|other]", known({"viewport"})).has_value());
+    CHECK_FALSE(DockLayout::parse("rolo-dock 1 [0|other]", known({"viewport"})).has_value());
 }
 
 TEST_CASE("A closed panel reopens next to its old neighbour", "[ui][dock]")

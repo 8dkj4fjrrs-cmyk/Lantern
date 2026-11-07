@@ -1,22 +1,22 @@
-# Getting started with Lantern
+# Getting started with Rolo
 
 This guide goes from nothing to a small game you can send to a friend, in
-about half an hour. No programming is needed. Lantern is an **alpha**: read
+about half an hour. No programming is needed. Rolo is an **alpha**: read
 the [known limitations](known-limitations.md) first.
 
-## 1. Get Lantern
+## 1. Get Rolo
 
 - **A download** (when releases are published): unzip
-  `Lantern-<version>-<system>.zip` anywhere and run `lantern_editor` (on
-  macOS, `lantern_editor.app`; the first time, right-click it and choose
+  `Rolo-<version>-<system>.zip` anywhere and run `rolo_editor` (on
+  macOS, `rolo_editor.app`; the first time, right-click it and choose
   **Open**, because the alpha is not signed by Apple).
 - **From source**: follow [building](building.md), then run
-  `build/dev/bin/lantern_editor/lantern_editor` (on macOS,
-  `build/dev/bin/lantern_editor/lantern_editor.app`).
+  `build/dev/bin/rolo_editor/rolo_editor` (on macOS,
+  `build/dev/bin/rolo_editor/rolo_editor.app`).
 
 ## 2. Make a project
 
-The first time, the editor shows **Welcome to Lantern**. Click **New
+The first time, the editor shows **Welcome to Rolo**. Click **New
 Project…** (later: **File > New Project…**).
 
 - **Start from**: choose **Top-Down Starter**. It is a small game that
@@ -25,7 +25,7 @@ Project…** (later: **File > New Project…**).
   **Example: The Lantern Keeper** is a finished game to study.)
 - **Project name**: e.g. *My First Game*.
 - **Location**: where its folder goes (by default
-  `Documents/Lantern Projects`; **Browse…** to choose another).
+  `Documents/Rolo Projects`; **Browse…** to choose another).
 
 Click **Create Project**. The editor opens the project's first scene. Its
 parts:
@@ -70,7 +70,7 @@ Every change can be undone (⌘Z / Ctrl+Z). Save the scene with ⌘S / Ctrl+S.
 Click **Build** in the toolbar (or **File > Export Game…**). Choose the
 game's name and a folder, then **Export**.
 
-Lantern checks the project, then makes a folder holding the game's program,
+Rolo checks the project, then makes a folder holding the game's program,
 its files, and the license texts that must go with it. Zip that folder and
 send it: your friend runs the program inside, with no editor needed. Each
 export runs on the kind of computer it was made on (macOS, Windows or
@@ -85,5 +85,5 @@ Linux); see [exporting](exporting.md).
   needed. The starter's fireflies (`scripts/firefly.lua`) are a first
   example to change.
 - [Gameplay guide](gameplay.md): triggers, quests and saving without code,
-  and C++ behaviours if you build Lantern from source.
-- [File formats](formats/scene.md): what Lantern writes, for version control.
+  and C++ behaviours if you build Rolo from source.
+- [File formats](formats/scene.md): what Rolo writes, for version control.

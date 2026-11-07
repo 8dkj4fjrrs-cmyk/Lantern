@@ -2,7 +2,7 @@
 
 // A tiny settings store saved as a readable text file of "key = value" lines.
 //
-//     # Lantern Editor preferences
+//     # Rolo Editor preferences
 //     format = 1
 //     panel.console = true
 //     window.width = 1600
@@ -10,8 +10,8 @@
 // Used for the editor's own preferences (panel visibility, window size).
 // Unknown keys are kept, so newer and older editor versions can share a file.
 
-#include "lantern/core/Engine.hpp" // lantern::Status
-#include "lantern/core/Files.hpp"
+#include "rolo/core/Engine.hpp" // rolo::Status
+#include "rolo/core/Files.hpp"
 
 #include <filesystem>
 #include <map>
@@ -19,7 +19,7 @@
 #include <string>
 #include <string_view>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 class Preferences {
 public:
@@ -62,7 +62,7 @@ private:
 };
 
 // The file helpers moved to the engine core; editor code keeps using them by these names.
-using lantern::readTextFile;
-using lantern::writeTextFileAtomically;
+using rolo::readTextFile;
+using rolo::writeTextFileAtomically;
 
-} // namespace lantern::editor
+} // namespace rolo::editor

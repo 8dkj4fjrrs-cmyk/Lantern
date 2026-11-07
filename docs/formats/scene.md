@@ -1,8 +1,8 @@
-# Lantern file formats: projects, scenes and assets
+# Rolo file formats: projects, scenes and assets
 
-Lantern saves projects and scenes as UTF-8 JSON text. The files are meant to
+Rolo saves projects and scenes as UTF-8 JSON text. The files are meant to
 be readable, to diff cleanly in version control, and to keep working when
-Lantern changes. This page describes format **version 1** of each.
+Rolo changes. This page describes format **version 1** of each.
 
 Code: `engine/scene` (`SceneFile.hpp`, `Project.hpp`). Design reasons:
 [ADR 0005](../adr/0005-scenes-and-serialization.md).
@@ -13,17 +13,17 @@ A project is a folder:
 
 ```
 My Game/
-  project.lantern      project settings
+  project.rolo      project settings
   scenes/
     main.lscene        one file per scene
   assets/              images, tilesets, animations, sounds, fonts (each with a .meta file)
 ```
 
-`project.lantern`:
+`project.rolo`:
 
 ```json
 {
-  "format": "lantern.project",
+  "format": "rolo.project",
   "version": 1,
   "name": "My Game",
   "startScene": "scenes/main.lscene"
@@ -32,7 +32,7 @@ My Game/
 
 | Key | Meaning |
 |---|---|
-| `format` | Always `"lantern.project"`. |
+| `format` | Always `"rolo.project"`. |
 | `version` | Format version (an integer). |
 | `name` | The game's name. |
 | `startScene` | The scene the player opens first. |
@@ -46,16 +46,16 @@ therefore be moved, zipped, shared or put in git.
 
 ```json
 {
-  "format": "lantern.scene",
+  "format": "rolo.scene",
   "version": 1,
   "name": "Main",
   "entities": [
     {
       "id": "43e4ca317c1f4e40",
-      "name": "Lantern",
+      "name": "Rolo",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [640, 360], "rotation": 0, "scale": [1, 1] }
+        { "type": "rolo.Transform", "position": [640, 360], "rotation": 0, "scale": [1, 1] }
       ]
     },
     {
@@ -64,8 +64,8 @@ therefore be moved, zipped, shared or put in git.
       "name": "Flame",
       "active": true,
       "components": [
-        { "type": "lantern.Transform", "position": [0, -8], "rotation": 0, "scale": [1, 1] },
-        { "type": "lantern.Shape", "kind": "ellipse", "size": [44, 44], "color": "#ffb84dff",
+        { "type": "rolo.Transform", "position": [0, -8], "rotation": 0, "scale": [1, 1] },
+        { "type": "rolo.Shape", "kind": "ellipse", "size": [44, 44], "color": "#ffb84dff",
           "filled": true, "lineWidth": 2 }
       ]
     }
@@ -81,7 +81,7 @@ therefore be moved, zipped, shared or put in git.
 | `parent` | ID of the parent entity. Missing for top-level entities. |
 | `name` | Any text; names do not have to be unique. |
 | `active` | `false` hides the entity and everything inside it. Optional, default `true`. |
-| `components` | The entity's components (below). Every entity has a `lantern.Transform`. |
+| `components` | The entity's components (below). Every entity has a `rolo.Transform`. |
 
 Entities are listed **parents before children**, and siblings in their order.
 That order is also the drawing order: later siblings are drawn on top, and
@@ -96,7 +96,7 @@ normal size.
 
 ### Components (version 1)
 
-**`lantern.Transform`**: where the entity is. Every entity has exactly one.
+**`rolo.Transform`**: where the entity is. Every entity has exactly one.
 
 | Key | Type | Default |
 |---|---|---|
@@ -104,7 +104,7 @@ normal size.
 | `rotation` | number, degrees clockwise | `0` |
 | `scale` | `[x, y]` | `[1, 1]` |
 
-**`lantern.Shape`**: a rectangle or ellipse centred on the entity.
+**`rolo.Shape`**: a rectangle or ellipse centred on the entity.
 
 | Key | Type | Default |
 |---|---|---|
@@ -114,7 +114,7 @@ normal size.
 | `filled` | `true` / `false` | `true` |
 | `lineWidth` | outline thickness when not filled | `2` |
 
-**`lantern.Sprite`**: an image centred on the entity, stretched to `size`.
+**`rolo.Sprite`**: an image centred on the entity, stretched to `size`.
 
 | Key | Type | Default |
 |---|---|---|
@@ -123,7 +123,7 @@ normal size.
 | `color` | tint, `"#rrggbbaa"` (white = the image's own colours) | `"#ffffffff"` |
 | `flipX`, `flipY` | mirror the image | `false` |
 
-**`lantern.Animator`**: plays a flipbook clip from an animation set (below)
+**`rolo.Animator`**: plays a flipbook clip from an animation set (below)
 on the entity's Sprite: the frames replace the Sprite's image, and the Sprite
 still decides the size, colour and flipping. Without a Sprite, frames are
 drawn at their size in pixels. Gameplay code switches clips
@@ -136,14 +136,14 @@ drawn at their size in pixels. Gameplay code switches clips
 | `speed` | 0 to 20; 2 plays twice as fast | `1` |
 | `playing` | `false` shows the clip's first frame | `true` |
 
-**`lantern.Camera`**: what the player sees. The first active Camera (in
+**`rolo.Camera`**: what the player sees. The first active Camera (in
 hierarchy order) centres the game view on its entity's position.
 
 | Key | Type | Default |
 |---|---|---|
 | `zoom` | 0.05 to 20; 2 shows everything twice as large | `1` |
 
-**`lantern.Tilemap`**: tiles from a tileset in layers, plus painted collision.
+**`rolo.Tilemap`**: tiles from a tileset in layers, plus painted collision.
 Cell (0, 0) has its bottom-left corner at the entity's position; x counts to
 the right, y upwards.
 
@@ -172,7 +172,7 @@ the map is one line of the file and a small change gives a small diff.
 (blocks movement) and 0 (gap). A cell blocks movement if it is painted
 solid, or if a visible layer has a tile there that the tileset marks solid.
 
-**`lantern.Collider`**: a box for collision, centred on the entity (moved
+**`rolo.Collider`**: a box for collision, centred on the entity (moved
 by `offset`), in the entity's own coordinates (so scaled with it). Used by
 gameplay code ([gameplay guide](../gameplay.md)).
 
@@ -182,7 +182,7 @@ gameplay code ([gameplay guide](../gameplay.md)).
 | `offset` | `[x, y]` from the entity's centre | `[0, 0]` |
 | `solid` | `true`: blocks movement; `false`: an area gameplay notices (a door, a pick-up) | `true` |
 
-**`lantern.Text`**: text in the world, or on screen as a child of the Camera.
+**`rolo.Text`**: text in the world, or on screen as a child of the Camera.
 The entity's position is the top of the text (its left end, middle or right
 end, by `align`).
 
@@ -190,16 +190,16 @@ end, by `align`).
 |---|---|---|
 | `text` | the words; `{variable}` shows a game variable while playing | `"Text"` |
 | `source` | `"text"`, `"dialogueSpeaker"`, `"dialogueLine"`, `"dialogueChoices"`, `"interactionPrompt"`, `"questLog"` | `"text"` |
-| `font` | a font asset's ID, or `null` for Lantern's built-in font | `null` |
+| `font` | a font asset's ID, or `null` for Rolo's built-in font | `null` |
 | `size` | points, 4 to 512 | `16` |
 | `color` | `"#rrggbbaa"` | `"#ffffffff"` |
 | `align` | `"left"`, `"center"`, `"right"` | `"left"` |
 | `width` | wrap long lines at this width in points (0: no wrapping) | `0` |
 
-**`lantern.Interactor`**: marks the player. `key`: `"E"`, `"Space"`, `"Enter"`
+**`rolo.Interactor`**: marks the player. `key`: `"E"`, `"Space"`, `"Enter"`
 or `"Z"` (default `"E"`).
 
-**`lantern.Trigger`**: runs actions when something happens (see the
+**`rolo.Trigger`**: runs actions when something happens (see the
 [gameplay guide](../gameplay.md#story-content-dialogue-quests-and-triggers-without-code)).
 
 | Key | Type | Default |
@@ -211,19 +211,19 @@ or `"Z"` (default `"E"`).
 | `once` | run once per playthrough | `false` |
 | `data` | `{ "condition": <condition or null>, "actions": [<actions>] }` ([conditions and actions](content.md#conditions)) | no condition, no actions |
 
-**`lantern.DialogueView`**: shown only during dialogues. `marker`: written
+**`rolo.DialogueView`**: shown only during dialogues. `marker`: written
 before the selected choice (default `"> "`).
 
-**`lantern.TopDownController`**, **`lantern.SceneDoor`**, **`lantern.CameraBounds`**:
-Lantern's built-in behaviours (added in 0.8; see the
+**`rolo.TopDownController`**, **`rolo.SceneDoor`**, **`rolo.CameraBounds`**:
+Rolo's built-in behaviours (added in 0.8; see the
 [gameplay guide](../gameplay.md#built-in-behaviours-games-without-c)).
 
 | Type | Key | Type | Default |
 |---|---|---|---|
-| `lantern.TopDownController` | `speed` | points per second, not negative | `150` |
-| `lantern.SceneDoor` | `scene` | a scene asset's ID, or `null` | `null` |
+| `rolo.TopDownController` | `speed` | points per second, not negative | `150` |
+| `rolo.SceneDoor` | `scene` | a scene asset's ID, or `null` | `null` |
 | | `arriveAt` | the name of an object in that scene (empty: where the scene puts the player) | `""` |
-| `lantern.CameraBounds` | `min`, `max` | `[x, y]` corners of the area the view stays in, world points | `[0, 0]`, `[1920, 1080]` |
+| `rolo.CameraBounds` | `min`, `max` | `[x, y]` corners of the area the view stays in, world points | `[0, 0]`, `[1920, 1080]` |
 | | `view` | `[width, height]` of the game's view, points | `[1280, 720]` |
 
 **Behaviours** (gameplay code from a game module) are stored like any other
@@ -243,7 +243,7 @@ beside it holding its permanent ID:
 
 ```
 assets/hero.png
-assets/hero.png.meta    {"format": "lantern.asset", "version": 1,
+assets/hero.png.meta    {"format": "rolo.asset", "version": 1,
                          "id": "8c1f02e94b7d3a60", "type": "image",
                          "filter": "pixel"}
 ```
@@ -261,7 +261,7 @@ as missing). A copied file *and* `.meta` is noticed and the copy gets a new
 ID. Supported files: PNG and JPEG images, `.ltileset` tilesets, `.lanim` animation sets, `.lua` scripts, WAV, OGG and
 MP3 sounds, TTF and OTF fonts, and `.lscene` scenes (scenes have IDs so that
 gameplay can refer to them, e.g. a door leading to another scene; the
-project's `startScene` stays a path). Files written by Lantern 0.4 have no
+project's `startScene` stays a path). Files written by Rolo 0.4 have no
 `"scene"` type; they simply gain `.meta` files for their scenes when opened
 with 0.5.
 
@@ -269,7 +269,7 @@ with 0.5.
 
 ```json
 {
-  "format": "lantern.tileset",
+  "format": "rolo.tileset",
   "version": 1,
   "image": "8c1f02e94b7d3a60",
   "tileSize": [16, 16],
@@ -287,11 +287,11 @@ that block movement wherever they are painted.
 ## Animation sets (`.lanim`)
 
 A sprite sheet cut into equal frames (like a tileset), and named clips that
-show some of those frames one after another. Added in Lantern 0.6.5.
+show some of those frames one after another. Added in Rolo 0.6.5.
 
 ```json
 {
-  "format": "lantern.animations",
+  "format": "rolo.animations",
   "version": 1,
   "image": "5a4d1e0000000007",
   "frameSize": [16, 24],
@@ -316,7 +316,7 @@ A clip with no frames is allowed (it shows nothing until frames are added).
 Frame numbers past the end of the sheet are not an error in the file (the
 sheet may be changed later); they are drawn as the sheet's first frame.
 
-## How Lantern reads files
+## How Rolo reads files
 
 Loading is forgiving when that is safe, and strict when guessing would lose
 or scramble data.
@@ -325,18 +325,18 @@ or scramble data.
 |---|---|
 | A property or field that is not known | Skipped, with a warning. |
 | A value of the wrong type or out of range | Replaced by the default (or clamped), with a warning. |
-| A component type that is not known (from a newer Lantern, or a game module that is not loaded) | **Kept unchanged** and written back on save, with a warning. Nothing is lost. |
+| A component type that is not known (from a newer Rolo, or a game module that is not loaded) | **Kept unchanged** and written back on save, with a warning. Nothing is lost. |
 | An entity without a Transform | Gets the default Transform (position 0, 0). |
 | A missing, malformed or duplicate `id` | **Error**: the file is not loaded. |
 | A `parent` that is not an entity listed earlier in the file | **Error**. (Requiring parents first also makes loops impossible.) |
-| `version` newer than this Lantern understands | **Error** asking you to update Lantern. |
-| Not JSON, or `format` is not `lantern.scene` | **Error**. |
+| `version` newer than this Rolo understands | **Error** asking you to update Rolo. |
+| Not JSON, or `format` is not `rolo.scene` | **Error**. |
 
 Every warning and error says where the problem is (entity name and ID,
 component, property) and, where possible, what to do. The editor shows them
 in the Console; the player prints them.
 
-## How Lantern writes files
+## How Rolo writes files
 
 - Keys always appear in the same order, numbers are written as short as
   possible, short lists stay on one line: saving an unchanged scene gives an
@@ -349,7 +349,7 @@ in the Console; the player prints them.
 ## Versions and migration
 
 Each file states its format version. When a format changes, its version
-number goes up, and Lantern gets an *upgrade step* that turns a version N
+number goes up, and Rolo gets an *upgrade step* that turns a version N
 document into version N + 1 (`kUpgrades` in `SceneFile.cpp`). Older files are
 upgraded step by step when they are read, and saved in the newest version.
-Files from a **newer** Lantern are refused rather than half-read.
+Files from a **newer** Rolo are refused rather than half-read.

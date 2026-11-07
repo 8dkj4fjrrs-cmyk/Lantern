@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -67,7 +67,7 @@ int Preferences::parse(std::string_view text)
 
 std::string Preferences::serialize() const
 {
-    std::string out = "# Lantern Editor preferences. Safe to delete: defaults are restored.\n";
+    std::string out = "# Rolo Editor preferences. Safe to delete: defaults are restored.\n";
     out += "format = " + std::to_string(kFormatVersion) + "\n";
     for (const auto& [key, value] : m_values) {
         if (key == "format") {
@@ -166,4 +166,4 @@ void Preferences::setInt(std::string_view key, int value)
     setString(key, std::to_string(value));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

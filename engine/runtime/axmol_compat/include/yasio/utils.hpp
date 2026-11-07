@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for the clock helpers Axmol's core takes from yasio.
-// Written from scratch for Lantern; it contains no yasio code (see ../../README.md).
+// Rolo's replacement for the clock helpers Axmol's core takes from yasio.
+// Written from scratch for Rolo; it contains no yasio code (see ../../README.md).
 #pragma once
 
 #include <algorithm>

@@ -1,6 +1,6 @@
 #include "SceneDocument.hpp"
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 SceneDocument::SceneDocument(Scene scene, std::filesystem::path path)
     : m_scene(std::make_shared<Scene>(std::move(scene)))
@@ -61,4 +61,4 @@ Status SceneDocument::saveAs(const std::filesystem::path& path)
     return Status::success();
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

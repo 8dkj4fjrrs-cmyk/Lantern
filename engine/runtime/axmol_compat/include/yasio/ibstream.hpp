@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Lantern's replacement for yasio's binary readers, used by Axmol's UserDefault
-// (settings file) and Metal shader loader. Written from scratch for Lantern; it
+// Rolo's replacement for yasio's binary readers, used by Axmol's UserDefault
+// (settings file) and Metal shader loader. Written from scratch for Rolo; it
 // contains no yasio code (see ../../README.md).
 //
 // Two flavours read the same layout with different byte orders:

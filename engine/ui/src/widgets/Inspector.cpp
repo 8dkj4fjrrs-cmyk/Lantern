@@ -1,12 +1,12 @@
-#include "lantern/ui/widgets/Inspector.hpp"
+#include "rolo/ui/widgets/Inspector.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 namespace {
 
@@ -362,4 +362,4 @@ void EmptyState::paint(Context& ctx, DrawList& draw)
     draw.popClip();
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

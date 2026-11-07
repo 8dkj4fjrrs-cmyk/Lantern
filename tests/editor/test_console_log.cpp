@@ -5,10 +5,10 @@
 #include <thread>
 #include <vector>
 
-using lantern::LogLevel;
-using lantern::LogMessage;
-using lantern::editor::ConsoleFilter;
-using lantern::editor::ConsoleLog;
+using rolo::LogLevel;
+using rolo::LogMessage;
+using rolo::editor::ConsoleFilter;
+using rolo::editor::ConsoleLog;
 
 namespace {
 LogMessage msg(LogLevel level, const char* category, const char* text)
@@ -99,7 +99,7 @@ TEST_CASE("Copy text has one line per visible message", "[editor][console]")
 TEST_CASE("The log sink feeds a Logger into the console", "[editor][console]")
 {
     ConsoleLog console;
-    lantern::Logger logger;
+    rolo::Logger logger;
     const auto id = logger.addSink(console.makeSink());
     logger.warning("test", "through the logger");
     logger.removeSink(id);

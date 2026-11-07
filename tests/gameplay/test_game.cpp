@@ -1,13 +1,13 @@
-#include "lantern/gameplay/Behaviour.hpp"
-#include "lantern/gameplay/Game.hpp"
-#include "lantern/gameplay/GameModule.hpp"
+#include "rolo/gameplay/Behaviour.hpp"
+#include "rolo/gameplay/Game.hpp"
+#include "rolo/gameplay/GameModule.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <stdexcept>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -243,7 +243,7 @@ TEST_CASE("Moving a child converts world movement into its parent's space", "[ga
     Captured c;
     Scene scene;
     const EntityId parent = scene.create("Parent")->id();
-    scene.setProperty(parent, "lantern.Transform", "scale", Vec2{2, 2});
+    scene.setProperty(parent, "rolo.Transform", "scale", Vec2{2, 2});
     const EntityId child = scene.create("Child", parent)->id();
     Game game(c.log, nullptr);
     game.start(scene);
@@ -264,5 +264,5 @@ TEST_CASE("Game modules register their behaviours", "[gameplay][module]")
     CHECK(registry.find("test.Walker") != nullptr);
     REQUIRE(c.errors.size() == 1);
     CHECK(c.errors[0].find("Game module 'test_game' could not add 'test.Walker'") != std::string::npos);
-    CHECK(registry.find("lantern.Collider") != nullptr);
+    CHECK(registry.find("rolo.Collider") != nullptr);
 }

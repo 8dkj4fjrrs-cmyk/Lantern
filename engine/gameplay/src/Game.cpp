@@ -1,16 +1,16 @@
-#include "lantern/gameplay/Game.hpp"
+#include "rolo/gameplay/Game.hpp"
 
-#include "lantern/assets/Animation.hpp"
+#include "rolo/assets/Animation.hpp"
 
-#include "lantern/gameplay/Behaviour.hpp"
-#include "lantern/gameplay/Components.hpp"
+#include "rolo/gameplay/Behaviour.hpp"
+#include "rolo/gameplay/Components.hpp"
 
 #include "ScriptHost.hpp"
 
 #include <algorithm>
 #include <exception>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 constexpr std::string_view kCategory = "game";
@@ -606,7 +606,7 @@ void Game::load(std::string_view slot)
 
 std::optional<Box> Game::colliderBox(EntityId id) const
 {
-    return m_scene != nullptr ? lantern::colliderBox(*m_scene, id) : std::nullopt;
+    return m_scene != nullptr ? rolo::colliderBox(*m_scene, id) : std::nullopt;
 }
 
 std::vector<EntityId> Game::overlapping(EntityId id) const
@@ -622,7 +622,7 @@ std::vector<EntityId> Game::overlapping(const Box& box, EntityId ignore) const
 
 bool Game::isBlocked(const Box& box, EntityId ignore) const
 {
-    return m_scene != nullptr && lantern::isBlocked(*m_scene, m_setup.assets, box, ignore);
+    return m_scene != nullptr && rolo::isBlocked(*m_scene, m_setup.assets, box, ignore);
 }
 
 MoveResult Game::move(EntityId id, Vec2 delta)
@@ -709,4 +709,4 @@ bool Game::isAnimationFinished(EntityId id) const
     return clip != nullptr && clip->finishedAt(animatorTime(*animator, m_time));
 }
 
-} // namespace lantern
+} // namespace rolo

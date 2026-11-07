@@ -1,12 +1,12 @@
-// Lantern runtime application — Axmol implementation.
+// Rolo runtime application — Axmol implementation.
 //
 // How the pieces fit together:
 //
-//   lantern::Application::run()
+//   rolo::Application::run()
 //     └─ creates BackendApp (an ax::Application) and calls its run()
 //          └─ Axmol calls BackendApp::applicationDidFinishLaunching()
 //               └─ Impl::startWindow(): window, diagnostics, the world
-//                  (a SceneRenderer drawing a lantern::Scene),
+//                  (a SceneRenderer drawing a rolo::Scene),
 //                  the optional UI layer (UiHost), the per-frame callback
 //          └─ Axmol's main loop, every frame:
 //               update → Impl::onFrame(): game callback, then the UI is
@@ -18,7 +18,7 @@
 //
 // Axmol types never appear outside this folder.
 
-#include "lantern/runtime/Application.hpp"
+#include "rolo/runtime/Application.hpp"
 
 #include "AxmolLogBridge.hpp"
 #include "SceneRenderer.hpp"
@@ -35,7 +35,7 @@
 #include <string>
 #include <utility>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -89,8 +89,8 @@ ax::Mat4 viewTransform(Vec2 center, float scale, float width, float height)
     return m;
 }
 
-// Axmol's key codes as Lantern keys (game code never sees Axmol's).
-Key toLanternKey(ax::EventKeyboard::KeyCode code)
+// Axmol's key codes as Rolo keys (game code never sees Axmol's).
+Key toRoloKey(ax::EventKeyboard::KeyCode code)
 {
     using K = ax::EventKeyboard::KeyCode;
     const int c = static_cast<int>(code);
@@ -129,7 +129,7 @@ Key toLanternKey(ax::EventKeyboard::KeyCode code)
     }
 }
 
-std::optional<MouseButton> toLanternButton(ax::EventMouse::MouseButton button)
+std::optional<MouseButton> toRoloButton(ax::EventMouse::MouseButton button)
 {
     switch (button) {
     case ax::EventMouse::MouseButton::BUTTON_LEFT: return MouseButton::Left;
@@ -222,7 +222,7 @@ namespace {
 // simply forwards the interesting moments to Application::Impl.
 class BackendApp final : public ax::Application {
 public:
-    explicit BackendApp(lantern::Application::Impl& impl)
+    explicit BackendApp(rolo::Application::Impl& impl)
         : m_impl(impl)
     {
     }
@@ -247,7 +247,7 @@ public:
     void applicationWillEnterForeground() override { ax::Director::getInstance()->startAnimation(); }
 
 private:
-    lantern::Application::Impl& m_impl;
+    rolo::Application::Impl& m_impl;
 };
 
 } // namespace
@@ -279,7 +279,7 @@ bool Application::Impl::startWindow()
 
     auto* scene = ax::Scene::create();
     scene->setName("Root");
-    // The world: an empty node the Lantern scene is drawn under.
+    // The world: an empty node the Rolo scene is drawn under.
     world = ax::Node::create();
     world->setName("World");
     world->setContentSize(ax::Size(worldW, worldH));
@@ -347,7 +347,7 @@ bool Application::Impl::startWindow()
                                                            [this](ax::EventCustom*) { releaseBackendObjects(); });
 
     // Run onFrame() every frame (interval 0) for as long as the loop lives.
-    director->getScheduler()->schedule([this](float dt) { onFrame(dt); }, this, 0.0f, false, "lantern.frame");
+    director->getScheduler()->schedule([this](float dt) { onFrame(dt); }, this, 0.0f, false, "rolo.frame");
     return true;
 }
 
@@ -429,9 +429,9 @@ void Application::Impl::listenForGameInput(ax::Scene& scene)
 {
     auto* dispatcher = ax::Director::getInstance()->getEventDispatcher();
     auto* keyboard = ax::EventListenerKeyboard::create();
-    keyboard->onKeyPressed = [this](ax::EventKeyboard::KeyCode code, ax::Event*) { gameInput->press(toLanternKey(code)); };
+    keyboard->onKeyPressed = [this](ax::EventKeyboard::KeyCode code, ax::Event*) { gameInput->press(toRoloKey(code)); };
     keyboard->onKeyReleased = [this](ax::EventKeyboard::KeyCode code, ax::Event*) {
-        gameInput->release(toLanternKey(code));
+        gameInput->release(toRoloKey(code));
     };
     dispatcher->addEventListenerWithSceneGraphPriority(keyboard, &scene);
 
@@ -452,14 +452,14 @@ void Application::Impl::listenForGameInput(ax::Scene& scene)
     };
     mouse->onMouseDown = [this, track](ax::EventMouse* event) {
         track(event);
-        if (const auto button = toLanternButton(event->getMouseButton())) {
+        if (const auto button = toRoloButton(event->getMouseButton())) {
             gameInput->press(*button);
         }
         return false;
     };
     mouse->onMouseUp = [this, track](ax::EventMouse* event) {
         track(event);
-        if (const auto button = toLanternButton(event->getMouseButton())) {
+        if (const auto button = toRoloButton(event->getMouseButton())) {
             gameInput->release(*button);
         }
         return false;
@@ -476,7 +476,7 @@ void Application::Impl::startUi(ax::Scene& scene, ax::RenderView& view)
     UiFrame::Access access{*this};
     UiFrame frame(access);
     presentation.uiSetup(frame);
-    log().info(kCategory, "UI layer: Lantern UI");
+    log().info(kCategory, "UI layer: Rolo UI");
 }
 
 void Application::Impl::logDiagnostics(ax::RenderView& view)
@@ -797,7 +797,7 @@ Status Application::run(const RunOptions& options)
         return Status::failure("A screenshot needs a frame limit (RunOptions::maxFrames > 0).");
     }
     if (g_backendInUse.exchange(true)) {
-        return Status::failure("Only one Lantern Application can run at a time in a process.");
+        return Status::failure("Only one Rolo Application can run at a time in a process.");
     }
 
     impl.hasRun = true;
@@ -841,4 +841,4 @@ Status Application::run(const RunOptions& options)
     return Status::success();
 }
 
-} // namespace lantern
+} // namespace rolo

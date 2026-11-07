@@ -1,11 +1,25 @@
 # Changelog
 
-All notable changes to Lantern Engine. Versions follow the milestones in
+All notable changes to Rolo Engine. Versions follow the milestones in
 [docs/roadmap.md](docs/roadmap.md); design reasons are in [docs/adr](docs/adr).
 
-## 0.9.1-alpha — Lantern opens on downloaded Macs
+## Unreleased
 
-- **macOS called the downloaded Lantern "damaged"** and would not open it:
+- **Lantern Engine is now Rolo Engine**, with a new logo: Rolo, a smiling
+  orange on a red tile ([ADR 0014](docs/adr/0014-rename-to-rolo.md)).
+  - Programs, the package and the C++ namespace are renamed (`rolo_editor`,
+    `rolo::`, `#include "rolo/…"`, `ROLO_GAME_MODULE`).
+  - New projects open on Rolo's face, drawn with shapes.
+  - **Projects made with Lantern keep opening.** Their `project.lantern`
+    file and `lantern.` names are read, and saving writes `project.rolo`
+    and `rolo.` names.
+  - Game modules written for Lantern need their includes, namespace and
+    module macro renamed. Lua scripts need no changes.
+  - The demo game keeps its name: *The Lantern Keeper*.
+
+## 0.9.1-alpha — Rolo opens on downloaded Macs
+
+- **macOS called the downloaded Rolo "damaged"** and would not open it:
   its app bundles had no valid signature, which Apple silicon Macs require
   for downloaded apps.
   - The package, and every game exported on a Mac, is now signed "ad hoc".
@@ -16,7 +30,7 @@ All notable changes to Lantern Engine. Versions follow the milestones in
 ## 0.9.0-alpha — Lua scripting, and verified on macOS and Windows
 
 - **Lua scripting.** Gameplay code without a compiler: write a `.lua` file,
-  add a **Script** component, press Play. A downloaded Lantern runs scripts,
+  add a **Script** component, press Play. A downloaded Rolo runs scripts,
   and exported games carry them.
   - Scripts get `start(self)` and `update(self, dt)`, and can use:
     - objects: move with collisions, animate, destroy, set text...;
@@ -48,10 +62,10 @@ All notable changes to Lantern Engine. Versions follow the milestones in
     its programs (and exported games) would not have started. The release
     now checks every packaged program's DLLs
     (`tools/release/check_windows_dlls.py`).
-- **No more yasio, curl, llhttp or websocket-parser in games.** Lantern now
-  builds Axmol without its network module and remote console, which Lantern
+- **No more yasio, curl, llhttp or websocket-parser in games.** Rolo now
+  builds Axmol without its network module and remote console, which Rolo
   never used. The few yasio containers and helpers that Axmol's core still
-  needs are replaced by Lantern's own code (`engine/runtime/axmol_compat`).
+  needs are replaced by Rolo's own code (`engine/runtime/axmol_compat`).
   Exported games no longer carry yasio's non-standard "Anti 996" license
   terms. See ADR 0012.
 - Axmol is now patched at configure time from `cmake/axmol-patches/`. An
@@ -68,11 +82,11 @@ The first version meant for people other than its authors. See
   - Top-Down Starter: a small game that plays at once, with no C++;
   - the example game The Lantern Keeper.
 
-  Also `lantern_editor --new-project FOLDER --template topdown`.
+  Also `rolo_editor --new-project FOLDER --template topdown`.
 - **Exporting games**:
   - **Build** (or **File > Export Game…**) checks the project and makes a
     copy of the game that runs without the editor, with the license texts it
-    must carry. Also `lantern_editor --project P --export OUT`.
+    must carry. Also `rolo_editor --project P --export OUT`.
   - The player plays a game bundled beside it when started with no arguments.
 - **Built-in gameplay behaviours**, so games need no C++ to start:
   - Top-Down Controller: walking, with walk and idle clips;
@@ -80,8 +94,8 @@ The first version meant for people other than its authors. See
   - Camera Bounds.
 
   `Game::changeScene(scene, arriveAt)`.
-- **Packaging**: install rules and `lantern_package`, which makes the
-  downloadable Lantern folder and zip. Release preset and workflows.
+- **Packaging**: install rules and `rolo_package`, which makes the
+  downloadable Rolo folder and zip. Release preset and workflows.
 - **Licenses**: `licenses/` holds the full license texts of everything
   inside a game, fetched from each project at the versions used, and every
   export carries it. THIRD_PARTY_NOTICES.md now also lists the header-only
@@ -92,7 +106,7 @@ The first version meant for people other than its authors. See
   - a getting-started guide, an exporting guide and release instructions;
   - clearer messages when a project, a template or the runtime is missing.
 - The editor finds its templates, examples and the game runtime in an
-  installed copy or in a build folder (`LanternResources`).
+  installed copy or in a build folder (`RoloResources`).
 
 ## 0.7.0 — The Lantern Keeper (Milestone 7)
 
@@ -126,5 +140,5 @@ The first version meant for people other than its authors. See
 ## Earlier milestones
 
 - 0.3: scenes and serialization, stable IDs, undo/redo (Milestone 3).
-- 0.2: the editor shell with docking panels, built with Lantern UI (Milestone 2).
+- 0.2: the editor shell with docking panels, built with Rolo UI (Milestone 2).
 - 0.1: the Axmol runtime, the window and start-up (Milestones 0 and 1).

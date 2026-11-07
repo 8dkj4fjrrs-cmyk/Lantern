@@ -1,10 +1,10 @@
-#include "lantern/scene/SceneFile.hpp"
+#include "rolo/scene/SceneFile.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -26,7 +26,7 @@ bool mentions(const SceneLoadResult& r, std::string_view text)
 
 std::string wrap(std::string entities)
 {
-    return R"({"format": "lantern.scene", "version": 1, "name": "T", "entities": [)" + entities + "]}";
+    return R"({"format": "rolo.scene", "version": 1, "name": "T", "entities": [)" + entities + "]}";
 }
 
 } // namespace
@@ -57,7 +57,7 @@ TEST_CASE("Saved numbers are short and readable", "[scene][file]")
 {
     Scene scene("Numbers");
     const EntityId id = scene.create("Box")->id();
-    scene.setProperty(id, "lantern.Transform", "position", Vec2{0.1f, 640.0f});
+    scene.setProperty(id, "rolo.Transform", "position", Vec2{0.1f, 640.0f});
     const std::string text = serializeScene(scene);
     CHECK(text.find("0.1,") != std::string::npos);
     CHECK(text.find("640") != std::string::npos);
@@ -65,22 +65,22 @@ TEST_CASE("Saved numbers are short and readable", "[scene][file]")
     CHECK(text.find("640.0") == std::string::npos);
 }
 
-TEST_CASE("Files from a newer Lantern are refused with advice", "[scene][file]")
+TEST_CASE("Files from a newer Rolo are refused with advice", "[scene][file]")
 {
-    const auto r = parseScene(R"({"format": "lantern.scene", "version": 99, "entities": []})", registry());
+    const auto r = parseScene(R"({"format": "rolo.scene", "version": 99, "entities": []})", registry());
     CHECK_FALSE(r.ok());
-    CHECK(r.firstError().find("newer version of Lantern") != std::string::npos);
+    CHECK(r.firstError().find("newer version of Rolo") != std::string::npos);
 }
 
 TEST_CASE("Broken files give a clear error, never a crash", "[scene][file]")
 {
     CHECK(parseScene("", registry()).firstError().find("not valid JSON") != std::string::npos);
-    CHECK(parseScene("{\"format\": \"lantern.scene\",\n \"version\": 1, }", registry()).firstError().find("line 2")
+    CHECK(parseScene("{\"format\": \"rolo.scene\",\n \"version\": 1, }", registry()).firstError().find("line 2")
           != std::string::npos);
-    CHECK(parseScene(R"({"format": "something.else", "version": 1})", registry()).firstError().find("not a Lantern scene")
+    CHECK(parseScene(R"({"format": "something.else", "version": 1})", registry()).firstError().find("not a Rolo scene")
           != std::string::npos);
-    CHECK_FALSE(parseScene(R"({"format": "lantern.scene", "version": 1})", registry()).ok()); // no entities
-    CHECK_FALSE(parseScene(R"({"format": "lantern.scene", "entities": []})", registry()).ok()); // no version
+    CHECK_FALSE(parseScene(R"({"format": "rolo.scene", "version": 1})", registry()).ok()); // no entities
+    CHECK_FALSE(parseScene(R"({"format": "rolo.scene", "entities": []})", registry()).ok()); // no version
     CHECK_FALSE(parseScene(wrap("42"), registry()).ok());
 }
 
@@ -104,8 +104,8 @@ TEST_CASE("IDs must be present, valid and unique", "[scene][file]")
 TEST_CASE("Bad values fall back to defaults with a warning", "[scene][file]")
 {
     const auto r = parseScene(wrap(R"({"id": "00000000000000aa", "name": "A", "components": [
-        {"type": "lantern.Transform", "position": "here", "rotation": 45, "scale": [1, 1]},
-        {"type": "lantern.Shape", "kind": "triangle", "size": [-10, 5], "color": "#12345678", "wobble": 3}]})"),
+        {"type": "rolo.Transform", "position": "here", "rotation": 45, "scale": [1, 1]},
+        {"type": "rolo.Shape", "kind": "triangle", "size": [-10, 5], "color": "#12345678", "wobble": 3}]})"),
                            registry());
     REQUIRE(r.ok());
     const Entity* e = r.scene->find(*EntityId::parse("00000000000000aa"));
@@ -125,7 +125,7 @@ TEST_CASE("Bad values fall back to defaults with a warning", "[scene][file]")
 TEST_CASE("Unknown component types are kept and saved unchanged", "[scene][file]")
 {
     const std::string text = wrap(R"({"id": "00000000000000aa", "name": "A", "components": [
-        {"type": "lantern.Transform", "position": [1, 2], "rotation": 0, "scale": [1, 1]},
+        {"type": "rolo.Transform", "position": [1, 2], "rotation": 0, "scale": [1, 1]},
         {"type": "mygame.Health", "max": 10, "regen": [1, 2, {"deep": true}]}]})");
     const auto r = parseScene(text, registry());
     REQUIRE(r.ok());
@@ -156,7 +156,7 @@ TEST_CASE("Hierarchy and order come back from the file", "[scene][file]")
 
 TEST_CASE("Scene files are written atomically and read back", "[scene][file]")
 {
-    const auto dir = std::filesystem::temp_directory_path() / "lantern_scene_file_test";
+    const auto dir = std::filesystem::temp_directory_path() / "rolo_scene_file_test";
     std::filesystem::remove_all(dir);
     const auto path = dir / "nested" / "main.lscene";
     REQUIRE(saveSceneFile(path, makeStartScene()));
@@ -175,7 +175,7 @@ TEST_CASE("Validation accepts scenes built through the API", "[scene][file]")
 
 TEST_CASE("The hand-written test card scene loads cleanly", "[scene][file]")
 {
-    const auto r = loadSceneFile(std::filesystem::path(LANTERN_TEST_DATA_DIR) / "test_card.lscene", registry());
+    const auto r = loadSceneFile(std::filesystem::path(ROLO_TEST_DATA_DIR) / "test_card.lscene", registry());
     REQUIRE(r.ok());
     CHECK(r.issues.empty());
     CHECK(r.scene->name() == "Test Card");
@@ -213,7 +213,7 @@ TEST_CASE("Sprites keep their image ID through save and load", "[scene][file][sp
 TEST_CASE("A bad image ID falls back to no image, with a warning", "[scene][file][sprite]")
 {
     const auto r = parseScene(wrap(R"({"id": "0000000000000001", "name": "A", "components": [
-        {"type": "lantern.Sprite", "image": "not-an-id"}]})"),
+        {"type": "rolo.Sprite", "image": "not-an-id"}]})"),
                               registry());
     REQUIRE(r.ok());
     CHECK(mentions(r, "asset ID"));
@@ -224,7 +224,7 @@ TEST_CASE("Sprites can be picked and outlined like shapes", "[scene][sprite]")
 {
     Scene scene("Pick", EntityIdGenerator(3));
     Entity* e = scene.create("Hero");
-    scene.setProperty(e->id(), "lantern.Transform", "position", Vec2{100.0f, 100.0f});
+    scene.setProperty(e->id(), "rolo.Transform", "position", Vec2{100.0f, 100.0f});
     auto sprite = std::make_unique<Sprite>();
     sprite->size = {20.0f, 40.0f};
     scene.addComponent(e->id(), std::move(sprite));

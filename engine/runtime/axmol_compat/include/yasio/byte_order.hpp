@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Oscar Hird
 // SPDX-License-Identifier: MIT
 //
-// Byte-order conversion for Lantern's stream replacements (ibstream.hpp,
+// Byte-order conversion for Rolo's stream replacements (ibstream.hpp,
 // obstream.hpp). Not a yasio header name: only those two include it.
 //
 // "Network order" is big-endian: the most significant byte first. Most

@@ -1,9 +1,9 @@
-#include "lantern/gameplay/Collision.hpp"
+#include "rolo/gameplay/Collision.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -222,4 +222,4 @@ MoveResult sweepBox(const Scene& scene, const AssetDatabase* assets, const Box& 
     return result;
 }
 
-} // namespace lantern
+} // namespace rolo

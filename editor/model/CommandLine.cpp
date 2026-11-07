@@ -3,7 +3,7 @@
 #include <charconv>
 #include <limits>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
 {
@@ -102,12 +102,12 @@ EditorParseResult parseEditorCommandLine(std::span<const std::string_view> args)
 
 std::string editorHelpText()
 {
-    return "Usage: lantern_editor [options]\n"
+    return "Usage: rolo_editor [options]\n"
            "\n"
            "Options:\n"
            "  --help              Show this message\n"
            "  --version           Print version information and exit\n"
-           "  --project FOLDER    Open the Lantern project in FOLDER\n"
+           "  --project FOLDER    Open the Rolo project in FOLDER\n"
            "  --new-project FOLDER  Create a new project in FOLDER and open it\n"
            "  --template NAME     With --new-project: start from a template, e.g. topdown\n"
            "  --export OUTPUT     With --project: export the game into OUTPUT and quit\n"
@@ -120,4 +120,4 @@ std::string editorHelpText()
            "  --screenshot FILE   Save the last frame as a PNG (needs --frames)\n";
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

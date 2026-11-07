@@ -1,8 +1,9 @@
-#include "lantern/assets/AssetDatabase.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/core/Names.hpp"
 
-#include "lantern/core/Files.hpp"
-#include "lantern/scene/Project.hpp"
-#include "lantern/scene/Scene.hpp"
+#include "rolo/core/Files.hpp"
+#include "rolo/scene/Project.hpp"
+#include "rolo/scene/Scene.hpp"
 
 #include <nlohmann/json.hpp>
 // stb_image, compiled into this file only and with every function `static`:
@@ -19,7 +20,7 @@
 #include <cctype>
 #include <fstream>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -79,12 +80,12 @@ std::optional<Meta> parseMeta(std::string_view text, std::string& problem)
         problem = "its .meta file is not valid JSON";
         return std::nullopt;
     }
-    if (!j.is_object() || j.value("format", "") != AssetFormat::kName) {
-        problem = "its .meta file is not a Lantern asset file";
+    if (!j.is_object() || !isFormatName(j.value("format", ""), AssetFormat::kName)) {
+        problem = "its .meta file is not a Rolo asset file";
         return std::nullopt;
     }
     if (j.contains("version") && j["version"].is_number_integer() && j["version"].get<int>() > AssetFormat::kVersion) {
-        problem = "its .meta file was written by a newer version of Lantern";
+        problem = "its .meta file was written by a newer version of Rolo";
         return std::nullopt;
     }
     Meta meta;
@@ -174,7 +175,7 @@ std::optional<AssetType> assetTypeForPath(const fs::path& path)
     if (ext == SceneFormat::kExtension) {
         return AssetType::Scene;
     }
-    // RPG content (read and checked by lantern_content's ContentLibrary).
+    // RPG content (read and checked by rolo_content's ContentLibrary).
     if (ext == ".lvars") {
         return AssetType::Variables;
     }
@@ -813,4 +814,4 @@ std::vector<FileIssue> checkAssetReferences(const Scene& scene, const AssetDatab
     return issues;
 }
 
-} // namespace lantern
+} // namespace rolo

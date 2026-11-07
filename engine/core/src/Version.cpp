@@ -1,6 +1,6 @@
-#include "lantern/core/Version.hpp"
+#include "rolo/core/Version.hpp"
 
-namespace lantern {
+namespace rolo {
 
 std::string_view versionString() noexcept
 {
@@ -12,4 +12,4 @@ std::string_view runtimeBackendName() noexcept
     return kRuntimeBackend;
 }
 
-} // namespace lantern
+} // namespace rolo

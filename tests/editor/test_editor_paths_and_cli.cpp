@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-using namespace lantern::editor;
+using namespace rolo::editor;
 
 namespace {
 
@@ -33,17 +33,17 @@ TEST_CASE("Settings folder follows each operating system's convention", "[editor
 {
     const auto env = fakeEnvironment({{"HOME", "/Users/oscar"}, {"APPDATA", "C:/Users/oscar/AppData/Roaming"}});
     CHECK(userConfigDirectory(HostOs::MacOS, env)
-          == std::filesystem::path("/Users/oscar/Library/Application Support/Lantern Engine/Editor"));
+          == std::filesystem::path("/Users/oscar/Library/Application Support/Rolo Engine/Editor"));
     CHECK(userConfigDirectory(HostOs::Windows, env)
-          == std::filesystem::path("C:/Users/oscar/AppData/Roaming") / "Lantern Engine" / "Editor");
+          == std::filesystem::path("C:/Users/oscar/AppData/Roaming") / "Rolo Engine" / "Editor");
     CHECK(userConfigDirectory(HostOs::Linux, env)
-          == std::filesystem::path("/Users/oscar/.config/lantern-engine/editor"));
+          == std::filesystem::path("/Users/oscar/.config/rolo-engine/editor"));
 }
 
 TEST_CASE("Linux respects XDG_CONFIG_HOME", "[editor][paths]")
 {
     const auto env = fakeEnvironment({{"HOME", "/home/oscar"}, {"XDG_CONFIG_HOME", "/data/config"}});
-    CHECK(userConfigDirectory(HostOs::Linux, env) == std::filesystem::path("/data/config/lantern-engine/editor"));
+    CHECK(userConfigDirectory(HostOs::Linux, env) == std::filesystem::path("/data/config/rolo-engine/editor"));
 }
 
 TEST_CASE("No home folder gives an empty path instead of guessing", "[editor][paths]")
@@ -83,13 +83,13 @@ TEST_CASE("Editor command line: project options", "[editor][cli]")
     CHECK_FALSE(parse({"--project"}).ok());
 }
 
-TEST_CASE("New projects are suggested in Documents/Lantern Projects", "[editor][paths]")
+TEST_CASE("New projects are suggested in Documents/Rolo Projects", "[editor][paths]")
 {
     const auto mac = fakeEnvironment({{"HOME", "/Users/oscar"}});
-    CHECK(defaultProjectsDirectory(HostOs::MacOS, mac) == "/Users/oscar/Documents/Lantern Projects");
+    CHECK(defaultProjectsDirectory(HostOs::MacOS, mac) == "/Users/oscar/Documents/Rolo Projects");
     const auto win = fakeEnvironment({{"USERPROFILE", "C:/Users/oscar"}});
     CHECK(defaultProjectsDirectory(HostOs::Windows, win) == std::filesystem::path("C:/Users/oscar") / "Documents"
-                                                                / "Lantern Projects");
+                                                                / "Rolo Projects");
     CHECK(defaultProjectsDirectory(HostOs::Linux, fakeEnvironment({})).empty());
 }
 

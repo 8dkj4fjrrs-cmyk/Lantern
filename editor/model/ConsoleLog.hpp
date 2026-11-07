@@ -6,7 +6,7 @@
 // Plain C++ (no UI toolkit), so it can be unit-tested and would survive a
 // change of UI library.
 
-#include "lantern/core/Log.hpp"
+#include "rolo/core/Log.hpp"
 
 #include <array>
 #include <chrono>
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 struct ConsoleEntry {
     std::uint64_t sequence = 0;    // 1 for the first message ever added
@@ -81,4 +81,4 @@ private:
     std::chrono::steady_clock::time_point m_start = std::chrono::steady_clock::now();
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

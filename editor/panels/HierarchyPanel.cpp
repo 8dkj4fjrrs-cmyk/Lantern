@@ -1,6 +1,6 @@
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 namespace {
 
@@ -139,7 +139,7 @@ void HierarchyPanel::rebuild()
     ui::TreeItem root;
     root.id = kSceneRow;
     root.label = scene.name();
-    root.icon = ui::Icon::Flame;
+    root.icon = ui::Icon::Rolo;
     root.hasChildren = !scene.empty();
     items.push_back(root);
 
@@ -164,4 +164,4 @@ void HierarchyPanel::rebuild()
     m_tree->setItems(std::move(items));
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

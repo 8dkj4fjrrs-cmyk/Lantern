@@ -1,6 +1,6 @@
-#include "lantern/ui/Input.hpp"
+#include "rolo/ui/Input.hpp"
 
-namespace lantern::ui {
+namespace rolo::ui {
 
 std::string primaryShortcutLabel(const Platform& platform, std::string_view key)
 {
@@ -8,4 +8,4 @@ std::string primaryShortcutLabel(const Platform& platform, std::string_view key)
     return platform.macConventions ? "⌘" + std::string(key) : "Ctrl+" + std::string(key);
 }
 
-} // namespace lantern::ui
+} // namespace rolo::ui

@@ -1,7 +1,7 @@
 // The Tilemap component: tiles in layers, painted collision, and how they
 // are saved.
 //
-// Saved form (the "data" of a lantern.Tilemap component), one line per row
+// Saved form (the "data" of a rolo.Tilemap component), one line per row
 // of tiles so that a painted change shows up as a small diff:
 //
 //   "data": {
@@ -18,7 +18,7 @@
 // Each row is [y, first x, then one value per cell]; -1 (or 0 for "solid")
 // marks a gap inside the row.
 
-#include "lantern/scene/Components.hpp"
+#include "rolo/scene/Components.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -26,7 +26,7 @@
 #include <cmath>
 #include <map>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -217,7 +217,7 @@ std::string Tilemap::loadData(std::string_view text)
 const ComponentType& Tilemap::componentType()
 {
     static const ComponentType type =
-        ComponentTypeBuilder<Tilemap>("lantern.Tilemap", "Tilemap")
+        ComponentTypeBuilder<Tilemap>("rolo.Tilemap", "Tilemap")
             .description("A grid of tiles from a tileset, painted in layers, plus collision: cells that block "
                          "movement. Select the tilemap and use the Brush, Eraser and Fill tools in the Scene view; "
                          "pick tiles in the Tile Palette.")
@@ -229,4 +229,4 @@ const ComponentType& Tilemap::componentType()
     return type;
 }
 
-} // namespace lantern
+} // namespace rolo

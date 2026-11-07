@@ -1,11 +1,11 @@
 #include "ContentFixture.hpp"
 
-#include "lantern/content/ContentRunner.hpp"
+#include "rolo/content/ContentRunner.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 TEST_CASE("A save holds the progress and reads back identically", "[content][save]")
 {
@@ -43,7 +43,7 @@ TEST_CASE("Old saves keep working after the game's content changes", "[content][
 {
     const ContentLibrary lib = makeLibrary();
     const auto loaded = parseSave(R"({
-        "format": "lantern.save", "version": 1, "game": "Test",
+        "format": "rolo.save", "version": 1, "game": "Test",
         "scene": "0000000000004001",
         "variables": { "gems": 4, "met_elder": "yes", "old_flag": true },
         "quests": { "0000000000002001": { "state": "active", "objectives": ["collect", "removed_objective"] },
@@ -67,8 +67,8 @@ TEST_CASE("Damaged or foreign save files are refused", "[content][save]")
 {
     const ContentLibrary lib = makeLibrary();
     CHECK_FALSE(parseSave("{oops", lib).ok());
-    CHECK_FALSE(parseSave(R"({"format":"lantern.scene","version":1})", lib).ok());
-    const auto newer = parseSave(R"({"format":"lantern.save","version":2})", lib);
+    CHECK_FALSE(parseSave(R"({"format":"rolo.scene","version":1})", lib).ok());
+    const auto newer = parseSave(R"({"format":"rolo.save","version":2})", lib);
     REQUIRE_FALSE(newer.ok());
     CHECK(newer.issues.front().message == "This save was made by a newer version of the game.");
 }

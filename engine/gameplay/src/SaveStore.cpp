@@ -1,13 +1,13 @@
-#include "lantern/gameplay/SaveStore.hpp"
+#include "rolo/gameplay/SaveStore.hpp"
 
-#include "lantern/content/GameState.hpp"
-#include "lantern/core/Files.hpp"
+#include "rolo/content/GameState.hpp"
+#include "rolo/core/Files.hpp"
 
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 
-namespace lantern {
+namespace rolo {
 
 namespace {
 
@@ -74,7 +74,7 @@ std::optional<std::string> FolderSaveStore::read(std::string_view slot) const
 
 std::filesystem::path FolderSaveStore::userFolder(std::string_view gameName)
 {
-    std::string name(gameName.empty() ? "Lantern Game" : gameName);
+    std::string name(gameName.empty() ? "Rolo Game" : gameName);
     for (char& c : name) {
         if (std::string_view("/\\:*?\"<>|").find(c) != std::string_view::npos) {
             c = '_';
@@ -99,4 +99,4 @@ std::filesystem::path FolderSaveStore::userFolder(std::string_view gameName)
     return {};
 }
 
-} // namespace lantern
+} // namespace rolo

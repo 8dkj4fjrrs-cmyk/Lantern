@@ -4,17 +4,17 @@
 
 #include <vector>
 
-using lantern::LogLevel;
-using lantern::detail::toLanternLevel;
-using lantern::detail::trimTrailingNewlines;
+using rolo::LogLevel;
+using rolo::detail::toRoloLevel;
+using rolo::detail::trimTrailingNewlines;
 
-TEST_CASE("Axmol log levels map onto Lantern levels", "[runtime][log]")
+TEST_CASE("Axmol log levels map onto Rolo levels", "[runtime][log]")
 {
-    CHECK(toLanternLevel(ax::LogLevel::Verbose) == LogLevel::Trace);
-    CHECK(toLanternLevel(ax::LogLevel::Debug) == LogLevel::Debug);
-    CHECK(toLanternLevel(ax::LogLevel::Info) == LogLevel::Info);
-    CHECK(toLanternLevel(ax::LogLevel::Warn) == LogLevel::Warning);
-    CHECK(toLanternLevel(ax::LogLevel::Error) == LogLevel::Error);
+    CHECK(toRoloLevel(ax::LogLevel::Verbose) == LogLevel::Trace);
+    CHECK(toRoloLevel(ax::LogLevel::Debug) == LogLevel::Debug);
+    CHECK(toRoloLevel(ax::LogLevel::Info) == LogLevel::Info);
+    CHECK(toRoloLevel(ax::LogLevel::Warn) == LogLevel::Warning);
+    CHECK(toRoloLevel(ax::LogLevel::Error) == LogLevel::Error);
 }
 
 TEST_CASE("Trailing newlines are removed from backend messages", "[runtime][log]")
@@ -26,15 +26,15 @@ TEST_CASE("Trailing newlines are removed from backend messages", "[runtime][log]
     CHECK(trimTrailingNewlines("").empty());
 }
 
-TEST_CASE("While the bridge exists, Axmol log messages reach the Lantern logger", "[runtime][log]")
+TEST_CASE("While the bridge exists, Axmol log messages reach the Rolo logger", "[runtime][log]")
 {
-    lantern::Logger logger;
+    rolo::Logger logger;
     logger.setMinimumLevel(LogLevel::Trace);
-    std::vector<lantern::LogMessage> received;
-    logger.addSink([&received](const lantern::LogMessage& m) { received.push_back(m); });
+    std::vector<rolo::LogMessage> received;
+    logger.addSink([&received](const rolo::LogMessage& m) { received.push_back(m); });
 
     {
-        lantern::detail::AxmolLogBridge bridge(logger);
+        rolo::detail::AxmolLogBridge bridge(logger);
         AXLOGW("disk is {} percent full", 93);
     }
     // After the bridge is destroyed, messages go back to Axmol's own output.

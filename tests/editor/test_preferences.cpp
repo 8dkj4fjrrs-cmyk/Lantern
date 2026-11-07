@@ -6,8 +6,8 @@
 
 #include <filesystem>
 
-using lantern::editor::EditorState;
-using lantern::editor::Preferences;
+using rolo::editor::EditorState;
+using rolo::editor::Preferences;
 
 namespace {
 
@@ -15,7 +15,7 @@ namespace {
 struct TempDir {
     std::filesystem::path path;
     explicit TempDir(const char* name)
-        : path(lantern::test::uniqueTempFolder(name))
+        : path(rolo::test::uniqueTempFolder(name))
     {
         std::filesystem::remove_all(path);
     }
@@ -29,13 +29,13 @@ TEST_CASE("Typed values round-trip through text", "[editor][prefs]")
     Preferences prefs;
     prefs.setBool("panel.console", false);
     prefs.setInt("window.width", 1440);
-    prefs.setString("theme.name", "Lantern Dark");
+    prefs.setString("theme.name", "Rolo Dark");
 
     Preferences reloaded;
     CHECK(reloaded.parse(prefs.serialize()) == 0);
     CHECK_FALSE(reloaded.getBool("panel.console", true));
     CHECK(reloaded.getInt("window.width", 0) == 1440);
-    CHECK(reloaded.getString("theme.name", "") == "Lantern Dark");
+    CHECK(reloaded.getString("theme.name", "") == "Rolo Dark");
 }
 
 TEST_CASE("Missing or unreadable values fall back to defaults", "[editor][prefs]")
@@ -136,8 +136,8 @@ TEST_CASE("Window sizes are clamped and unknown sizes ignored", "[editor][state]
 
 TEST_CASE("Recent projects are remembered newest first, without repeats", "[editor][state]")
 {
-    using lantern::editor::EditorState;
-    using lantern::editor::Preferences;
+    using rolo::editor::EditorState;
+    using rolo::editor::Preferences;
     EditorState state;
     state.addRecentProject("/a");
     state.addRecentProject("/b");

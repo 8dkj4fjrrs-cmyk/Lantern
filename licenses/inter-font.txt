@@ -1,4 +1,4 @@
-Inter font 4.0 (Lantern's default text font)
+Inter font 4.0 (Rolo's default text font)
 License: SIL OFL 1.1
 
 Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)

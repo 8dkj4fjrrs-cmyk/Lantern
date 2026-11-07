@@ -4,8 +4,8 @@
 
 #include <algorithm>
 
-using namespace lantern;
-using namespace lantern::test;
+using namespace rolo;
+using namespace rolo::test;
 
 namespace {
 
@@ -45,7 +45,7 @@ TEST_CASE("Content files round-trip: variables, dialogue, quest", "[content][fil
 TEST_CASE("A hand-written dialogue file reads as documented", "[content][files]")
 {
     const auto read = parseDialogue(R"({
-      "format": "lantern.dialogue", "version": 1,
+      "format": "rolo.dialogue", "version": 1,
       "speakers": [{ "id": "elder", "name": "Village Elder", "color": "#f2a93b" }],
       "start": "hello",
       "nodes": [
@@ -70,41 +70,41 @@ TEST_CASE("Broken content files say what is wrong and where", "[content][files]"
 {
     SECTION("duplicate ids")
     {
-        const auto read = parseDialogue(R"({"format":"lantern.dialogue","version":1,"start":"a",
+        const auto read = parseDialogue(R"({"format":"rolo.dialogue","version":1,"start":"a",
             "nodes":[{"id":"a","text":"x"},{"id":"a","text":"y"}]})");
         CHECK_FALSE(read.ok());
         CHECK(hasIssue(read.issues, "node 2: Another item already has the id \"a\""));
     }
     SECTION("bad id")
     {
-        const auto read = parseVariables(R"({"format":"lantern.variables","version":1,
+        const auto read = parseVariables(R"({"format":"rolo.variables","version":1,
             "variables":[{"id":"2 gems","type":"int"}]})");
         CHECK_FALSE(read.ok());
         CHECK(hasIssue(read.issues, "must start with a letter"));
     }
     SECTION("starting value of the wrong type")
     {
-        const auto read = parseVariables(R"({"format":"lantern.variables","version":1,
+        const auto read = parseVariables(R"({"format":"rolo.variables","version":1,
             "variables":[{"id":"gems","type":"int","initial":"lots"}]})");
         CHECK_FALSE(read.ok());
         CHECK(hasIssue(read.issues, "variable 'gems': \"initial\" must be a int value"));
     }
     SECTION("a condition that is not in the language")
     {
-        const auto read = parseQuest(R"({"format":"lantern.quest","version":1,"name":"Q",
+        const auto read = parseQuest(R"({"format":"rolo.quest","version":1,"name":"Q",
             "objectives":[{"id":"o","completeWhen":{"type":"script","code":"x"}}]})");
         CHECK_FALSE(read.ok());
         CHECK(hasIssue(read.issues, "objective 'o', completeWhen: Condition: unknown condition type \"script\""));
     }
     SECTION("newer version, wrong format, not JSON")
     {
-        CHECK(hasIssue(parseQuest(R"({"format":"lantern.quest","version":99,"objectives":[]})").issues, "newer version"));
-        CHECK(hasIssue(parseQuest(R"({"format":"lantern.dialogue","version":1})").issues, "not a lantern.quest file"));
+        CHECK(hasIssue(parseQuest(R"({"format":"rolo.quest","version":99,"objectives":[]})").issues, "newer version"));
+        CHECK(hasIssue(parseQuest(R"({"format":"rolo.dialogue","version":1})").issues, "not a rolo.quest file"));
         CHECK(hasIssue(parseQuest("{").issues, "not valid JSON"));
     }
     SECTION("missing defaults are filled in")
     {
-        const auto read = parseVariables(R"({"format":"lantern.variables","version":1,
+        const auto read = parseVariables(R"({"format":"rolo.variables","version":1,
             "variables":[{"id":"name","type":"text"},{"id":"flag","type":"bool"}]})");
         REQUIRE(read.ok());
         CHECK(std::get<std::string>(read.content->variables[0].initial).empty());

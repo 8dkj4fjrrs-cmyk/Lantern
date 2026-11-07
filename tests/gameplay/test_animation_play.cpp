@@ -2,10 +2,10 @@
 
 #include "support/TempFolder.hpp"
 
-#include "lantern/assets/Animation.hpp"
-#include "lantern/assets/AssetDatabase.hpp"
-#include "lantern/core/Log.hpp"
-#include "lantern/gameplay/Game.hpp"
+#include "rolo/assets/Animation.hpp"
+#include "rolo/assets/AssetDatabase.hpp"
+#include "rolo/core/Log.hpp"
+#include "rolo/gameplay/Game.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -13,7 +13,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 
@@ -27,9 +27,9 @@ struct AnimatedProject {
     AnimatedProject()
     {
         std::filesystem::create_directories(folder);
-        std::ofstream(folder / "project.lantern") << R"({"format": "lantern.project", "version": 1, "name": "T"})";
+        std::ofstream(folder / "project.rolo") << R"({"format": "rolo.project", "version": 1, "name": "T"})";
         db = std::make_unique<AssetDatabase>(folder);
-        const AssetId image = *db->import(std::filesystem::path(LANTERN_TEST_DATA_DIR) / "tiles_16px.png");
+        const AssetId image = *db->import(std::filesystem::path(ROLO_TEST_DATA_DIR) / "tiles_16px.png");
         set = *db->createAnimationSet(image, {16, 16}, "Hero");
         AnimationSet changed = *db->find(set)->animation;
         changed.clips = {AnimationClip{"walk", {0, 1, 2}, 10.0f, true}, AnimationClip{"attack", {3, 4}, 10.0f, false}};

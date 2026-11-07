@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: external
-          key: external-${{ runner.os }}-${{ hashFiles('cmake/LanternAxmol.cmake', 'cmake/axmol-patches/**') }}
+          key: external-${{ runner.os }}-${{ hashFiles('cmake/RoloAxmol.cmake', 'cmake/axmol-patches/**') }}
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'

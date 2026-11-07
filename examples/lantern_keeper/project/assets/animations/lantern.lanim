@@ -1,5 +1,5 @@
 {
-  "format": "lantern.animations",
+  "format": "rolo.animations",
   "version": 1,
   "image": "4b45455000000008",
   "frameSize": [32, 64],

@@ -1,11 +1,11 @@
 #include "Panels.hpp"
 
-#include "lantern/ui/Context.hpp"
+#include "rolo/ui/Context.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 // The tileset image, cut into its tiles. Click to choose.
 class TilePalettePanel::Palette final : public ui::Widget {
@@ -163,7 +163,7 @@ private:
         if (!m_editor.execute(std::make_unique<ChangeTileset>(m_tilesetId, std::move(changed),
                                                               solid ? "Make Tile Solid" : "Make Tile Not Solid"))) {
             m_editor.showMessage("Could Not Save the Tileset",
-                                 "Lantern could not write " + asset->path + ". Check that the file is not read-only.");
+                                 "Rolo could not write " + asset->path + ". Check that the file is not read-only.");
         }
     }
 
@@ -231,4 +231,4 @@ void TilePalettePanel::update(UiFrame& frame)
                     + std::to_string(m_palette->tileCount()) + "   ·   painting on " + target);
 }
 
-} // namespace lantern::editor
+} // namespace rolo::editor

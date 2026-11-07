@@ -4,7 +4,7 @@
 
 namespace keeper {
 
-using namespace lantern;
+using namespace rolo;
 
 namespace {
 

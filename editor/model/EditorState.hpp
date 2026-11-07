@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace lantern::editor {
+namespace rolo::editor {
 
 struct PanelVisibility {
     bool viewport = true;
@@ -58,4 +58,4 @@ struct EditorState {
     void setWindowSize(int width, int height);
 };
 
-} // namespace lantern::editor
+} // namespace rolo::editor

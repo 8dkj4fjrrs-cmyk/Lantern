@@ -1,6 +1,6 @@
 """Builds The Lantern Keeper's project files.
 
-    lantern_editor --new-project "<folder>"      # 1. a fresh, empty project
+    rolo_editor --new-project "<folder>"      # 1. a fresh, empty project
     python3 build_project.py "<folder>"          # 2. this script
 
 Starting from the fresh project the editor makes, this adds the art (drawn
@@ -57,34 +57,34 @@ class Ids:
 
 
 def transform(x=0.0, y=0.0, scale=(1, 1)):
-    return {"type": "lantern.Transform", "position": [x, y], "rotation": 0, "scale": list(scale)}
+    return {"type": "rolo.Transform", "position": [x, y], "rotation": 0, "scale": list(scale)}
 
 
 def sprite(image, size, flip=False):
-    return {"type": "lantern.Sprite", "image": IDS[image], "size": list(size), "color": "#ffffffff",
+    return {"type": "rolo.Sprite", "image": IDS[image], "size": list(size), "color": "#ffffffff",
             "flipX": flip, "flipY": False}
 
 
 def animator(lanim, clip):
-    return {"type": "lantern.Animator", "animations": IDS[lanim], "clip": clip, "speed": 1, "playing": True}
+    return {"type": "rolo.Animator", "animations": IDS[lanim], "clip": clip, "speed": 1, "playing": True}
 
 
 def collider(size, offset=(0, 0), solid=True):
-    return {"type": "lantern.Collider", "size": list(size), "offset": list(offset), "solid": solid}
+    return {"type": "rolo.Collider", "size": list(size), "offset": list(offset), "solid": solid}
 
 
 def trigger(on, actions, condition=None, prompt="", event="", delay=1.0, once=False):
-    return {"type": "lantern.Trigger", "on": on, "prompt": prompt, "event": event, "delay": delay, "once": once,
+    return {"type": "rolo.Trigger", "on": on, "prompt": prompt, "event": event, "delay": delay, "once": once,
             "data": {"condition": condition, "actions": actions}}
 
 
 def shape(size, colour, kind="rectangle"):
-    return {"type": "lantern.Shape", "kind": kind, "size": list(size), "color": colour, "filled": True,
+    return {"type": "rolo.Shape", "kind": kind, "size": list(size), "color": colour, "filled": True,
             "lineWidth": 2}
 
 
 def text(words, size=18, colour="#ffffffff", align="left", width=0, source="text"):
-    return {"type": "lantern.Text", "text": words, "source": source, "font": None, "size": size,
+    return {"type": "rolo.Text", "text": words, "source": source, "font": None, "size": size,
             "color": colour, "align": align, "width": width}
 
 
@@ -139,7 +139,7 @@ class Scene:
             y = self.h - 1 - i
             rows.append([y, 0] + [TILE[c] for c in line])
         self.add("Ground", [transform(scale=(SCALE, SCALE)), {
-            "type": "lantern.Tilemap", "tileset": IDS["tiles.ltileset"], "cellSize": [PIXEL, PIXEL],
+            "type": "rolo.Tilemap", "tileset": IDS["tiles.ltileset"], "cellSize": [PIXEL, PIXEL],
             "data": {"layers": [{"name": "Ground", "visible": True, "rows": rows}], "solid": []}}])
 
     def person(self, name, col, row, image, lanim, dialogue, prompt="Talk", flip=False, size=(16, 24),
@@ -154,7 +154,7 @@ class Scene:
         return body
 
     def scene_json(self):
-        return {"format": "lantern.scene", "version": 1, "name": self.name, "entities": self.entities}
+        return {"format": "rolo.scene", "version": 1, "name": self.name, "entities": self.entities}
 
 
 def door(scene, name, col, row, target, arrive_at):
@@ -194,11 +194,11 @@ def player(scene, col, row, darkness, night_while=None):
     hero = scene.add("Player", [
         transform(x, y, (SCALE, SCALE)), sprite("hero_walk.png", (16, 24)), animator("hero.lanim", "idle_down"),
         collider((10, 5), (0, -9.5)),                     # only the feet collide
-        {"type": "lantern.Interactor", "key": "E"},
+        {"type": "rolo.Interactor", "key": "E"},
         {"type": "keeper.PlayerController", "speed": 170},
     ])
     camera = scene.add("Camera", [
-        transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "lantern.Camera", "zoom": 1},
+        transform(scale=(1 / SCALE, 1 / SCALE)), {"type": "rolo.Camera", "zoom": 1},
         {"type": "keeper.CameraLimits", "min": [0, 0], "max": [scene.w * CELL, scene.h * CELL], "view": list(VIEW)},
     ], parent=hero)
     ui = {}
@@ -214,7 +214,7 @@ def player(scene, col, row, darkness, night_while=None):
     scene.add("Prompt", [transform(0, -120), text("", 20, "#ffc84aff", align="center", source="interactionPrompt")],
               parent=camera)
     box = scene.add("Dialogue Box", [transform(0, -VIEW[1] / 2 + 100), shape((1040, 168), "#120e1aee"),
-                                     {"type": "lantern.DialogueView", "marker": "> "}], parent=camera, active=False)
+                                     {"type": "rolo.DialogueView", "marker": "> "}], parent=camera, active=False)
     scene.add("Speaker", [transform(-496, 68), text("", 20, source="dialogueSpeaker")], parent=box)
     scene.add("Line", [transform(-496, 38), text("", 19, width=990, source="dialogueLine")], parent=box)
     scene.add("Choices", [transform(-496, -14), text("", 19, "#ffd88aff", source="dialogueChoices")], parent=box)
@@ -436,7 +436,7 @@ def village():
     # Fill in the IDs of objects made after the triggers that refer to them.
     for e in s.entities:
         for comp in e["components"]:
-            if comp["type"] == "lantern.Trigger":
+            if comp["type"] == "rolo.Trigger":
                 for a in comp["data"]["actions"]:
                     if a.get("entity") == "NIGHT":
                         a["entity"] = ui["Night"]
@@ -483,7 +483,7 @@ def mine():
 # --- Content -----------------------------------------------------------------------------------------------
 
 def variables():
-    return {"format": "lantern.variables", "version": 1, "variables": [
+    return {"format": "rolo.variables", "version": 1, "variables": [
         {"id": "flames", "type": "int", "initial": 0, "description": "Lost flames found"},
         {"id": "met_maren", "type": "bool", "initial": False, "description": "Maren asked Pip to find the flames"},
         {"id": "met_wren", "type": "bool", "initial": False, "description": "Wren asked about Biscuit"},
@@ -496,7 +496,7 @@ def variables():
 
 
 def lantern_quest():
-    return {"format": "lantern.quest", "version": 1,
+    return {"format": "rolo.quest", "version": 1,
             "name": "The Dark Lantern",
             "description": "The storm blew out Emberwick's great lantern and scattered its three flames.",
             "prerequisites": [],
@@ -512,7 +512,7 @@ def lantern_quest():
 
 
 def biscuit_quest():
-    return {"format": "lantern.quest", "version": 1,
+    return {"format": "rolo.quest", "version": 1,
             "name": "Where Is Biscuit?",
             "description": "Wren's cat Biscuit ran into Whisperwood when the lantern went dark.",
             "prerequisites": [],
@@ -535,7 +535,7 @@ SPEAKERS = {
 
 
 def dialogue(speakers, nodes, start=None):
-    return {"format": "lantern.dialogue", "version": 1, "speakers": [SPEAKERS[s] for s in speakers],
+    return {"format": "rolo.dialogue", "version": 1, "speakers": [SPEAKERS[s] for s in speakers],
             "start": start or nodes[0]["id"], "nodes": nodes}
 
 
@@ -704,7 +704,7 @@ def clip(clip_id, frames, fps, loop=True):
 
 
 def animations(image, frame, clips):
-    return {"format": "lantern.animations", "version": 1, "image": IDS[image], "frameSize": list(frame),
+    return {"format": "rolo.animations", "version": 1, "image": IDS[image], "frameSize": list(frame),
             "margin": 0, "spacing": 0, "clips": clips}
 
 
@@ -757,16 +757,16 @@ def write(path, data):
 
 
 def meta(name, kind, extra=None):
-    m = {"format": "lantern.asset", "version": 1, "id": IDS[name], "type": kind}
+    m = {"format": "rolo.asset", "version": 1, "id": IDS[name], "type": kind}
     m.update(extra or {})
     return m
 
 
 def main():
     root = Path(sys.argv[1])
-    project_file = root / "project.lantern"
+    project_file = root / "project.rolo"
     if not project_file.exists():
-        sys.exit(f"{root} is not a Lantern project. Make one first: lantern_editor --new-project \"{root}\"")
+        sys.exit(f"{root} is not a Rolo project. Make one first: rolo_editor --new-project \"{root}\"")
     project = json.loads(project_file.read_text())
 
     # Art, imported into assets/ (pixel art keeps its hard edges).
@@ -774,7 +774,7 @@ def main():
     subprocess.run([sys.executable, str(HERE / "make_art.py"), str(art)], check=True)
     for png in sorted(art.glob("*.png")):
         write(png.with_name(png.name + ".meta"), meta(png.name, "image", {"filter": "pixel"}))
-    write(root / "assets/tiles.ltileset", {"format": "lantern.tileset", "version": 1, "image": IDS["tiles.png"],
+    write(root / "assets/tiles.ltileset", {"format": "rolo.tileset", "version": 1, "image": IDS["tiles.png"],
                                            "tileSize": [PIXEL, PIXEL], "margin": 0, "spacing": 0,
                                            "solid": SOLID_TILES})
     write(root / "assets/tiles.ltileset.meta", meta("tiles.ltileset", "tileset"))

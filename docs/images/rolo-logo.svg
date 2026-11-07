@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Rolo Engine</title>
+  <defs>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0473a"/>
+      <stop offset="1" stop-color="#c41f19"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#ffc061"/>
+      <stop offset="0.55" stop-color="#ff9326"/>
+      <stop offset="1" stop-color="#f06d12"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Black border square with the red tile inside. -->
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="#141414"/>
+  <rect x="34" y="34" width="444" height="444" rx="80" fill="url(#red)"/>
+
+  <!-- Soft shadow under Rolo. -->
+  <ellipse cx="256" cy="430" rx="118" ry="16" fill="#7a0f0b" opacity="0.45"/>
+
+  <!-- A little sprout on top. -->
+  <path d="M256 118 C254 100 258 88 266 78" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
+  <path d="M264 84 C286 64 318 66 330 78 C312 98 284 102 264 84 Z" fill="#4cc25a" stroke="#141414" stroke-width="9"
+        stroke-linejoin="round"/>
+
+  <!-- Rolo: the round body. -->
+  <circle cx="256" cy="270" r="150" fill="url(#ball)" stroke="#141414" stroke-width="14"/>
+  <ellipse cx="196" cy="190" rx="44" ry="24" fill="#fff3d6" opacity="0.55" transform="rotate(-28 196 190)"/>
+
+  <!-- Big eyes. -->
+  <g stroke="#141414" stroke-width="10">
+    <ellipse cx="204" cy="250" rx="38" ry="46" fill="#ffffff"/>
+    <ellipse cx="308" cy="250" rx="38" ry="46" fill="#ffffff"/>
+  </g>
+  <circle cx="214" cy="262" r="21" fill="#141414"/>
+  <circle cx="298" cy="262" r="21" fill="#141414"/>
+  <circle cx="221" cy="253" r="7" fill="#ffffff"/>
+  <circle cx="305" cy="253" r="7" fill="#ffffff"/>
+
+  <!-- Cheeks. -->
+  <ellipse cx="164" cy="318" rx="22" ry="13" fill="#ff5a5f" opacity="0.6"/>
+  <ellipse cx="348" cy="318" rx="22" ry="13" fill="#ff5a5f" opacity="0.6"/>
+
+  <!-- Big smile. -->
+  <path d="M206 318 Q256 378 306 318 Z" fill="#5a1708" stroke="#141414" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M232 344 Q256 366 280 344 Q256 334 232 344 Z" fill="#ff6f6f"/>
+</svg>
